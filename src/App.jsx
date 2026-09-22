@@ -434,6 +434,17 @@ export default function App() {
 
     const channel = supabase
       .channel('music-night-live-all')
+      .on(
+  'postgres_changes',
+  { event: '*', schema: 'public', table: 'performances' },
+  (payload) => {
+    console.log('🔥 PERFORMANCE REALTIME EVENT:', payload);
+
+    setSupabasePerformances((current) =>
+      applyRealtimeRowChange(current, payload)
+    );
+  }
+)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'performances' }, (payload) => {
         setSupabasePerformances((current) => applyRealtimeRowChange(current, payload));
       })
