@@ -35,6 +35,94 @@ const SESSION_KEY = 'music_night_audience_session_v1';
 const SYNC_KEY = 'music_night_local_event_db_v4';
 const ADMIN_PASSWORD = 'suhani1105';
 
+
+const LANGUAGE_OPTIONS = [
+  { code: 'en', label: 'English', native: 'English' },
+  { code: 'hi', label: 'Hindi', native: 'हिन्दी' },
+  { code: 'gu', label: 'Gujarati', native: 'ગુજરાતી' },
+];
+
+const UI_TEXT = {
+  en: {
+    welcome: 'Welcome to', experience: 'Choose your language, enter your name and join the live experience.',
+    chooseLanguage: 'Choose language', yourName: 'Your Name', enterName: 'Enter your name',
+    memoryPhoto: 'Photo for your memory card', optional: '(optional)', join: 'Join',
+    continueAs: 'Continue as', liveEvent: 'Live Event', audienceExperience: 'Audience Experience',
+    goodEvening: 'Good evening, {name} 👋', audienceMember: 'Audience Member', change: 'Change',
+    nowPlaying: 'Now Playing', intermission: 'Intermission / Preparing Next Act',
+    knowPerformer: 'Know the Performer', knowMore: 'Know more', liveInteraction: 'Live Interaction',
+    guessSong: 'Guess the Song', tapOne: 'Tap one option', submitting: 'Submitting…',
+    voteRecorded: 'Vote recorded ✓', alreadyAnswered: 'You already answered this one.',
+    correct: 'Correct!', notQuite: 'Not quite — correct answer', reactPerformance: 'React to the performance',
+    oneReaction: 'One reaction per performance', sending: 'Sending…', reactionSent: 'Reaction sent ✓',
+    alreadyReacted: 'You already reacted to this performance.', knowMusicians: 'Know the Musicians',
+    peopleCreatingSound: 'The people creating the live sound tonight', seeMusicianDetails: 'See musician details',
+    anchorsTeam: 'Anchors & Organising Team', meetPeople: 'Meet the people making the evening happen',
+    knowAnchorsTeam: 'Know More: Anchors & Team', yourMemory: 'Your Memory Card',
+    builtFromParticipation: 'Built from your live participation tonight.', addPhoto: 'Add photo',
+    download: 'Download', share: 'Share', yourMusicNight: 'Your Music Night', votes: 'Votes', reactions: 'Reactions',
+    watchLine: 'Made by - Suhani Joshi' , knowMoreTitle: 'Know More', performingNow: 'Performing now',
+    noTeam: 'No team members added yet.', performers: 'Performers', liveMusicians: 'Live Musicians', anchors: 'Anchors / MoC',
+    organisingTeam: 'Organising Team', age: 'Age', work: 'Work', workplace: 'Workplace', achievements: 'Achievements',
+    partOfTeam: 'Part of the team behind the evening.', languageSaved: 'Language preference saved for this event.'
+  },
+  hi: {
+    welcome: 'स्वागत है', experience: 'अपनी भाषा चुनें, अपना नाम दर्ज करें और लाइव अनुभव में शामिल हों।',
+    chooseLanguage: 'भाषा चुनें', yourName: 'आपका नाम', enterName: 'अपना नाम दर्ज करें',
+    memoryPhoto: 'मेमोरी कार्ड के लिए फोटो', optional: '(वैकल्पिक)', join: 'शामिल हों',
+    continueAs: 'के रूप में जारी रखें', liveEvent: 'लाइव कार्यक्रम', audienceExperience: 'दर्शक अनुभव',
+    goodEvening: 'शुभ संध्या, {name} 👋', audienceMember: 'दर्शक सदस्य', change: 'बदलें',
+    nowPlaying: 'अभी चल रहा है', intermission: 'अंतराल / अगली प्रस्तुति की तैयारी',
+    knowPerformer: 'कलाकार के बारे में जानें', knowMore: 'और जानें', liveInteraction: 'लाइव सहभागिता',
+    guessSong: 'गाना पहचानें', tapOne: 'एक विकल्प चुनें', submitting: 'भेजा जा रहा है…',
+    voteRecorded: 'आपका उत्तर दर्ज हो गया ✓', alreadyAnswered: 'आपने इसका उत्तर पहले ही दिया है।',
+    correct: 'सही!', notQuite: 'सही नहीं — सही उत्तर', reactPerformance: 'प्रस्तुति पर प्रतिक्रिया दें',
+    oneReaction: 'हर प्रस्तुति पर एक प्रतिक्रिया', sending: 'भेजा जा रहा है…', reactionSent: 'प्रतिक्रिया भेज दी गई ✓',
+    alreadyReacted: 'आपने इस प्रस्तुति पर पहले ही प्रतिक्रिया दी है।', knowMusicians: 'संगीतकारों से मिलें',
+    peopleCreatingSound: 'आज की लाइव धुन बनाने वाले कलाकार', seeMusicianDetails: 'संगीतकारों की जानकारी',
+    anchorsTeam: 'एंकर और आयोजन टीम', meetPeople: 'इस शाम को खास बनाने वाले लोगों से मिलें',
+    knowAnchorsTeam: 'एंकर और टीम के बारे में जानें', yourMemory: 'आपका मेमोरी कार्ड',
+    builtFromParticipation: 'आज की आपकी लाइव सहभागिता से बनाया गया।', addPhoto: 'फोटो जोड़ें',
+    download: 'डाउनलोड', share: 'शेयर', yourMusicNight: 'आपकी म्यूज़िक नाइट', votes: 'उत्तर', reactions: 'प्रतिक्रियाएँ',
+    watchLine: 'सुहानी जोशी द्वारा निर्मित', knowMoreTitle: 'और जानें', performingNow: 'अभी प्रस्तुति दे रहे हैं',
+    noTeam: 'अभी कोई टीम सदस्य नहीं जोड़ा गया है।', performers: 'कलाकार', liveMusicians: 'लाइव संगीतकार', anchors: 'एंकर / संचालक',
+    organisingTeam: 'आयोजन टीम', age: 'उम्र', work: 'कार्य', workplace: 'कार्यस्थल', achievements: 'उपलब्धियाँ',
+    partOfTeam: 'इस शाम को बनाने वाली टीम का हिस्सा।', languageSaved: 'इस कार्यक्रम के लिए आपकी भाषा सुरक्षित है।'
+  },
+  gu: {
+    welcome: 'આપનું સ્વાગત છે', experience: 'તમારી ભાષા પસંદ કરો, તમારું નામ લખો અને લાઇવ અનુભવમાં જોડાઓ.',
+    chooseLanguage: 'ભાષા પસંદ કરો', yourName: 'તમારું નામ', enterName: 'તમારું નામ લખો',
+    memoryPhoto: 'મેમરી કાર્ડ માટે ફોટો', optional: '(વૈકલ્પિક)', join: 'જોડાઓ',
+    continueAs: 'તરીકે ચાલુ રાખો', liveEvent: 'લાઇવ કાર્યક્રમ', audienceExperience: 'પ્રેક્ષક અનુભવ',
+    goodEvening: 'શુભ સાંજ, {name} 👋', audienceMember: 'પ્રેક્ષક સભ્ય', change: 'બદલો',
+    nowPlaying: 'હમણાં ચાલી રહ્યું છે', intermission: 'વિરામ / આગળની રજૂઆતની તૈયારી',
+    knowPerformer: 'પરફોર્મર વિશે જાણો', knowMore: 'વધુ જાણો', liveInteraction: 'લાઇવ ઇન્ટરૅક્શન',
+    guessSong: 'ગીત ઓળખો', tapOne: 'એક વિકલ્પ પસંદ કરો', submitting: 'મોકલાઈ રહ્યું છે…',
+    voteRecorded: 'તમારો જવાબ નોંધાયો ✓', alreadyAnswered: 'તમે આનો જવાબ પહેલેથી આપી દીધો છે.',
+    correct: 'સાચું!', notQuite: 'સાચું નથી — સાચો જવાબ', reactPerformance: 'રજૂઆત પર પ્રતિક્રિયા આપો',
+    oneReaction: 'દરેક રજૂઆત માટે એક પ્રતિક્રિયા', sending: 'મોકલાઈ રહ્યું છે…', reactionSent: 'પ્રતિક્રિયા મોકલાઈ ✓',
+    alreadyReacted: 'તમે આ રજૂઆત પર પહેલેથી પ્રતિક્રિયા આપી છે.', knowMusicians: 'સંગીતકારોને જાણો',
+    peopleCreatingSound: 'આજની લાઇવ ધૂન બનાવતા સંગીતકારો', seeMusicianDetails: 'સંગીતકારોની માહિતી',
+    anchorsTeam: 'એન્કર અને આયોજન ટીમ', meetPeople: 'આ સાંજને ખાસ બનાવતા લોકોને મળો',
+    knowAnchorsTeam: 'એન્કર અને ટીમ વિશે જાણો', yourMemory: 'તમારું મેમરી કાર્ડ',
+    builtFromParticipation: 'આજની તમારી લાઇવ ભાગીદારી પરથી બનાવાયું છે.', addPhoto: 'ફોટો ઉમેરો',
+    download: 'ડાઉનલોડ', share: 'શેર', yourMusicNight: 'તમારી મ્યુઝિક નાઇટ', votes: 'જવાબ', reactions: 'પ્રતિક્રિયાઓ',
+    watchLine: 'સુહાની જોશી દ્વારા નિર્મિત', knowMoreTitle: 'વધુ જાણો', performingNow: 'હમણાં રજૂઆત કરી રહ્યા છે',
+    noTeam: 'હજુ સુધી કોઈ ટીમ સભ્ય ઉમેરાયો નથી.', performers: 'પરફોર્મર્સ', liveMusicians: 'લાઇવ સંગીતકારો', anchors: 'એન્કર / સંચાલક',
+    organisingTeam: 'આયોજન ટીમ', age: 'ઉંમર', work: 'કામ', workplace: 'કાર્યસ્થળ', achievements: 'સિદ્ધિઓ',
+    partOfTeam: 'આ સાંજ બનાવતી ટીમનો એક ભાગ.', languageSaved: 'આ કાર્યક્રમ માટે તમારી ભાષા સાચવવામાં આવી છે.'
+  }
+};
+
+function uiText(language, key) {
+  const pack = UI_TEXT[language] || UI_TEXT.en;
+  return pack[key] || UI_TEXT.en[key] || key;
+}
+
+function uiTextWithName(language, key, name) {
+  return uiText(language, key).replace('{name}', name);
+}
+
 const REACTION_OPTIONS = ['❤️', '🔥', '👏', '✨'];
 
 const DEFAULT_INTERACTIONS = [
@@ -157,14 +245,20 @@ function mergePeople(peopleRows = []) {
   return [...mergedStatic, ...extras].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
 }
 
-function getEngagementProfile(voteCount, reactionCount) {
+function getEngagementProfile(voteCount, reactionCount, language = 'en') {
   const score = Math.min(100, Math.round(voteCount * 20 + reactionCount * 10));
-  let tag = 'You are a good listener';
-  if (score >= 25 && score < 50) tag = 'You really feel the music';
-  else if (score >= 50 && score < 75) tag = 'Your taste in music is excellent';
-  else if (score >= 75 && score < 90) tag = "You're a true music enthusiast";
-  else if (score >= 90) tag = 'Music flows with you';
-  return { score, tag };
+  const tags = {
+    en: ['You are a good listener', 'You really feel the music', 'Your taste in music is excellent', "You're a true music enthusiast", 'Music flows with you'],
+    hi: ['आप एक अच्छे श्रोता हैं', 'आप संगीत को महसूस करते हैं', 'संगीत में आपकी पसंद शानदार है', 'आप सच्चे संगीत प्रेमी हैं', 'संगीत आपके साथ बहता है'],
+    gu: ['તમે સારા શ્રોતા છો', 'તમે સંગીતને દિલથી અનુભવો છો', 'સંગીતમાં તમારી પસંદ ખૂબ સરસ છે', 'તમે સાચા સંગીતપ્રેમી છો', 'સંગીત તમારી સાથે વહે છે'],
+  };
+  const labels = tags[language] || tags.en;
+  let index = 0;
+  if (score >= 25 && score < 50) index = 1;
+  else if (score >= 50 && score < 75) index = 2;
+  else if (score >= 75 && score < 90) index = 3;
+  else if (score >= 90) index = 4;
+  return { score, tag: labels[index] };
 }
 
 async function uploadEventMedia(file, folder, filenameBase) {
@@ -229,7 +323,18 @@ function downloadBlob(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-async function buildMemoryCardBlob({ name, photoUrl, score, tag }) {
+function downloadCsv(rows, filename) {
+  if (!rows.length) return;
+  const headers = Object.keys(rows[0]);
+  const escape = (value) => {
+    const text = value == null ? '' : String(value);
+    return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  };
+  const csv = [headers.map(escape).join(','), ...rows.map((row) => headers.map((header) => escape(row[header])).join(','))].join('\n');
+  downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), filename);
+}
+
+async function buildMemoryCardBlob({ name, photoUrl, score, tag, language = 'en' }) {
   const canvas = document.createElement('canvas');
   canvas.width = 1200;
   canvas.height = 675;
@@ -261,7 +366,7 @@ async function buildMemoryCardBlob({ name, photoUrl, score, tag }) {
   ctx.fillText('TOFANI VAYRA 9', 70, 90);
   ctx.fillStyle = '#0f766e';
   ctx.font = '700 20px Arial';
-  ctx.fillText('YOUR MUSIC NIGHT MEMORY', 70, 124);
+  ctx.fillText(language === 'hi' ? 'आपकी म्यूज़िक नाइट याद' : language === 'gu' ? 'તમારી મ્યુઝિક નાઇટ યાદ' : 'YOUR MUSIC NIGHT MEMORY', 70, 124);
 
   let photoDrawn = false;
   if (photoUrl) {
@@ -316,11 +421,11 @@ async function buildMemoryCardBlob({ name, photoUrl, score, tag }) {
   ctx.fillRect(350, 355, 760 * (score / 100), 28);
   ctx.fillStyle = '#0f172a';
   ctx.font = '800 28px Arial';
-  ctx.fillText(`ENGAGEMENT  ${score}%`, 350, 414);
+  ctx.fillText(`${language === 'hi' ? 'भागीदारी' : language === 'gu' ? 'ભાગીદારી' : 'ENGAGEMENT'}  ${score}%`, 350, 414);
 
   ctx.fillStyle = '#155e75';
   ctx.font = '600 22px Arial';
-  ctx.fillText('You were part of the music, not just the audience.', 70, 610);
+  ctx.fillText(language === 'hi' ? 'आप सिर्फ दर्शक नहीं, इस संगीत का हिस्सा थे।' : language === 'gu' ? 'તમે માત્ર પ્રેક્ષક નહોતા, આ સંગીતનો એક ભાગ હતા.' : 'You were part of the music, not just the audience.', 70, 610);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
@@ -483,238 +588,25 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-  if (!supabase) return;
-
-  const refreshLiveData = async () => {
-    const [
-      performancesResult,
-      interactionsResult,
-      votesResult,
-      reactionsResult,
-      audienceResult,
-      peopleResult,
-      snapshotsResult,
-      memoryCardsResult,
-    ] = await Promise.all([
-      supabase
-        .from('performances')
-        .select('*')
-        .eq('event_id', APP_EVENT_ID)
-        .order('display_order', { ascending: true }),
-
-      supabase
-        .from('interactions')
-        .select('*')
-        .eq('event_id', APP_EVENT_ID)
-        .order('created_at', { ascending: false }),
-
-      supabase
-        .from('interaction_votes')
-        .select('*'),
-
-      supabase
-        .from('performance_reactions')
-        .select('*'),
-
-      supabase
-        .from('audience')
-        .select('*')
-        .eq('event_id', APP_EVENT_ID)
-        .order('joined_at', { ascending: true }),
-
-      supabase
-        .from('event_people')
-        .select('*')
-        .eq('event_id', APP_EVENT_ID)
-        .order('display_order', { ascending: true }),
-
-      supabase
-        .from('event_analytics_snapshots')
-        .select('*')
-        .eq('event_id', APP_EVENT_ID)
-        .order('created_at', { ascending: false }),
-
-      supabase
-        .from('audience_memory_cards')
-        .select('*')
-        .eq('event_id', APP_EVENT_ID)
-        .order('updated_at', { ascending: false }),
-    ]);
-
-    if (!performancesResult.error) {
-      setSupabasePerformances(performancesResult.data || []);
-    }
-
-    if (!interactionsResult.error) {
-      setSupabaseInteractions(interactionsResult.data || []);
-    }
-
-    if (!votesResult.error) {
-      setSupabaseVotes(votesResult.data || []);
-    }
-
-    if (!reactionsResult.error) {
-      setSupabaseReactions(reactionsResult.data || []);
-    }
-
-    if (!audienceResult.error) {
-      setSupabaseAudience(audienceResult.data || []);
-    }
-
-    if (!peopleResult.error) {
-      setSupabasePeople(peopleResult.data || []);
-    }
-
-    if (!snapshotsResult.error) {
-      setAnalyticsSnapshots(snapshotsResult.data || []);
-    }
-
-    if (!memoryCardsResult.error) {
-      setSupabaseMemoryCards(memoryCardsResult.data || []);
-    }
-  };
-
-  refreshLiveData();
-
-  const interval = setInterval(refreshLiveData, 2000);
-
-  return () => clearInterval(interval);
-}, []);
-
-useEffect(() => {
-  const handleHashChange = () => {
-    setCurrentRoute(window.location.hash || '#/');
-  };
-
-  window.addEventListener('hashchange', handleHashChange);
-
-  return () => {
-    window.removeEventListener('hashchange', handleHashChange);
-  };
-}, []);
-
-      useEffect(() => {
-    if (!supabase) return;
-
-    const refreshLiveData = async () => {
-      const [
-        performancesResult,
-        interactionsResult,
-        votesResult,
-        reactionsResult,
-        audienceResult,
-        peopleResult,
-        snapshotsResult,
-        memoryCardsResult,
-      ] = await Promise.all([
-        supabase
-          .from('performances')
-          .select('*')
-          .eq('event_id', APP_EVENT_ID)
-          .order('display_order', { ascending: true }),
-
-        supabase
-          .from('interactions')
-          .select('*')
-          .eq('event_id', APP_EVENT_ID)
-          .order('created_at', { ascending: false }),
-
-        supabase
-          .from('interaction_votes')
-          .select('*'),
-
-        supabase
-          .from('performance_reactions')
-          .select('*'),
-
-        supabase
-          .from('audience')
-          .select('*')
-          .eq('event_id', APP_EVENT_ID)
-          .order('joined_at', { ascending: true }),
-
-        supabase
-          .from('event_people')
-          .select('*')
-          .eq('event_id', APP_EVENT_ID)
-          .order('display_order', { ascending: true }),
-
-        supabase
-          .from('event_analytics_snapshots')
-          .select('*')
-          .eq('event_id', APP_EVENT_ID)
-          .order('created_at', { ascending: false }),
-
-        supabase
-          .from('audience_memory_cards')
-          .select('*')
-          .eq('event_id', APP_EVENT_ID)
-          .order('updated_at', { ascending: false }),
-      ]);
-
-      if (!performancesResult.error) {
-        setSupabasePerformances(performancesResult.data || []);
-      }
-
-      if (!interactionsResult.error) {
-        setSupabaseInteractions(interactionsResult.data || []);
-      }
-
-      if (!votesResult.error) {
-        setSupabaseVotes(votesResult.data || []);
-      }
-
-      if (!reactionsResult.error) {
-        setSupabaseReactions(reactionsResult.data || []);
-      }
-
-      if (!audienceResult.error) {
-        setSupabaseAudience(audienceResult.data || []);
-      }
-
-      if (!peopleResult.error) {
-        setSupabasePeople(peopleResult.data || []);
-      }
-
-      if (!snapshotsResult.error) {
-        setAnalyticsSnapshots(snapshotsResult.data || []);
-      }
-
-      if (!memoryCardsResult.error) {
-        setSupabaseMemoryCards(memoryCardsResult.data || []);
-      }
-    };
-
     refreshLiveData();
-
     const interval = setInterval(refreshLiveData, 2000);
-
     return () => clearInterval(interval);
+  }, [isAdminRoute]);
+
+  useEffect(() => {
+    const handleHashChange = () => setCurrentRoute(window.location.hash || '#/');
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
- useEffect(() => {
-  const handleHashChange = () => {
-    setCurrentRoute(window.location.hash || '#/');
-  };
-
-  window.addEventListener('hashchange', handleHashChange);
-
-  return () => {
-    window.removeEventListener('hashchange', handleHashChange);
-  };
-}, []);
-
-useEffect(() => {
-  try {
-    const savedSession = localStorage.getItem(SESSION_KEY);
-
-    if (savedSession) {
-      setAudienceSession(JSON.parse(savedSession));
+  useEffect(() => {
+    try {
+      const savedSession = localStorage.getItem(SESSION_KEY);
+      if (savedSession) setAudienceSession(JSON.parse(savedSession));
+    } catch (error) {
+      console.warn('Session restore error', error);
     }
-  } catch (error) {
-    console.warn('Session restore error', error);
-  }
-}, []);
+  }, []);
 
   useEffect(() => {
     const handleSync = (data) => {
@@ -765,7 +657,7 @@ useEffect(() => {
     });
   };
 
-  const handleAudienceJoin = async (nickname, photoFile = null) => {
+  const handleAudienceJoin = async (nickname, language = 'en', photoFile = null) => {
     let existingSession = null;
     try {
       const raw = localStorage.getItem(SESSION_KEY);
@@ -775,6 +667,7 @@ useEffect(() => {
     }
 
     const cleanNickname = (nickname || '').trim() || 'Audience Guest';
+    const cleanLanguage = ['en', 'hi', 'gu'].includes(language) ? language : 'en';
     const sessionId = existingSession?.sessionId || `sess_${Math.random().toString(36).slice(2, 9)}_${Date.now()}`;
     let photoUrl = existingSession?.photoUrl || '';
 
@@ -789,6 +682,7 @@ useEffect(() => {
 
     const newSession = {
       nickname: cleanNickname,
+      language: cleanLanguage,
       sessionId,
       eventId: APP_EVENT_ID,
       photoUrl,
@@ -807,15 +701,32 @@ useEffect(() => {
         .limit(1);
 
       if (!lookupError && existingAudience?.length) {
-        await supabase.from('audience').update({ nickname: cleanNickname, photo_url: photoUrl || null }).eq('id', existingAudience[0].id);
+        const { error: updateError } = await supabase
+          .from('audience')
+          .update({ nickname: cleanNickname, photo_url: photoUrl || null, language: cleanLanguage })
+          .eq('id', existingAudience[0].id);
+        if (updateError) {
+          // Graceful fallback for an older database that has not added the language column yet.
+          await supabase.from('audience').update({ nickname: cleanNickname, photo_url: photoUrl || null }).eq('id', existingAudience[0].id);
+        }
       } else if (!lookupError) {
         const { error: insertError } = await supabase.from('audience').insert({
           event_id: APP_EVENT_ID,
           nickname: cleanNickname,
           session_id: sessionId,
           photo_url: photoUrl || null,
+          language: cleanLanguage,
         });
-        if (insertError) console.error('Audience registration error:', insertError);
+        if (insertError) {
+          // Graceful fallback for an older database that has not added the language column yet.
+          const { error: fallbackError } = await supabase.from('audience').insert({
+            event_id: APP_EVENT_ID,
+            nickname: cleanNickname,
+            session_id: sessionId,
+            photo_url: photoUrl || null,
+          });
+          if (fallbackError) console.error('Audience registration error:', fallbackError);
+        }
       }
     }
 
@@ -842,7 +753,7 @@ useEffect(() => {
 
   useEffect(() => {
     if (!supabase || !audienceSession?.sessionId) return;
-    const profile = getEngagementProfile(audienceVoteCount, audienceReactionCount);
+    const profile = getEngagementProfile(audienceVoteCount, audienceReactionCount, audienceSession.language || 'en');
     supabase.from('audience_memory_cards').upsert({
       event_id: APP_EVENT_ID,
       audience_id: audienceSession.sessionId,
@@ -850,7 +761,7 @@ useEffect(() => {
       photo_url: audienceSession.photoUrl || null,
       engagement_score: profile.score,
       engagement_tag: profile.tag,
-      snapshot: { votes: audienceVoteCount, reactions: audienceReactionCount },
+      snapshot: { votes: audienceVoteCount, reactions: audienceReactionCount, language: audienceSession.language || 'en' },
       updated_at: new Date().toISOString(),
     }, { onConflict: 'event_id,audience_id' }).then(({ error }) => {
       if (error) console.warn('Memory card sync skipped:', error.message);
@@ -868,9 +779,7 @@ useEffect(() => {
 
       <div className="bg-white/85 border-b border-sky-200/60 text-xs py-2 px-4 backdrop-blur sticky top-0 z-50 flex items-center justify-between flex-wrap gap-2 shadow-sm">
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 font-black text-sky-700"><CloudRain className="w-4 h-4" /><span>Music Night Live</span></div>
-          <span className="text-slate-400">|</span>
-          <span className="text-slate-500 font-mono text-[11px] hidden sm:inline">Event: <strong className="text-slate-700">{eventName}</strong></span>
+          <div className="flex items-center gap-1.5 font-black text-sky-700"><CloudRain className="w-4 h-4" /><span>Tofani Vayra 9</span></div>
         </div>
 
         <div className="flex items-center bg-white/80 p-0.5 rounded-lg border border-sky-200/80">
@@ -884,6 +793,7 @@ useEffect(() => {
       ) : currentRoute === '#/event' ? (
         <AudienceHome
           session={audienceSession}
+          language={audienceSession?.language || 'en'}
           nowPlaying={nowPlayingPerformance}
           supabaseInteractions={supabaseInteractions}
           supabaseVotes={supabaseVotes}
@@ -923,40 +833,80 @@ useEffect(() => {
 
 function AudienceLanding({ session, onJoin, onContinue }) {
   const [nickname, setNickname] = useState(session?.nickname || '');
+  const [language, setLanguage] = useState(session?.language || 'en');
   const [photoFile, setPhotoFile] = useState(null);
+  const t = (key) => uiText(language, key);
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (nickname.trim()) onJoin(nickname.trim(), photoFile);
+    if (nickname.trim()) onJoin(nickname.trim(), language, photoFile);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-5 relative z-10">
       <div className="w-full max-w-md">
-        <div className="bg-white/82 border border-sky-200 rounded-3xl p-7 shadow-2xl text-center backdrop-blur-xl">
-          <div className="w-20 h-20 mx-auto rounded-3xl bg-sky-100 border border-sky-200 flex items-center justify-center mb-5"><CloudRain className="w-10 h-10 text-sky-600" /></div>
-          <p className="text-xs uppercase tracking-[0.25em] text-sky-700 font-black mb-2">Welcome to</p>
+        <div className="bg-white/88 border border-sky-200 rounded-3xl p-7 shadow-2xl text-center backdrop-blur-xl">
+          <div className="w-20 h-20 mx-auto rounded-3xl bg-sky-100 border border-sky-200 flex items-center justify-center mb-5">
+            <CloudRain className="w-10 h-10 text-sky-600" />
+          </div>
+          <p className="text-xs uppercase tracking-[0.25em] text-sky-700 font-black mb-2">{t('welcome')}</p>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">{EVENT_DISPLAY_NAME}</h1>
-          <p className="text-sm text-slate-500 mt-3 leading-relaxed">Experience the performances, interact with the stage, and keep your own rainy-night music memory.</p>
+          <p className="text-sm text-slate-500 mt-3 leading-relaxed">{t('experience')}</p>
           <div className="h-px bg-sky-100 my-6" />
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="text-left"><label className="text-xs font-black text-slate-600 uppercase tracking-wider">Your Name</label><input type="text" value={nickname} onChange={(event) => setNickname(event.target.value)} placeholder="Enter your name" className="w-full mt-2 bg-white border border-sky-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-300 transition" maxLength={30} autoComplete="off" /></div>
-            <div className="text-left"><label className="text-xs font-black text-slate-600 uppercase tracking-wider">Photo for your memory card <span className="normal-case text-slate-400">(optional)</span></label><input type="file" accept="image/*" onChange={(event) => setPhotoFile(event.target.files?.[0] || null)} className="w-full mt-2 text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-100 file:px-3 file:py-2 file:text-xs file:font-black file:text-sky-700" /></div>
-            <button type="submit" disabled={!nickname.trim()} className="w-full bg-sky-600 hover:bg-sky-500 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl py-3.5 font-black text-sm transition flex items-center justify-center gap-2">Join {EVENT_DISPLAY_NAME} <ArrowRight className="w-4 h-4" /></button>
-          </form>
-          {session?.nickname && <button onClick={onContinue} className="w-full mt-3 bg-white hover:bg-sky-50 text-slate-600 rounded-xl py-3 text-sm font-bold transition border border-sky-200">Continue as {session.nickname}</button>}
-          <div className="mt-7 flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest text-slate-400"><Radio className="w-3 h-3" /> Live Event <span>•</span> Audience Experience</div>
-        </div>
-        
-        <p className="text-center text-[10px] text-slate-400 mt-5">Made by - Suhani Gaurav Joshi</p>
 
+          <form onSubmit={handleSubmit} className="space-y-4 text-left">
+            <div>
+              <label className="text-xs font-black text-slate-600 uppercase tracking-wider">{t('chooseLanguage')}</label>
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                {LANGUAGE_OPTIONS.map((item) => (
+                  <button
+                    key={item.code}
+                    type="button"
+                    onClick={() => setLanguage(item.code)}
+                    className={`rounded-xl border px-2 py-3 text-sm font-black transition ${language === item.code ? 'bg-sky-600 text-white border-sky-600 shadow-md' : 'bg-white text-slate-600 border-sky-200 hover:bg-sky-50'}`}
+                  >
+                    {item.native}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-slate-400 mt-2">{t('languageSaved')}</p>
+            </div>
+
+            <div>
+              <label className="text-xs font-black text-slate-600 uppercase tracking-wider">{t('yourName')}</label>
+              <input type="text" value={nickname} onChange={(event) => setNickname(event.target.value)} placeholder={t('enterName')} className="w-full mt-2 bg-white border border-sky-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-300 transition" maxLength={30} autoComplete="off" />
+            </div>
+
+            <div>
+              <label className="text-xs font-black text-slate-600 uppercase tracking-wider">{t('memoryPhoto')} <span className="normal-case text-slate-400">{t('optional')}</span></label>
+              <input type="file" accept="image/*" onChange={(event) => setPhotoFile(event.target.files?.[0] || null)} className="w-full mt-2 text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-100 file:px-3 file:py-2 file:text-xs file:font-black file:text-sky-700" />
+            </div>
+
+            <button type="submit" disabled={!nickname.trim()} className="w-full bg-sky-600 hover:bg-sky-500 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl py-3.5 font-black text-sm transition flex items-center justify-center gap-2">
+              {t('join')} {EVENT_DISPLAY_NAME} <ArrowRight className="w-4 h-4" />
+            </button>
+          </form>
+
+          {session?.nickname && (
+            <button onClick={onContinue} className="w-full mt-3 bg-white hover:bg-sky-50 text-slate-600 rounded-xl py-3 text-sm font-bold transition border border-sky-200">
+              {t('continueAs')} {session.nickname}
+            </button>
+          )}
+
+          <div className="mt-7 flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest text-slate-400">
+            <Radio className="w-3 h-3" /> {t('liveEvent')} <span>•</span> {t('audienceExperience')}
+          </div>
+        </div>
+        <p className="text-center text-[14px] text-slate-600 mt-5">{t('watchLine')}</p>
       </div>
     </div>
   );
 }
 
-function AudienceHome({ session, nowPlaying, supabaseInteractions, supabaseVotes, supabaseReactions, people, audienceProfile, onAudiencePhotoUpload, onChangeNickname }) {
+function AudienceHome({ session, language = 'en', nowPlaying, supabaseInteractions, supabaseVotes, supabaseReactions, people, audienceProfile, onAudiencePhotoUpload, onChangeNickname }) {
   const nickname = session?.nickname || 'Guest';
+  const lang = session?.language || language || 'en';
+  const t = (key) => uiText(lang, key);
   const [showPeopleModal, setShowPeopleModal] = useState(false);
   const [peopleTab, setPeopleTab] = useState('anchor');
   const [voteMessage, setVoteMessage] = useState('');
@@ -966,32 +916,35 @@ function AudienceHome({ session, nowPlaying, supabaseInteractions, supabaseVotes
   const currentPerformer = people.find((person) => person.category === 'performer' && person.name === nowPlaying?.performer) || null;
   const musicianPeople = people.filter((person) => person.category === 'musician');
   const anchorPeople = people.filter((person) => person.category === 'anchor');
-  const organizerPeople = people.filter((person) => person.category === 'organizer');
 
   const hasVoted = Boolean(liveInteraction && session?.sessionId && supabaseVotes.some((vote) => vote.interaction_id === liveInteraction.id && vote.audience_id === session.sessionId));
   const myReaction = nowPlaying && session?.sessionId ? supabaseReactions.find((reaction) => reaction.performance_id === nowPlaying.id && reaction.audience_id === session.sessionId)?.reaction : null;
   const myVotes = session?.sessionId ? supabaseVotes.filter((vote) => vote.audience_id === session.sessionId) : [];
   const myReactions = session?.sessionId ? supabaseReactions.filter((row) => row.audience_id === session.sessionId) : [];
-  const engagement = getEngagementProfile(myVotes.length, myReactions.length);
+  const engagement = getEngagementProfile(myVotes.length, myReactions.length, lang);
   const photoUrl = audienceProfile?.photo_url || session?.photoUrl || '';
 
   const handleVote = async (option) => {
     if (!supabase || !liveInteraction || !session?.sessionId || hasVoted) return;
-    setVoteMessage('Submitting…');
+    setVoteMessage(t('submitting'));
     const { error } = await supabase.from('interaction_votes').insert({ interaction_id: liveInteraction.id, audience_id: session.sessionId, selected_option: option });
     if (error) {
-      setVoteMessage(error.code === '23505' ? 'You already answered this one.' : `Vote failed: ${error.message}`);
+      setVoteMessage(error.code === '23505' ? t('alreadyAnswered') : `Vote failed: ${error.message}`);
       return;
     }
-    setVoteMessage(liveInteraction.type === 'guess_song' ? (liveInteraction.correct_option === option ? 'Correct! 🎉' : `Not quite — correct answer: ${liveInteraction.correct_option}`) : 'Vote recorded ✓');
+    if (liveInteraction.type === 'guess_song') {
+      setVoteMessage(liveInteraction.correct_option === option ? `${t('correct')} 🎉` : `${t('notQuite')}: ${liveInteraction.correct_option}`);
+    } else {
+      setVoteMessage(t('voteRecorded'));
+    }
   };
 
   const handleReaction = async (reaction) => {
     if (!supabase || !nowPlaying || !session?.sessionId || myReaction) return;
-    setReactionMessage('Sending…');
+    setReactionMessage(t('sending'));
     const { error } = await supabase.from('performance_reactions').insert({ performance_id: nowPlaying.id, audience_id: session.sessionId, reaction });
-    if (error) setReactionMessage(error.code === '23505' ? 'You already reacted to this performance.' : `Reaction failed: ${error.message}`);
-    else setReactionMessage('Reaction sent ✓');
+    if (error) setReactionMessage(error.code === '23505' ? t('alreadyReacted') : `Reaction failed: ${error.message}`);
+    else setReactionMessage(t('reactionSent'));
   };
 
   const interactionResults = liveInteraction ? (liveInteraction.options || []).map((option) => {
@@ -1008,12 +961,12 @@ function AudienceHome({ session, nowPlaying, supabaseInteractions, supabaseVotes
   };
 
   const handleDownloadCard = async () => {
-    const blob = await buildMemoryCardBlob({ name: nickname, photoUrl, score: engagement.score, tag: engagement.tag });
+    const blob = await buildMemoryCardBlob({ name: nickname, photoUrl, score: engagement.score, tag: engagement.tag, language: lang });
     downloadBlob(blob, `${EVENT_DISPLAY_NAME.replace(/\s+/g, '-')}-${nickname.replace(/\s+/g, '-')}-memory.png`);
   };
 
   const handleShareCard = async () => {
-    const blob = await buildMemoryCardBlob({ name: nickname, photoUrl, score: engagement.score, tag: engagement.tag });
+    const blob = await buildMemoryCardBlob({ name: nickname, photoUrl, score: engagement.score, tag: engagement.tag, language: lang });
     const file = new File([blob], `${EVENT_DISPLAY_NAME.replace(/\s+/g, '-')}-memory.png`, { type: 'image/png' });
     try {
       if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
@@ -1029,35 +982,34 @@ function AudienceHome({ session, nowPlaying, supabaseInteractions, supabaseVotes
   return (
     <>
       <div className="max-w-md mx-auto p-4 pb-20 space-y-5 relative z-10">
-        <div className="bg-white/82 border border-sky-200 rounded-2xl p-4 backdrop-blur shadow-md flex items-center justify-between"><div><span className="text-[11px] font-black text-slate-400 uppercase tracking-wider block">Audience Member</span><h2 className="text-lg font-black text-slate-900">Good evening, {nickname} 👋</h2></div><button onClick={onChangeNickname} className="text-xs text-sky-700 hover:text-sky-900 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-200 font-bold transition">Change</button></div>
-
-        <div className="bg-white/86 border border-sky-200 rounded-3xl p-6 shadow-2xl relative overflow-hidden text-center">
-          <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-sky-200/40 rounded-full blur-2xl pointer-events-none" />
-          <div className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-widest text-sky-700 bg-sky-100 px-3.5 py-1 rounded-full border border-sky-200 mb-4"><CloudRain className="w-4 h-4" /> Now Playing</div>
-          {nowPlaying ? <div className="space-y-4"><h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight">🎤 {nowPlaying.title}</h1><p className="text-xl text-sky-700 font-black">{nowPlaying.performer}</p>{currentPerformer && <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">{currentPerformer.intro}</p>}<div className="pt-1 flex justify-center items-center gap-1"><span className="w-1.5 h-4 bg-sky-500 rounded-full animate-bounce" /><span className="w-1.5 h-6 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.2s]" /><span className="w-1.5 h-3 bg-cyan-500 rounded-full animate-bounce [animation-delay:0.4s]" /></div></div> : <div className="py-6"><Radio className="w-10 h-10 text-slate-300 mx-auto mb-2 animate-pulse" /><p className="text-slate-500 text-sm font-bold">Intermission / Preparing Next Act</p></div>}
+        <div className="bg-white/88 border border-sky-200 rounded-2xl p-4 backdrop-blur shadow-md flex items-center justify-between">
+          <div><span className="text-[11px] font-black text-slate-400 uppercase tracking-wider block">{t('audienceMember')}</span><h2 className="text-lg font-black text-slate-900">{uiTextWithName(lang, 'goodEvening', nickname)}</h2></div>
+          <button onClick={onChangeNickname} className="text-xs text-sky-700 hover:text-sky-900 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-200 font-bold transition">{t('change')}</button>
         </div>
 
-        {nowPlaying && currentPerformer && <PersonFeatureCard title="Know the Performer" person={currentPerformer} onClick={() => openPeople('performer')} />}
+        <div className="bg-white/88 border border-sky-200 rounded-3xl p-6 shadow-2xl relative overflow-hidden text-center">
+          <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-sky-200/40 rounded-full blur-2xl pointer-events-none" />
+          <div className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-widest text-sky-700 bg-sky-100 px-3.5 py-1 rounded-full border border-sky-200 mb-4"><CloudRain className="w-4 h-4" /> {t('nowPlaying')}</div>
+          {nowPlaying ? <div className="space-y-4"><h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight">🎤 {nowPlaying.title}</h1><p className="text-xl text-sky-700 font-black">{nowPlaying.performer}</p>{currentPerformer && <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">{currentPerformer.intro}</p>}<div className="pt-1 flex justify-center items-center gap-1"><span className="w-1.5 h-4 bg-sky-500 rounded-full animate-bounce" /><span className="w-1.5 h-6 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.2s]" /><span className="w-1.5 h-3 bg-cyan-500 rounded-full animate-bounce [animation-delay:0.4s]" /></div></div> : <div className="py-6"><Radio className="w-10 h-10 text-slate-300 mx-auto mb-2 animate-pulse" /><p className="text-slate-500 text-sm font-bold">{t('intermission')}</p></div>}
+        </div>
 
-        {liveInteraction && <div className="bg-white/84 border border-emerald-200 rounded-3xl p-5 shadow-xl"><div className="flex items-center justify-between mb-2"><div className="inline-flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-widest text-emerald-700"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Live Interaction</div>{hasVoted && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}</div><h3 className="text-lg font-black text-slate-900">{liveInteraction.question || liveInteraction.title}</h3><p className="text-xs text-slate-500 mt-1">{liveInteraction.type === 'guess_song' ? 'Guess the song' : 'Tap one option'}</p><div className="space-y-2 mt-4">{interactionResults.map(({ option, votes, percentage }) => <button key={option} disabled={hasVoted} onClick={() => handleVote(option)} className={`w-full relative overflow-hidden border rounded-xl px-3 py-3 text-left transition ${hasVoted ? 'border-slate-200 bg-slate-50' : 'border-slate-200 hover:border-emerald-300 bg-white'}`}><div className="absolute inset-y-0 left-0 bg-emerald-100/70" style={{ width: hasVoted ? `${percentage}%` : '0%' }} /><div className="relative flex items-center justify-between gap-3"><span className="text-sm text-slate-800 font-bold">{option}</span>{hasVoted && <span className="text-xs font-black text-emerald-700">{percentage}%</span>}</div>{hasVoted && <div className="relative mt-1 text-[10px] text-slate-500">{votes} vote{votes === 1 ? '' : 's'}</div>}</button>)}</div>{voteMessage && <p className="text-xs text-emerald-700 mt-3 font-bold">{voteMessage}</p>}</div>}
+        {nowPlaying && currentPerformer && <PersonFeatureCard title={t('knowPerformer')} person={currentPerformer} buttonText={t('knowMore')} onClick={() => openPeople('performer')} />}
 
-        {nowPlaying && <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-xl"><div className="flex items-center justify-between"><div><h3 className="text-sm font-black text-slate-900">React to the performance</h3><p className="text-[11px] text-slate-500 mt-1">One reaction per performance</p></div><Heart className="w-5 h-5 text-pink-500" /></div><div className="grid grid-cols-4 gap-2 mt-4">{performanceReactionCounts.map(({ reaction, count }) => <button key={reaction} disabled={Boolean(myReaction)} onClick={() => handleReaction(reaction)} className={`rounded-2xl py-3 border transition ${myReaction === reaction ? 'bg-pink-100 border-pink-300' : 'bg-white border-slate-200 hover:border-sky-300'}`}><div className="text-xl">{reaction}</div><div className="text-[10px] text-slate-500 mt-1">{count}</div></button>)}</div>{reactionMessage && <p className="text-xs text-pink-700 mt-3 font-bold">{reactionMessage}</p>}</div>}
+        {liveInteraction && <div className="bg-white/86 border border-emerald-200 rounded-3xl p-5 shadow-xl"><div className="flex items-center justify-between mb-2"><div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-700"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> {t('liveInteraction')}</div>{hasVoted && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}</div><h3 className="text-lg font-black text-slate-900">{liveInteraction.question || liveInteraction.title}</h3><p className="text-xs text-slate-500 mt-1">{liveInteraction.type === 'guess_song' ? t('guessSong') : t('tapOne')}</p><div className="space-y-2 mt-4">{interactionResults.map(({ option, votes, percentage }) => <button key={option} disabled={hasVoted} onClick={() => handleVote(option)} className={`w-full relative overflow-hidden border rounded-xl px-3 py-3 text-left transition ${hasVoted ? 'border-slate-200 bg-slate-50' : 'border-slate-200 hover:border-emerald-300 bg-white'}`}>{hasVoted && <div className="absolute inset-y-0 left-0 bg-emerald-100" style={{ width: `${percentage}%` }} />}<div className="relative flex items-center justify-between gap-3"><span className="text-sm text-slate-800 font-bold">{option}</span>{hasVoted && <span className="text-xs font-black text-emerald-700">{percentage}%</span>}</div>{hasVoted && <div className="relative mt-1 text-[10px] text-slate-500">{votes} {t('votes')}</div>}</button>)}</div>{voteMessage && <p className="text-xs text-emerald-700 mt-3 font-bold">{voteMessage}</p>}</div>}
 
-        <div className="bg-white/84 border border-indigo-200 rounded-3xl p-5 shadow"><div className="flex items-center justify-between mb-4"><div><h3 className="text-sm font-black text-slate-900">Meet the Performers</h3><p className="text-[11px] text-slate-500 mt-1">The voices performing live tonight</p></div><Music className="w-5 h-5 text-indigo-600" /></div><div className="grid grid-cols-2 gap-3">{people.filter((person) => person.category === 'performer').map((person) => <PersonMiniPhotoCard key={person.id || person.name} person={person} />)}</div><button onClick={() => openPeople('performer')} className="w-full mt-4 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 border border-indigo-200 rounded-xl py-2.5 text-xs font-black transition">Know More: Performers</button></div>
+        {nowPlaying && <div className="bg-white/86 border border-sky-200 rounded-3xl p-5 shadow-xl"><div className="flex items-center justify-between"><div><h3 className="text-sm font-black text-slate-900">{t('reactPerformance')}</h3><p className="text-[11px] text-slate-500 mt-1">{t('oneReaction')}</p></div><Heart className="w-5 h-5 text-pink-500" /></div><div className="grid grid-cols-4 gap-2 mt-4">{performanceReactionCounts.map(({ reaction, count }) => <button key={reaction} disabled={Boolean(myReaction)} onClick={() => handleReaction(reaction)} className={`rounded-2xl py-3 border transition ${myReaction === reaction ? 'bg-pink-50 border-pink-300' : 'bg-white border-slate-200 hover:border-sky-300'}`}><div className="text-xl">{reaction}</div><div className="text-[10px] text-slate-500 mt-1">{count}</div></button>)}</div>{reactionMessage && <p className="text-xs text-pink-600 mt-3 font-bold">{reactionMessage}</p>}</div>}
 
-        <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><div className="flex items-center justify-between mb-4"><div><h3 className="text-sm font-black text-slate-900">Know the Musicians</h3><p className="text-[11px] text-slate-500 mt-1">The people creating the live sound tonight</p></div><Volume2 className="w-5 h-5 text-sky-600" /></div><div className="grid grid-cols-2 gap-3">{musicianPeople.map((person) => <PersonMiniPhotoCard key={person.id || person.name} person={person} />)}</div><button onClick={() => openPeople('musician')} className="w-full mt-4 bg-sky-100 hover:bg-sky-200 text-sky-800 border border-sky-200 rounded-xl py-2.5 text-xs font-black transition">See musician details</button></div>
+        <div className="bg-white/86 border border-sky-200 rounded-3xl p-5"><div className="flex items-center justify-between mb-4"><div><h3 className="text-sm font-black text-slate-900">{t('knowMusicians')}</h3><p className="text-[11px] text-slate-500 mt-1">{t('peopleCreatingSound')}</p></div><Volume2 className="w-5 h-5 text-sky-700" /></div><div className="grid grid-cols-2 gap-3">{musicianPeople.map((person) => <PersonMiniPhotoCard key={person.id || person.name} person={person} />)}</div><button onClick={() => openPeople('musician')} className="w-full mt-4 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl py-2.5 text-xs font-black transition">{t('seeMusicianDetails')}</button></div>
 
-        <div className="bg-white/84 border border-indigo-200 rounded-3xl p-5 shadow"><div className="flex items-center justify-between"><div><h3 className="text-sm font-black text-slate-900">Anchors & Organising Team</h3><p className="text-[11px] text-slate-500 mt-1">Meet the people making the evening happen</p></div><Sparkles className="w-5 h-5 text-indigo-600" /></div><div className="grid grid-cols-2 gap-3 mt-4">{[...anchorPeople, ...organizerPeople].map((person) => <PersonMiniPhotoCard key={person.id || person.name} person={person} />)}</div><button onClick={() => openPeople('anchor')} className="w-full mt-4 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 border border-indigo-200 rounded-xl py-2.5 text-xs font-black transition">Know More: Anchors & Team</button></div>
+        <div className="bg-white/86 border border-sky-200 rounded-3xl p-5"><div className="flex items-center justify-between"><div><h3 className="text-sm font-black text-slate-900">{t('anchorsTeam')}</h3><p className="text-[11px] text-slate-500 mt-1">{t('meetPeople')}</p></div><Sparkles className="w-5 h-5 text-sky-700" /></div><div className="grid grid-cols-2 gap-3 mt-4">{anchorPeople.slice(0, 2).map((person) => <PersonMiniPhotoCard key={person.id || person.name} person={person} />)}</div><button onClick={() => openPeople('anchor')} className="w-full mt-4 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl py-2.5 text-xs font-black transition">{t('knowAnchorsTeam')}</button></div>
 
-        <div className="bg-white/90 border border-sky-200 rounded-3xl p-5 shadow-xl"><div className="flex items-center justify-between"><div><div className="text-xs font-black uppercase tracking-widest text-sky-700 flex items-center gap-2"><Zap className="w-4 h-4" /> Your Memory Card</div><h3 className="text-xl font-black text-slate-900 mt-2">{engagement.tag}</h3><p className="text-xs text-slate-500 mt-1">Built from your live participation tonight.</p></div><div className="text-3xl font-black text-sky-700">{engagement.score}%</div></div><div className="h-3 rounded-full bg-slate-200 mt-4 overflow-hidden"><div className="h-full bg-gradient-to-r from-sky-500 to-cyan-400 rounded-full" style={{ width: `${engagement.score}%` }} /></div><div className="mt-4 rounded-2xl border border-sky-200 bg-sky-50 p-3 flex items-center gap-3"><div className="w-14 h-14 rounded-xl overflow-hidden bg-sky-100 border border-sky-200 flex items-center justify-center text-xl text-sky-700">{photoUrl ? <img src={photoUrl} alt={nickname} className="w-full h-full object-cover" /> : nickname.charAt(0).toUpperCase()}</div><div className="flex-1"><p className="text-xs text-slate-400">Memory card name</p><p className="text-sm font-black text-slate-900">{nickname}</p>{!photoUrl && <p className="text-[10px] text-slate-400 mt-1">Add a photo for a personal memory card.</p>}</div>{!photoUrl && <label className="cursor-pointer text-[10px] font-black text-sky-700 bg-white border border-sky-200 rounded-lg px-2 py-1.5"><Camera className="w-3 h-3 inline mr-1" /> Add<input type="file" accept="image/*" className="hidden" onChange={(event) => onAudiencePhotoUpload(event.target.files?.[0])} /></label>}</div><div className="flex gap-2 mt-3"><button onClick={handleDownloadCard} className="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-black text-xs rounded-xl py-2.5 flex items-center justify-center gap-2"><Download className="w-4 h-4" /> Download</button><button onClick={handleShareCard} className="flex-1 bg-white text-slate-700 font-black text-xs rounded-xl py-2.5 flex items-center justify-center gap-2 border border-slate-200"><Share2 className="w-4 h-4" /> Share</button></div></div>
+        <div className="bg-white/88 border border-sky-200 rounded-3xl p-5"><div className="flex items-center justify-between"><div><div className="text-xs font-black uppercase tracking-widest text-sky-700 flex items-center gap-2"><Zap className="w-4 h-4" /> {t('yourMemory')}</div><h3 className="text-xl font-black text-slate-900 mt-2">{engagement.tag}</h3><p className="text-xs text-slate-500 mt-1">{t('builtFromParticipation')}</p></div><div className="text-3xl font-black text-sky-700">{engagement.score}%</div></div><div className="h-3 rounded-full bg-slate-100 mt-4 overflow-hidden"><div className="h-full bg-sky-500 rounded-full" style={{ width: `${engagement.score}%` }} /></div><div className="mt-4 rounded-2xl border border-sky-100 bg-sky-50 p-3 flex items-center gap-3"><div className="w-14 h-14 rounded-xl overflow-hidden bg-white border border-sky-100 flex items-center justify-center text-xl text-sky-700">{photoUrl ? <img src={photoUrl} alt={nickname} className="w-full h-full object-cover" /> : nickname.charAt(0).toUpperCase()}</div><div className="flex-1"><p className="text-xs text-slate-400">{t('memoryPhoto')}</p><p className="text-sm font-black text-slate-900">{nickname}</p></div>{!photoUrl && <label className="cursor-pointer text-[10px] font-black text-sky-700 bg-white border border-sky-200 rounded-lg px-2 py-1.5"><Camera className="w-3 h-3 inline mr-1" />{t('addPhoto')}<input type="file" accept="image/*" className="hidden" onChange={(event) => onAudiencePhotoUpload(event.target.files?.[0])} /></label>}</div><div className="flex gap-2 mt-3"><button onClick={handleDownloadCard} className="flex-1 bg-sky-600 text-white font-black text-xs rounded-xl py-2.5 flex items-center justify-center gap-2"><Download className="w-4 h-4" /> {t('download')}</button><button onClick={handleShareCard} className="flex-1 bg-indigo-600 text-white font-black text-xs rounded-xl py-2.5 flex items-center justify-center gap-2"><Share2 className="w-4 h-4" /> {t('share')}</button></div></div>
 
-        <div className="bg-white/84 border border-sky-200 rounded-3xl p-5"><div className="flex items-center gap-2 text-sky-700 text-xs font-black uppercase tracking-widest"><Zap className="w-4 h-4" /> Your Music Night</div><div className="grid grid-cols-2 gap-3 mt-4"><StatBox label="Votes" value={myVotes.length} /><StatBox label="Reactions" value={myReactions.length} /></div></div>
-        <div className="text-center text-[10px] uppercase font-black tracking-widest text-slate-400 pt-2">WATCH → EXPERIENCE → PARTICIPATE → REMEMBER</div>
-      
-      <div className="text-center text-[10px] uppercase font-black tracking-widest text-slate-400 pt-2">Made by - Suhani Gaurav Joshi</div>
-    </div>
+        <div className="bg-white/86 border border-sky-200 rounded-3xl p-5"><div className="flex items-center gap-2 text-sky-700 text-xs font-black uppercase tracking-widest"><Zap className="w-4 h-4" /> {t('yourMusicNight')}</div><div className="grid grid-cols-2 gap-3 mt-4"><StatBox label={t('votes')} value={myVotes.length} /><StatBox label={t('reactions')} value={myReactions.length} /></div></div>
+        <div className="text-center text-[12px] uppercase font-black tracking-widest text-slate-400 pt-2">{t('watchLine')}</div>
+      </div>
 
-      {showPeopleModal && <EventPeopleModal people={people} initialTab={peopleTab} currentPerformer={currentPerformer} onClose={() => setShowPeopleModal(false)} />}
+      {showPeopleModal && <EventPeopleModal people={people} initialTab={peopleTab} currentPerformer={currentPerformer} language={lang} onClose={() => setShowPeopleModal(false)} />}
     </>
   );
 }
@@ -1078,21 +1030,23 @@ function instrumentEmoji(instrument) {
   return { Guitar: '🎸', Keyboard: '🎹', Drums: '🥁', Bass: '🎸', Violin: '🎻', Flute: '🪈', Tabla: '🥁' }[instrument] || '🎵';
 }
 
-function EventPeopleModal({ people, currentPerformer, initialTab, onClose }) {
+function EventPeopleModal({ people, currentPerformer, initialTab, language = 'en', onClose }) {
   const [tab, setTab] = useState(initialTab || 'performer');
+  const t = (key) => uiText(language, key);
   const groups = {
-    performer: { title: 'Performers', icon: '🎤', people: people.filter((person) => person.category === 'performer') },
-    musician: { title: 'Live Musicians', icon: '🎼', people: people.filter((person) => person.category === 'musician') },
-    anchor: { title: 'Anchors / MoC', icon: '🎙️', people: people.filter((person) => person.category === 'anchor') },
-    organizer: { title: 'Organising Team', icon: '✨', people: people.filter((person) => person.category === 'organizer') },
+    performer: { title: t('performers'), icon: '🎤', people: people.filter((person) => person.category === 'performer') },
+    musician: { title: t('liveMusicians'), icon: '🎼', people: people.filter((person) => person.category === 'musician') },
+    anchor: { title: t('anchors'), icon: '🎙️', people: people.filter((person) => person.category === 'anchor') },
+    organizer: { title: t('organisingTeam'), icon: '✨', people: people.filter((person) => person.category === 'organizer') },
   };
   const currentGroup = groups[tab] || groups.performer;
 
-  return <div className="fixed inset-0 z-[100] bg-sky-950/30 backdrop-blur-md flex items-center justify-center p-4"><div className="bg-white border border-sky-200 rounded-3xl w-full max-w-md max-h-[90vh] overflow-hidden shadow-2xl"><div className="p-4 border-b border-sky-100 flex items-center justify-between"><div><p className="text-[10px] uppercase tracking-widest text-sky-700 font-black">{EVENT_DISPLAY_NAME}</p><h2 className="text-lg font-black text-slate-900">Know More</h2></div><button onClick={onClose} className="p-2 rounded-xl bg-sky-50 text-slate-400 hover:text-slate-700"><X className="w-5 h-5" /></button></div><div className="flex gap-2 p-3 overflow-x-auto border-b border-sky-100">{Object.entries(groups).map(([key, group]) => <button key={key} onClick={() => setTab(key)} className={`whitespace-nowrap px-3 py-2 rounded-xl text-[11px] font-black border ${tab === key ? 'bg-sky-600 text-white border-sky-500' : 'bg-white text-slate-500 border-slate-200'}`}>{group.icon} {group.title}</button>)}</div><div className="overflow-y-auto max-h-[calc(90vh-130px)] p-4 space-y-4">{tab === 'performer' && currentPerformer && <div className="mb-2"><p className="text-[9px] uppercase tracking-widest text-sky-700 font-black mb-2">Performing now</p><PersonDetailCard person={currentPerformer} /></div>}{currentGroup.people.length === 0 ? <div className="py-10 text-center text-slate-400 text-xs">No team members added yet.</div> : currentGroup.people.map((person) => <PersonDetailCard key={person.id || person.name} person={person} />)}</div></div></div>;
+  return <div className="fixed inset-0 z-[100] bg-sky-950/30 backdrop-blur-md flex items-center justify-center p-4"><div className="bg-white border border-sky-200 rounded-3xl w-full max-w-md max-h-[90vh] overflow-hidden shadow-2xl"><div className="p-4 border-b border-sky-100 flex items-center justify-between"><div><p className="text-[10px] uppercase tracking-widest text-sky-700 font-black">{EVENT_DISPLAY_NAME}</p><h2 className="text-lg font-black text-slate-900">{t('knowMoreTitle')}</h2></div><button onClick={onClose} className="p-2 rounded-xl bg-sky-50 text-slate-400 hover:text-slate-700"><X className="w-5 h-5" /></button></div><div className="flex gap-2 p-3 overflow-x-auto border-b border-sky-100">{Object.entries(groups).map(([key, group]) => <button key={key} onClick={() => setTab(key)} className={`whitespace-nowrap px-3 py-2 rounded-xl text-[11px] font-black border ${tab === key ? 'bg-sky-600 text-white border-sky-500' : 'bg-white text-slate-500 border-slate-200'}`}>{group.icon} {group.title}</button>)}</div><div className="overflow-y-auto max-h-[calc(90vh-130px)] p-4 space-y-4">{tab === 'performer' && currentPerformer && <div className="mb-2"><p className="text-[9px] uppercase tracking-widest text-sky-700 font-black mb-2">{t('performingNow')}</p><PersonDetailCard person={currentPerformer} language={language} /></div>}{currentGroup.people.length === 0 ? <div className="py-10 text-center text-slate-400 text-xs">{t('noTeam')}</div> : currentGroup.people.map((person) => <PersonDetailCard key={person.id || person.name} person={person} language={language} />)}</div></div></div>;
 }
 
-function PersonDetailCard({ person }) {
-  return <div className="bg-sky-50/80 border border-sky-100 rounded-2xl p-4"><div className="flex items-start gap-3"><div className="w-16 h-16 rounded-xl bg-white border border-sky-200 flex items-center justify-center text-xl overflow-hidden">{person.photo ? <img src={person.photo} alt={person.name} className="w-full h-full object-cover" /> : (person.category === 'musician' ? instrumentEmoji(person.instrument) : person.category === 'anchor' ? '🎙️' : person.category === 'organizer' ? '✨' : '🎤')}</div><div className="flex-1"><h4 className="text-sm font-black text-slate-900">{person.name}</h4><p className="text-xs text-sky-700 font-bold">{person.role || person.instrument}</p></div></div><p className="text-xs text-slate-500 leading-relaxed mt-3">{person.intro || 'Part of the team behind the evening.'}</p><div className="grid grid-cols-2 gap-2 mt-3"><InfoBox label="Age" value={person.age || '—'} /><InfoBox label="Work" value={person.work || '—'} /><div className="col-span-2"><InfoBox label="Workplace" value={person.workplace || '—'} /></div></div><div className="mt-2"><InfoBox label="Achievements" value={person.achievements || '—'} /></div></div>;
+function PersonDetailCard({ person, language = 'en' }) {
+  const t = (key) => uiText(language, key);
+  return <div className="bg-sky-50/80 border border-sky-100 rounded-2xl p-4"><div className="flex items-start gap-3"><div className="w-16 h-16 rounded-xl bg-white border border-sky-200 flex items-center justify-center text-xl overflow-hidden">{person.photo ? <img src={person.photo} alt={person.name} className="w-full h-full object-cover" /> : (person.category === 'musician' ? instrumentEmoji(person.instrument) : person.category === 'anchor' ? '🎙️' : person.category === 'organizer' ? '✨' : '🎤')}</div><div className="flex-1"><h4 className="text-sm font-black text-slate-900">{person.name}</h4><p className="text-xs text-sky-700 font-bold">{person.role || person.instrument}</p></div></div><p className="text-xs text-slate-500 leading-relaxed mt-3">{person.intro || t('partOfTeam')}</p><div className="grid grid-cols-2 gap-2 mt-3"><InfoBox label={t('age')} value={person.age || '—'} /><InfoBox label={t('work')} value={person.work || '—'} /><div className="col-span-2"><InfoBox label={t('workplace')} value={person.workplace || '—'} /></div></div><div className="mt-2"><InfoBox label={t('achievements')} value={person.achievements || '—'} /></div></div>;
 }
 
 function InfoBox({ label, value }) {
@@ -1317,7 +1271,7 @@ function TextAreaInput({ label, value, setValue, placeholder }) {
 function AdminAudienceTab({ audience, audienceCount, supabaseVotes, supabaseReactions, supabaseInteractions }) {
   const audienceMap = useMemo(() => new Map(audience.map((member) => [member.session_id, member])), [audience]);
 
-  return <div className="space-y-6"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="flex items-center justify-between"><h3 className="text-sm font-black text-slate-900 flex items-center gap-2"><Users className="w-4 h-4 text-sky-700" /> Live Audience Directory ({audienceCount})</h3><span className="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">Live sync</span></div><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase font-black text-[10px]"><th className="pb-3 pl-2">Audience</th><th className="pb-3">Joined</th><th className="pb-3">Votes</th><th className="pb-3">Reactions</th><th className="pb-3 pr-2 text-right">Status</th></tr></thead><tbody className="divide-y divide-slate-200">{audience.length ? audience.map((member) => { const votes = supabaseVotes.filter((vote) => vote.audience_id === member.session_id).length; const reactions = supabaseReactions.filter((reaction) => reaction.audience_id === member.session_id).length; return <tr key={member.id || member.session_id}><td className="py-3 pl-2 font-black text-slate-900"><div className="flex items-center gap-2"><div className="w-9 h-9 rounded-full overflow-hidden bg-sky-100 text-sky-700 border border-sky-200 flex items-center justify-center font-black text-xs">{member.photo_url ? <img src={member.photo_url} alt={member.nickname} className="w-full h-full object-cover" /> : (member.nickname?.[0]?.toUpperCase() || 'A')}</div><div><div>{member.nickname}</div><div className="text-[9px] font-mono text-slate-400">{member.session_id?.slice(0, 12)}...</div></div></div></td><td className="py-3 text-slate-500">{formatJoined(member.joined_at || member.created_at)}</td><td className="py-3 font-black text-sky-700">{votes}</td><td className="py-3 font-black text-pink-600">{reactions}</td><td className="py-3 pr-2 text-right"><span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />Active</span></td></tr>; }) : <tr><td colSpan="5" className="py-8 text-center text-slate-500">No audience members yet.</td></tr>}</tbody></table></div></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><h3 className="text-sm font-black text-slate-900">Audience Response Summary</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase text-[9px]"><th className="pb-3">Question</th><th className="pb-3">Audience</th><th className="pb-3">Answer</th><th className="pb-3">Time</th></tr></thead><tbody className="divide-y divide-slate-200">{supabaseInteractions.flatMap((interaction) => supabaseVotes.filter((vote) => vote.interaction_id === interaction.id).map((vote) => <tr key={vote.id}><td className="py-2 font-bold text-slate-800">{interaction.question}</td><td className="py-2 text-slate-600">{audienceMap.get(vote.audience_id)?.nickname || 'Unknown'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>))}</tbody></table></div></div></div>;
+  return <div className="space-y-6"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="flex items-center justify-between"><h3 className="text-sm font-black text-slate-900 flex items-center gap-2"><Users className="w-4 h-4 text-sky-700" /> Live Audience Directory ({audienceCount})</h3><span className="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">Live sync</span></div><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase font-black text-[10px]"><th className="pb-3 pl-2">Audience</th><th className="pb-3">Language</th><th className="pb-3">Joined</th><th className="pb-3">Votes</th><th className="pb-3">Reactions</th><th className="pb-3 pr-2 text-right">Status</th></tr></thead><tbody className="divide-y divide-slate-200">{audience.length ? audience.map((member) => { const votes = supabaseVotes.filter((vote) => vote.audience_id === member.session_id).length; const reactions = supabaseReactions.filter((reaction) => reaction.audience_id === member.session_id).length; return <tr key={member.id || member.session_id}><td className="py-3 pl-2 font-black text-slate-900"><div className="flex items-center gap-2"><div className="w-9 h-9 rounded-full overflow-hidden bg-sky-100 text-sky-700 border border-sky-200 flex items-center justify-center font-black text-xs">{member.photo_url ? <img src={member.photo_url} alt={member.nickname} className="w-full h-full object-cover" /> : (member.nickname?.[0]?.toUpperCase() || 'A')}</div><div><div>{member.nickname}</div><div className="text-[9px] font-mono text-slate-400">{member.session_id?.slice(0, 12)}...</div></div></div></td><td className="py-3 text-slate-600">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || '—'}</td><td className="py-3 text-slate-500">{formatJoined(member.joined_at || member.created_at)}</td><td className="py-3 font-black text-sky-700">{votes}</td><td className="py-3 font-black text-pink-600">{reactions}</td><td className="py-3 pr-2 text-right"><span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />Active</span></td></tr>; }) : <tr><td colSpan="6" className="py-8 text-center text-slate-500">No audience members yet.</td></tr>}</tbody></table></div></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><h3 className="text-sm font-black text-slate-900">Audience Response Summary</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase text-[9px]"><th className="pb-3">Question</th><th className="pb-3">Audience</th><th className="pb-3">Answer</th><th className="pb-3">Time</th></tr></thead><tbody className="divide-y divide-slate-200">{supabaseInteractions.flatMap((interaction) => supabaseVotes.filter((vote) => vote.interaction_id === interaction.id).map((vote) => <tr key={vote.id}><td className="py-2 font-bold text-slate-800">{interaction.question}</td><td className="py-2 text-slate-600">{audienceMap.get(vote.audience_id)?.nickname || 'Unknown'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>))}</tbody></table></div></div></div>;
 }
 
 function formatJoined(value) {
@@ -1331,16 +1285,22 @@ function AdminInteractionsTab({ supabaseInteractions, supabaseVotes, supabaseAud
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['', '']);
   const [correctOption, setCorrectOption] = useState('');
+  const [performanceId, setPerformanceId] = useState('');
   const [saving, setSaving] = useState(false);
   const [selectedInteraction, setSelectedInteraction] = useState(null);
 
   const interactions = supabaseInteractions.filter((interaction) => ['poll', 'guess_song'].includes(interaction.type));
   const audienceMap = useMemo(() => new Map(supabaseAudience.map((member) => [member.session_id, member])), [supabaseAudience]);
   const performanceMap = useMemo(() => new Map(supabasePerformances.map((performance) => [performance.id, performance])), [supabasePerformances]);
+  const livePerformance = supabasePerformances.find((performance) => performance.status === 'playing') || null;
+
+  useEffect(() => {
+    if (!performanceId && livePerformance) setPerformanceId(livePerformance.id);
+  }, [performanceId, livePerformance]);
 
   const addOption = () => setOptions((current) => current.length < 4 ? [...current, ''] : current);
   const updateOption = (index, value) => setOptions((current) => current.map((option, optionIndex) => optionIndex === index ? value : option));
-  const reset = () => { setQuestion(''); setOptions(['', '']); setCorrectOption(''); setInteractionType('poll'); };
+  const reset = () => { setQuestion(''); setOptions(['', '']); setCorrectOption(''); setInteractionType('poll'); setPerformanceId(livePerformance?.id || ''); };
 
   const handleCreate = async () => {
     if (!supabase || saving) return;
@@ -1353,6 +1313,7 @@ function AdminInteractionsTab({ supabaseInteractions, supabaseVotes, supabaseAud
     setSaving(true);
     const { error } = await supabase.from('interactions').insert({
       event_id: APP_EVENT_ID,
+      performance_id: performanceId || null,
       type: interactionType,
       title: cleanQuestion,
       question: cleanQuestion,
@@ -1392,11 +1353,23 @@ function AdminInteractionsTab({ supabaseInteractions, supabaseVotes, supabaseAud
   const countVotes = (interactionId) => supabaseVotes.filter((vote) => vote.interaction_id === interactionId).length;
   const responseRows = selectedInteraction ? supabaseVotes.filter((vote) => vote.interaction_id === selectedInteraction.id) : [];
 
-  return <div className="space-y-6"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="flex flex-wrap items-start justify-between gap-3 mb-5"><div><h3 className="text-sm font-black text-slate-900">Create Live Interaction</h3><p className="text-xs text-slate-500 mt-1">Create a poll, make it live, and audience screens update within about 2 seconds.</p></div><span className="text-[10px] uppercase font-black text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-1 rounded-full">Live sync active</span></div><div className="flex gap-2 mb-4"><button onClick={() => { setInteractionType('poll'); setCorrectOption(''); }} className={`px-3 py-2 rounded-xl text-xs font-black border ${interactionType === 'poll' ? 'bg-sky-600 text-white border-sky-500' : 'bg-white text-slate-500 border-slate-200'}`}>Poll</button><button onClick={() => setInteractionType('guess_song')} className={`px-3 py-2 rounded-xl text-xs font-black border ${interactionType === 'guess_song' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-white text-slate-500 border-slate-200'}`}>Guess the Song</button></div><div className="flex flex-wrap gap-2 mb-5">{DEFAULT_INTERACTIONS.map((preset, index) => <button key={index} onClick={() => addDefault(preset)} className="bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-700 px-3 py-1.5 rounded-lg text-[10px] font-black">Use default {index + 1}</button>)}</div><div className="space-y-4"><FormInput label="Question" value={question} setValue={setQuestion} placeholder="Ask the audience..." required /><div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Options</label><div className="space-y-2">{options.map((option, index) => <input key={index} value={option} onChange={(event) => updateOption(index, event.target.value)} placeholder={`Option ${index + 1}`} className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-sky-500" />)}</div>{options.length < 4 && <button onClick={addOption} className="mt-3 text-xs font-black text-sky-700">+ Add Option</button>}</div>{interactionType === 'guess_song' && <div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Correct Answer</label><select value={correctOption} onChange={(event) => setCorrectOption(event.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800"><option value="">Select correct answer</option>{options.filter(Boolean).map((option) => <option key={option} value={option}>{option}</option>)}</select></div>}<button onClick={handleCreate} disabled={saving} className="bg-sky-600 hover:bg-sky-500 disabled:bg-slate-300 text-white font-black text-xs px-4 py-2.5 rounded-xl">{saving ? 'Creating…' : 'Create Interaction'}</button></div></div>
+  return <div className="space-y-6">
+    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-5"><div><h3 className="text-sm font-black text-slate-900">Create Live Interaction</h3><p className="text-xs text-slate-500 mt-1">Attach every question to a song/performance so future analytics stay useful.</p></div><span className="text-[10px] uppercase font-black text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-1 rounded-full">Live sync active</span></div>
+      <div className="flex gap-2 mb-4"><button onClick={() => { setInteractionType('poll'); setCorrectOption(''); }} className={`px-3 py-2 rounded-xl text-xs font-black border ${interactionType === 'poll' ? 'bg-sky-600 text-white border-sky-500' : 'bg-white text-slate-500 border-slate-200'}`}>Poll</button><button onClick={() => setInteractionType('guess_song')} className={`px-3 py-2 rounded-xl text-xs font-black border ${interactionType === 'guess_song' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-white text-slate-500 border-slate-200'}`}>Guess the Song</button></div>
+      <div className="flex flex-wrap gap-2 mb-5">{DEFAULT_INTERACTIONS.map((preset, index) => <button key={index} onClick={() => addDefault(preset)} className="bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-700 px-3 py-1.5 rounded-lg text-[10px] font-black">Use default {index + 1}</button>)}</div>
+      <div className="space-y-4">
+        <div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Related song / performer</label><select value={performanceId} onChange={(event) => setPerformanceId(event.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800"><option value="">General event interaction</option>{supabasePerformances.map((performance) => <option key={performance.id} value={performance.id}>{performance.title} • {performance.performer}</option>)}</select></div>
+        <FormInput label="Question" value={question} setValue={setQuestion} placeholder="Ask the audience..." required />
+        <div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Options</label><div className="space-y-2">{options.map((option, index) => <input key={index} value={option} onChange={(event) => updateOption(index, event.target.value)} placeholder={`Option ${index + 1}`} className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-sky-500" />)}</div>{options.length < 4 && <button onClick={addOption} className="mt-3 text-xs font-black text-sky-700">+ Add Option</button>}</div>
+        {interactionType === 'guess_song' && <div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Correct Answer</label><select value={correctOption} onChange={(event) => setCorrectOption(event.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800"><option value="">Select correct answer</option>{options.filter(Boolean).map((option) => <option key={option} value={option}>{option}</option>)}</select></div>}
+        <button onClick={handleCreate} disabled={saving} className="bg-sky-600 hover:bg-sky-500 disabled:bg-slate-300 text-white font-black text-xs px-4 py-2.5 rounded-xl">{saving ? 'Creating…' : 'Create Interaction'}</button>
+      </div>
+    </div>
 
-  <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="mb-5"><h3 className="text-sm font-black text-slate-900">Created Interactions + Percent Analysis</h3><p className="text-xs text-slate-500 mt-1">Every question stays in Supabase for future event planning.</p></div><div className="space-y-3">{interactions.length === 0 ? <p className="text-xs text-slate-500 text-center py-8">No interactions created yet.</p> : interactions.map((interaction) => { const isLive = interaction.status === 'live'; const total = countVotes(interaction.id); return <div key={interaction.id} className={`p-4 rounded-2xl border ${isLive ? 'bg-sky-50 border-sky-300' : 'bg-white border-slate-200'}`}><div className="flex items-start justify-between gap-4"><div className="flex-1"><div className="flex items-center gap-2"><span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{interaction.type === 'guess_song' ? 'Guess' : 'Poll'}</span>{isLive && <span className="text-[9px] uppercase font-black text-emerald-700">LIVE</span>}</div><h4 className="text-sm font-black text-slate-900 mt-2">{interaction.question}</h4><div className="space-y-2 mt-3">{(interaction.options || []).map((option) => { const votes = supabaseVotes.filter((vote) => vote.interaction_id === interaction.id && vote.selected_option === option).length; const percentage = total ? Math.round((votes / total) * 100) : 0; return <div key={option} className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs"><div><div className="flex justify-between"><span className="text-slate-600 font-bold">{option}</span><span className="text-sky-700 font-black">{percentage}%</span></div><div className="h-2 bg-slate-100 rounded-full mt-1 overflow-hidden"><div className="h-full bg-sky-500 rounded-full" style={{ width: `${percentage}%` }} /></div></div><span className="text-slate-400 font-bold">{votes}</span></div>; })}</div><p className="text-[10px] text-slate-400 mt-3">{total} total response{total === 1 ? '' : 's'}</p></div><div className="flex flex-col gap-2">{isLive ? <button onClick={() => handleStop(interaction.id)} className="bg-rose-50 text-rose-700 font-black text-xs px-3 py-1.5 rounded-xl border border-rose-200">Stop</button> : <button onClick={() => handleMakeLive(interaction.id)} className="bg-emerald-50 text-emerald-700 font-black text-xs px-3 py-1.5 rounded-xl border border-emerald-200">Make Live</button>}<button onClick={() => setSelectedInteraction(selectedInteraction?.id === interaction.id ? null : interaction)} className="bg-sky-50 text-sky-700 font-black text-xs px-3 py-1.5 rounded-xl border border-sky-200">{selectedInteraction?.id === interaction.id ? 'Hide Responses' : 'See Responses'}</button></div></div>{selectedInteraction?.id === interaction.id && <div className="mt-4 bg-white border border-sky-100 rounded-2xl p-3"><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">Audience Name</th><th className="pb-2">Answer</th><th className="pb-2">Time</th></tr></thead><tbody className="divide-y divide-slate-100">{responseRows.length ? responseRows.map((vote) => <tr key={vote.id}><td className="py-2 font-black text-slate-800">{audienceMap.get(vote.audience_id)?.nickname || 'Unknown audience'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>) : <tr><td colSpan="3" className="py-5 text-center text-slate-400">No responses yet.</td></tr>}</tbody></table></div></div>}</div>; })}</div></div>
+    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="mb-5"><h3 className="text-sm font-black text-slate-900">Created Interactions + Answer Analysis</h3><p className="text-xs text-slate-500 mt-1">Option counts and audience names update automatically from Supabase.</p></div><div className="space-y-3">{interactions.length === 0 ? <p className="text-xs text-slate-500 text-center py-8">No interactions created yet.</p> : interactions.map((interaction) => { const isLive = interaction.status === 'live'; const total = countVotes(interaction.id); const attachedPerformance = performanceMap.get(interaction.performance_id); return <div key={interaction.id} className={`p-4 rounded-2xl border ${isLive ? 'bg-sky-50 border-sky-300' : 'bg-white border-slate-200'}`}><div className="flex items-start justify-between gap-4"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{interaction.type === 'guess_song' ? 'Guess' : 'Poll'}</span>{isLive && <span className="text-[9px] uppercase font-black text-emerald-700">LIVE</span>}{attachedPerformance && <span className="text-[9px] uppercase font-black text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">{attachedPerformance.title} • {attachedPerformance.performer}</span>}</div><h4 className="text-sm font-black text-slate-900 mt-2">{interaction.question}</h4><div className="space-y-2 mt-3">{(interaction.options || []).map((option) => { const votes = supabaseVotes.filter((vote) => vote.interaction_id === interaction.id && vote.selected_option === option).length; const percentage = total ? Math.round((votes / total) * 100) : 0; return <div key={option} className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs"><div><div className="flex justify-between"><span className="text-slate-600 font-bold">{option}</span><span className="text-sky-700 font-black">{percentage}%</span></div><div className="h-2 bg-slate-100 rounded-full mt-1 overflow-hidden"><div className="h-full bg-sky-500 rounded-full" style={{ width: `${percentage}%` }} /></div></div><span className="text-slate-400 font-bold">{votes}</span></div>; })}</div><p className="text-[10px] text-slate-400 mt-3">{total} total response{total === 1 ? '' : 's'}</p></div><div className="flex flex-col gap-2">{isLive ? <button onClick={() => handleStop(interaction.id)} className="bg-rose-50 text-rose-700 font-black text-xs px-3 py-1.5 rounded-xl border border-rose-200">Stop</button> : <button onClick={() => handleMakeLive(interaction.id)} className="bg-emerald-50 text-emerald-700 font-black text-xs px-3 py-1.5 rounded-xl border border-emerald-200">Make Live</button>}<button onClick={() => setSelectedInteraction(selectedInteraction?.id === interaction.id ? null : interaction)} className="bg-sky-50 text-sky-700 font-black text-xs px-3 py-1.5 rounded-xl border border-sky-200">{selectedInteraction?.id === interaction.id ? 'Hide Responses' : 'See Responses'}</button></div></div>{selectedInteraction?.id === interaction.id && <div className="mt-4 bg-white border border-sky-100 rounded-2xl p-3"><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">Audience Name</th><th className="pb-2">Language</th><th className="pb-2">Answer</th><th className="pb-2">Time</th></tr></thead><tbody className="divide-y divide-slate-100">{responseRows.length ? responseRows.map((vote) => <tr key={vote.id}><td className="py-2 font-black text-slate-800">{audienceMap.get(vote.audience_id)?.nickname || 'Unknown audience'}</td><td className="py-2 text-slate-500">{LANGUAGE_OPTIONS.find((item) => item.code === audienceMap.get(vote.audience_id)?.language)?.native || '—'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>) : <tr><td colSpan="4" className="py-5 text-center text-slate-400">No responses yet.</td></tr>}</tbody></table></div></div>}</div>; })}</div></div>
 
-  <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="flex items-center justify-between mb-4"><div><h3 className="text-sm font-black text-slate-900">Reaction Log</h3><p className="text-xs text-slate-500 mt-1">Audience member + performance + reaction, stored for future planning.</p></div><Heart className="w-5 h-5 text-pink-600" /></div><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">Audience</th><th className="pb-2">Performance</th><th className="pb-2">Reaction</th><th className="pb-2">Time</th></tr></thead><tbody className="divide-y divide-slate-100">{supabaseReactions.length ? supabaseReactions.map((reaction) => <tr key={reaction.id}><td className="py-2 font-black text-slate-800">{audienceMap.get(reaction.audience_id)?.nickname || 'Unknown audience'}</td><td className="py-2 text-slate-600">{performanceMap.get(reaction.performance_id)?.title || reaction.performance_id}</td><td className="py-2 text-lg">{reaction.reaction}</td><td className="py-2 text-slate-400">{new Date(reaction.created_at).toLocaleTimeString()}</td></tr>) : <tr><td colSpan="4" className="py-5 text-center text-slate-400">No reactions yet.</td></tr>}</tbody></table></div></div>
+    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><h3 className="text-sm font-black text-slate-900">Reaction Data</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">Audience</th><th className="pb-2">Song / Performer</th><th className="pb-2">Reaction</th><th className="pb-2">Time</th></tr></thead><tbody className="divide-y divide-slate-100">{supabaseReactions.length ? supabaseReactions.map((reaction) => { const audience = audienceMap.get(reaction.audience_id); const performance = performanceMap.get(reaction.performance_id); return <tr key={reaction.id}><td className="py-2 font-black text-slate-800">{audience?.nickname || 'Unknown audience'}</td><td className="py-2 text-slate-600">{performance ? `${performance.title} • ${performance.performer}` : reaction.performance_id}</td><td className="py-2 text-lg">{reaction.reaction}</td><td className="py-2 text-slate-400">{new Date(reaction.created_at).toLocaleTimeString()}</td></tr>; }) : <tr><td colSpan="4" className="py-5 text-center text-slate-400">No reactions yet.</td></tr>}</tbody></table></div></div>
   </div>;
 }
 
@@ -1406,12 +1379,58 @@ function AdminAnalyticsTab({ supabasePerformances, supabaseInteractions, supabas
   const performanceIds = new Set(supabasePerformances.map((performance) => performance.id));
   const eventVotes = supabaseVotes.filter((vote) => interactionIds.has(vote.interaction_id));
   const eventReactions = supabaseReactions.filter((reaction) => performanceIds.has(reaction.performance_id));
+  const audienceMap = useMemo(() => new Map(supabaseAudience.map((member) => [member.session_id, member])), [supabaseAudience]);
+  const performanceMap = useMemo(() => new Map(supabasePerformances.map((performance) => [performance.id, performance])), [supabasePerformances]);
+  const interactionMap = useMemo(() => new Map(supabaseInteractions.map((interaction) => [interaction.id, interaction])), [supabaseInteractions]);
 
   const audienceEngagement = supabaseAudience.map((member) => {
     const votes = eventVotes.filter((vote) => vote.audience_id === member.session_id).length;
     const reactions = eventReactions.filter((reaction) => reaction.audience_id === member.session_id).length;
-    const profile = getEngagementProfile(votes, reactions);
+    const profile = getEngagementProfile(votes, reactions, member.language || 'en');
     return { ...member, votes, reactions, ...profile };
+  });
+
+  const interactionDataSheet = supabaseInteractions.flatMap((interaction) => {
+    const relatedPerformance = performanceMap.get(interaction.performance_id);
+    const totalResponses = eventVotes.filter((vote) => vote.interaction_id === interaction.id).length;
+    return (interaction.options || []).map((option) => {
+      const selected = eventVotes.filter((vote) => vote.interaction_id === interaction.id && vote.selected_option === option).length;
+      return {
+        performance: relatedPerformance ? `${relatedPerformance.title} • ${relatedPerformance.performer}` : 'General event',
+        question: interaction.question || interaction.title,
+        type: interaction.type,
+        option,
+        selected,
+        percentage: totalResponses ? Math.round((selected / totalResponses) * 100) : 0,
+        totalResponses,
+      };
+    });
+  });
+
+  const responseDataSheet = eventVotes.map((vote) => {
+    const interaction = interactionMap.get(vote.interaction_id);
+    const performance = interaction?.performance_id ? performanceMap.get(interaction.performance_id) : null;
+    const audience = audienceMap.get(vote.audience_id);
+    return {
+      performance: performance ? `${performance.title} • ${performance.performer}` : 'General event',
+      question: interaction?.question || interaction?.title || 'Unknown',
+      audience: audience?.nickname || 'Unknown audience',
+      language: LANGUAGE_OPTIONS.find((item) => item.code === audience?.language)?.native || '—',
+      answer: vote.selected_option,
+      time: new Date(vote.created_at).toLocaleString(),
+    };
+  });
+
+  const reactionDataSheet = eventReactions.map((reaction) => {
+    const performance = performanceMap.get(reaction.performance_id);
+    const audience = audienceMap.get(reaction.audience_id);
+    return {
+      performance: performance ? `${performance.title} • ${performance.performer}` : reaction.performance_id,
+      audience: audience?.nickname || 'Unknown audience',
+      language: LANGUAGE_OPTIONS.find((item) => item.code === audience?.language)?.native || '—',
+      reaction: reaction.reaction,
+      time: new Date(reaction.created_at).toLocaleString(),
+    };
   });
 
   const topPerformance = [...supabasePerformances].map((performance) => ({ ...performance, reactions: eventReactions.filter((reaction) => reaction.performance_id === performance.id).length })).sort((a, b) => b.reactions - a.reactions).slice(0, 5);
@@ -1430,7 +1449,10 @@ function AdminAnalyticsTab({ supabasePerformances, supabaseInteractions, supabas
       people_count: people.length,
       top_performances: topPerformance.map(({ id, title, performer, reactions }) => ({ id, title, performer, reactions })),
       top_interactions: topInteractions.map(({ id, question, type, responses }) => ({ id, question, type, responses })),
-      audience_engagement: audienceEngagement.map(({ session_id, nickname, votes, reactions, score, tag }) => ({ session_id, nickname, votes, reactions, score, tag })),
+      audience_engagement: audienceEngagement.map(({ session_id, nickname, language, votes, reactions, score, tag }) => ({ session_id, nickname, language, votes, reactions, score, tag })),
+      interaction_data_sheet: interactionDataSheet,
+      response_data_sheet: responseDataSheet,
+      reaction_data_sheet: reactionDataSheet,
     };
     const { error } = await supabase.from('event_analytics_snapshots').insert({ event_id: APP_EVENT_ID, event_name: EVENT_DISPLAY_NAME, snapshot });
     setSaving(false);
@@ -1447,7 +1469,7 @@ function AdminAnalyticsTab({ supabasePerformances, supabaseInteractions, supabas
       photo_url: member.photo_url || null,
       engagement_score: member.score,
       engagement_tag: member.tag,
-      snapshot: { votes: member.votes, reactions: member.reactions },
+      snapshot: { votes: member.votes, reactions: member.reactions, language: member.language || 'en' },
       updated_at: new Date().toISOString(),
     }));
     const { error } = await supabase.from('audience_memory_cards').upsert(rows, { onConflict: 'event_id,audience_id' });
@@ -1471,12 +1493,43 @@ function AdminAnalyticsTab({ supabasePerformances, supabaseInteractions, supabas
       analytics_snapshots: analyticsSnapshots,
       memory_cards: supabaseMemoryCards,
       audience_engagement: audienceEngagement,
+      interaction_data_sheet: interactionDataSheet,
+      response_data_sheet: responseDataSheet,
+      reaction_data_sheet: reactionDataSheet,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     downloadBlob(blob, `${EVENT_DISPLAY_NAME.replace(/\s+/g, '-')}-event-data.json`);
   };
 
-  return <div className="space-y-6"><div className="grid grid-cols-1 md:grid-cols-4 gap-4"><Metric title="Audience" value={supabaseAudience.length} icon={<Users className="w-5 h-5" />} /><Metric title="Votes" value={eventVotes.length} icon={<MessageCircle className="w-5 h-5" />} /><Metric title="Reactions" value={eventReactions.length} icon={<Heart className="w-5 h-5" />} /><Metric title="Performances" value={supabasePerformances.length} icon={<Music className="w-5 h-5" />} /></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm font-black text-slate-900">Event Data Archive</h3><p className="text-xs text-slate-500 mt-1">Raw event data stays in Supabase. Save planning snapshots whenever you need a historical checkpoint.</p></div><div className="flex gap-2 flex-wrap"><button onClick={saveSnapshot} disabled={saving} className="bg-sky-600 text-white font-black text-xs px-3 py-2 rounded-xl flex items-center gap-2"><Save className="w-4 h-4" />{saving ? 'Saving…' : 'Save Snapshot'}</button><button onClick={generateAllMemoryCards} className="bg-indigo-600 text-white font-black text-xs px-3 py-2 rounded-xl flex items-center gap-2"><Sparkles className="w-4 h-4" />Generate Memory Cards</button><button onClick={exportAllData} className="bg-white text-slate-700 font-black text-xs px-3 py-2 rounded-xl border border-slate-200 flex items-center gap-2"><Download className="w-4 h-4" />Export All Data</button></div></div></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><h4 className="text-xs font-black uppercase tracking-widest text-sky-700">Top Performances by Reactions</h4><div className="space-y-2 mt-3">{topPerformance.length ? topPerformance.map((performance) => <div key={performance.id} className="flex items-center justify-between text-xs"><span className="text-slate-600 font-bold">{performance.title} • {performance.performer}</span><strong className="text-sky-700">{performance.reactions}</strong></div>) : <p className="text-slate-500 text-xs">No reactions yet.</p>}</div></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><h4 className="text-xs font-black uppercase tracking-widest text-sky-700">Top Interactions by Responses</h4><div className="space-y-2 mt-3">{topInteractions.length ? topInteractions.map((interaction) => <div key={interaction.id} className="flex items-center justify-between text-xs"><span className="text-slate-600 font-bold truncate mr-3">{interaction.question}</span><strong className="text-sky-700">{interaction.responses}</strong></div>) : <p className="text-slate-500 text-xs">No interaction responses yet.</p>}</div></div></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><div className="flex items-center gap-2 mb-4"><BarChart3 className="w-5 h-5 text-sky-700" /><h3 className="text-sm font-black text-slate-900">Audience Engagement Profiles</h3></div><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase text-[9px]"><th className="pb-3">Name</th><th className="pb-3">Votes</th><th className="pb-3">Reactions</th><th className="pb-3">Engagement</th><th className="pb-3">Music Tag</th></tr></thead><tbody className="divide-y divide-slate-200">{audienceEngagement.map((member) => <tr key={member.session_id}><td className="py-3 font-black text-slate-900">{member.nickname}</td><td className="py-3 text-slate-600">{member.votes}</td><td className="py-3 text-slate-600">{member.reactions}</td><td className="py-3 min-w-40"><div className="h-2 rounded-full bg-slate-200 overflow-hidden"><div className="h-full bg-sky-500" style={{ width: `${member.score}%` }} /></div><span className="text-[10px] text-sky-700 font-bold">{member.score}%</span></td><td className="py-3 text-slate-600">{member.tag}</td></tr>)}</tbody></table>{audienceEngagement.length === 0 && <p className="text-xs text-slate-500 text-center py-6">Audience participation will appear here.</p>}</div></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><h3 className="text-sm font-black text-slate-900">Saved Planning Snapshots</h3><div className="space-y-2 mt-4">{analyticsSnapshots.length ? analyticsSnapshots.map((snapshot) => <div key={snapshot.id} className="bg-white border border-slate-200 rounded-2xl p-3 flex items-center justify-between gap-3"><div><p className="text-xs font-black text-slate-900">{snapshot.event_name}</p><p className="text-[10px] text-slate-500">{new Date(snapshot.created_at).toLocaleString()}</p></div><div className="text-[10px] text-sky-700 font-bold">{snapshot.snapshot?.audience_count || 0} audience • {snapshot.snapshot?.total_votes || 0} votes • {snapshot.snapshot?.total_reactions || 0} reactions</div></div>) : <p className="text-xs text-slate-500">No snapshots saved yet.</p>}</div></div></div>;
+  const downloadInteractionSheet = () => {
+    downloadCsv(interactionDataSheet.map((row) => ({
+      'Song / Performer': row.performance,
+      Question: row.question,
+      Type: row.type,
+      Option: row.option,
+      'Selected Count': row.selected,
+      'Percentage': `${row.percentage}%`,
+      'Total Responses': row.totalResponses,
+    })), `${EVENT_DISPLAY_NAME.replace(/\s+/g, '-')}-question-data-sheet.csv`);
+  };
+
+  return <div className="space-y-6">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4"><Metric title="Audience" value={supabaseAudience.length} icon={<Users className="w-5 h-5" />} /><Metric title="Votes" value={eventVotes.length} icon={<MessageCircle className="w-5 h-5" />} /><Metric title="Reactions" value={eventReactions.length} icon={<Heart className="w-5 h-5" />} /><Metric title="Performances" value={supabasePerformances.length} icon={<Music className="w-5 h-5" />} /></div>
+
+    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm font-black text-slate-900">Event Data Archive</h3><p className="text-xs text-slate-500 mt-1">Names, languages, interactions, answers and reactions stay stored for future event planning.</p></div><div className="flex gap-2 flex-wrap"><button onClick={saveSnapshot} disabled={saving} className="bg-sky-600 text-white font-black text-xs px-3 py-2 rounded-xl flex items-center gap-2"><Save className="w-4 h-4" />{saving ? 'Saving…' : 'Save Snapshot'}</button><button onClick={generateAllMemoryCards} className="bg-indigo-600 text-white font-black text-xs px-3 py-2 rounded-xl flex items-center gap-2"><Sparkles className="w-4 h-4" />Generate Memory Cards</button><button onClick={downloadInteractionSheet} className="bg-emerald-600 text-white font-black text-xs px-3 py-2 rounded-xl flex items-center gap-2"><Download className="w-4 h-4" />Question Data Sheet</button><button onClick={exportAllData} className="bg-white text-slate-700 font-black text-xs px-3 py-2 rounded-xl border border-slate-200 flex items-center gap-2"><Download className="w-4 h-4" />Export All Data</button></div></div></div>
+
+    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><h3 className="text-sm font-black text-slate-900">Audience Members & Language</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase text-[9px]"><th className="pb-3">Name</th><th className="pb-3">Language</th><th className="pb-3">Votes</th><th className="pb-3">Reactions</th><th className="pb-3">Engagement</th><th className="pb-3">Music Tag</th></tr></thead><tbody className="divide-y divide-slate-200">{audienceEngagement.map((member) => <tr key={member.session_id}><td className="py-3 font-black text-slate-900">{member.nickname}</td><td className="py-3 text-slate-600">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || 'English'}</td><td className="py-3 text-slate-600">{member.votes}</td><td className="py-3 text-slate-600">{member.reactions}</td><td className="py-3 min-w-40"><div className="h-2 rounded-full bg-slate-200 overflow-hidden"><div className="h-full bg-sky-500" style={{ width: `${member.score}%` }} /></div><span className="text-[10px] text-sky-700 font-bold">{member.score}%</span></td><td className="py-3 text-slate-600">{member.tag}</td></tr>)}</tbody></table>{audienceEngagement.length === 0 && <p className="text-xs text-slate-500 text-center py-6">Audience members will appear here as they join.</p>}</div></div>
+
+    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><div className="flex items-center justify-between gap-3"><div><h3 className="text-sm font-black text-slate-900">Question Data Sheet</h3><p className="text-xs text-slate-500 mt-1">Each row shows how many people selected each option for each question, tied to the song/performer.</p></div><span className="text-[10px] font-black text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-1 rounded-full">{interactionDataSheet.length} option rows</span></div><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase text-[9px]"><th className="pb-3">Song / Performer</th><th className="pb-3">Question</th><th className="pb-3">Type</th><th className="pb-3">Option</th><th className="pb-3">Selected</th><th className="pb-3">%</th><th className="pb-3">Total</th></tr></thead><tbody className="divide-y divide-slate-200">{interactionDataSheet.length ? interactionDataSheet.map((row, index) => <tr key={`${row.question}-${row.option}-${index}`}><td className="py-3 font-bold text-slate-700">{row.performance}</td><td className="py-3 font-black text-slate-900 min-w-60">{row.question}</td><td className="py-3 text-slate-500">{row.type === 'guess_song' ? 'Guess Song' : 'Poll'}</td><td className="py-3 text-sky-700 font-bold">{row.option}</td><td className="py-3 font-black text-slate-900">{row.selected}</td><td className="py-3 text-sky-700 font-black">{row.percentage}%</td><td className="py-3 text-slate-500">{row.totalResponses}</td></tr>) : <tr><td colSpan="7" className="py-8 text-center text-slate-500">No question responses yet.</td></tr>}</tbody></table></div></div>
+
+    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><h3 className="text-sm font-black text-slate-900">Individual Answers</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase text-[9px]"><th className="pb-3">Audience</th><th className="pb-3">Language</th><th className="pb-3">Song / Performer</th><th className="pb-3">Question</th><th className="pb-3">Answer</th><th className="pb-3">Time</th></tr></thead><tbody className="divide-y divide-slate-200">{responseDataSheet.length ? responseDataSheet.map((row, index) => <tr key={`${row.audience}-${row.question}-${index}`}><td className="py-3 font-black text-slate-900">{row.audience}</td><td className="py-3 text-slate-500">{row.language}</td><td className="py-3 text-slate-600">{row.performance}</td><td className="py-3 text-slate-700 font-bold min-w-56">{row.question}</td><td className="py-3 text-sky-700 font-black">{row.answer}</td><td className="py-3 text-slate-400">{row.time}</td></tr>) : <tr><td colSpan="6" className="py-8 text-center text-slate-500">No individual answers yet.</td></tr>}</tbody></table></div></div>
+
+    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><h3 className="text-sm font-black text-slate-900">Reaction Data Sheet</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase text-[9px]"><th className="pb-3">Audience</th><th className="pb-3">Language</th><th className="pb-3">Song / Performer</th><th className="pb-3">Reaction</th><th className="pb-3">Time</th></tr></thead><tbody className="divide-y divide-slate-200">{reactionDataSheet.length ? reactionDataSheet.map((row, index) => <tr key={`${row.audience}-${row.performance}-${index}`}><td className="py-3 font-black text-slate-900">{row.audience}</td><td className="py-3 text-slate-500">{row.language}</td><td className="py-3 text-slate-600">{row.performance}</td><td className="py-3 text-lg">{row.reaction}</td><td className="py-3 text-slate-400">{row.time}</td></tr>) : <tr><td colSpan="5" className="py-8 text-center text-slate-500">No reactions yet.</td></tr>}</tbody></table></div></div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><h4 className="text-xs font-black uppercase tracking-widest text-sky-700">Top Performances by Reactions</h4><div className="space-y-2 mt-3">{topPerformance.length ? topPerformance.map((performance) => <div key={performance.id} className="flex items-center justify-between text-xs"><span className="text-slate-600 font-bold">{performance.title} • {performance.performer}</span><strong className="text-sky-700">{performance.reactions}</strong></div>) : <p className="text-slate-500 text-xs">No reactions yet.</p>}</div></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><h4 className="text-xs font-black uppercase tracking-widest text-sky-700">Top Interactions by Responses</h4><div className="space-y-2 mt-3">{topInteractions.length ? topInteractions.map((interaction) => <div key={interaction.id} className="flex items-center justify-between text-xs"><span className="text-slate-600 font-bold truncate mr-3">{interaction.question}</span><strong className="text-sky-700">{interaction.responses}</strong></div>) : <p className="text-slate-500 text-xs">No interaction responses yet.</p>}</div></div></div>
+
+    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><h3 className="text-sm font-black text-slate-900">Saved Planning Snapshots</h3><div className="space-y-2 mt-4">{analyticsSnapshots.length ? analyticsSnapshots.map((snapshot) => <div key={snapshot.id} className="bg-white border border-slate-200 rounded-2xl p-3 flex items-center justify-between gap-3"><div><p className="text-xs font-black text-slate-900">{snapshot.event_name}</p><p className="text-[10px] text-slate-500">{new Date(snapshot.created_at).toLocaleString()}</p></div><div className="text-[10px] text-sky-700 font-bold">{snapshot.snapshot?.audience_count || 0} audience • {snapshot.snapshot?.total_votes || 0} votes • {snapshot.snapshot?.total_reactions || 0} reactions</div></div>) : <p className="text-xs text-slate-500">No snapshots saved yet.</p>}</div></div>
+  </div>;
 }
 
 function Metric({ title, value, icon }) {
