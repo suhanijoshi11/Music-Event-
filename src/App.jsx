@@ -1,9 +1,30 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Music, Users, BarChart3, PlayCircle, CheckCircle2, Heart, Flame,
-  Sparkles, MessageCircle, Activity, X, Radio, ArrowRight, Database,
-  ListMusic, Trash2, Edit3, Lock, LogOut, Plus, Volume2, Disc,
-  ChevronRight, Copy, Check, Eye, Zap, AlertCircle, Upload, Download, Share2, CloudRain, Camera, Save
+  Activity,
+  ArrowRight,
+  BarChart3,
+  Camera,
+  CheckCircle2,
+  CloudRain,
+  Download,
+  Edit3,
+  Heart,
+  ListMusic,
+  Lock,
+  LogOut,
+  MessageCircle,
+  Music,
+  PlayCircle,
+  Plus,
+  Radio,
+  Save,
+  Share2,
+  Sparkles,
+  Trash2,
+  Users,
+  Volume2,
+  X,
+  Zap,
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
@@ -12,6 +33,27 @@ const EVENT_DISPLAY_NAME = 'Tofani Vayra 9';
 const MEDIA_BUCKET = 'event-media';
 const SESSION_KEY = 'music_night_audience_session_v1';
 const SYNC_KEY = 'music_night_local_event_db_v4';
+const ADMIN_PASSWORD = 'suhani1105';
+
+const REACTION_OPTIONS = ['❤️', '🔥', '👏', '✨'];
+
+const DEFAULT_INTERACTIONS = [
+  {
+    type: 'poll',
+    question: 'How are you feeling about the performance?',
+    options: ['Amazing', 'I am loving it', 'Chill vibes', 'Give us more'],
+  },
+  {
+    type: 'poll',
+    question: 'Which mood should come next?',
+    options: ['Romantic', 'Energetic', 'Nostalgic', 'Party'],
+  },
+  {
+    type: 'guess_song',
+    question: 'Can you guess the next song?',
+    options: ['Option A', 'Option B', 'Option C', 'Option D'],
+  },
+];
 
 const INITIAL_SEED_DATA = {
   event: {
@@ -38,9 +80,9 @@ const INITIAL_SEED_DATA = {
 
 const EVENT_INTRO_DATA = {
   performers: [
-    { id: 'performer_1', name: 'Aarushi', role: 'Performer', photo: '', age: '21', work: 'Student', workplace: 'Navrachana University', intro: 'A soulful voice bringing Bollywood melodies to life on the Music Night stage.', achievements: 'Trained vocalist with a passion for Bollywood and contemporary music.' },
+    { id: 'performer_1', name: 'Aarushi', role: 'Performer', photo: '', age: '21', work: 'Student', workplace: 'Navrachana University', intro: 'A soulful voice bringing Bollywood melodies to life on the Tofani Vayra 9 stage.', achievements: 'Trained vocalist with a passion for Bollywood and contemporary music.' },
     { id: 'performer_2', name: 'Riya', role: 'Performer', photo: '', age: '20', work: 'Student', workplace: 'Navrachana University', intro: 'A versatile singer known for expressive vocals and emotional performances.', achievements: 'Regular stage performer and music enthusiast.' },
-    { id: 'performer_3', name: 'Dev', role: 'Performer', photo: '', age: '21', work: 'Student', workplace: 'Navrachana University', intro: 'Bringing a fresh energy and expressive style to the Music Night stage.', achievements: 'Passionate performer with an interest in live music.' },
+    { id: 'performer_3', name: 'Dev', role: 'Performer', photo: '', age: '21', work: 'Student', workplace: 'Navrachana University', intro: 'Bringing a fresh energy and expressive style to the live stage.', achievements: 'Passionate performer with an interest in live music.' },
   ],
   anchors: [
     { id: 'anchor_1', name: 'Your Anchor', role: 'Anchor / MoC', photo: '', age: '22', work: 'Student', workplace: 'Navrachana University', intro: 'Keeping the evening lively, engaging and connected from one performance to the next.', achievements: 'Experienced in stage hosting and audience interaction.' },
@@ -55,9 +97,7 @@ const EVENT_INTRO_DATA = {
   organizers: [],
 };
 
-const REACTION_OPTIONS = ['❤️', '🔥', '👏', '✨'];
-
-const getLocalDB = () => {
+function getLocalDB() {
   try {
     const raw = localStorage.getItem(SYNC_KEY);
     if (raw) return JSON.parse(raw);
@@ -65,9 +105,9 @@ const getLocalDB = () => {
     console.warn('Storage error', error);
   }
   return INITIAL_SEED_DATA;
-};
+}
 
-const saveAndBroadcastLocalDB = (data) => {
+function saveAndBroadcastLocalDB(data) {
   try {
     localStorage.setItem(SYNC_KEY, JSON.stringify(data));
   } catch (error) {
@@ -85,116 +125,7 @@ const saveAndBroadcastLocalDB = (data) => {
   }
 
   window.dispatchEvent(new CustomEvent('mn_db_update', { detail: data }));
-};
-
-const SUPABASE_SQL_SCHEMA = `
--- ============================================================
--- TOFANI VAYRA 9 - DATA, PEOPLE, ANALYTICS & MEMORY CARD SETUP
--- Run this in Supabase SQL Editor after your existing schema.
--- ============================================================
-
-update public.events
-set name = 'Tofani Vayra 9'
-where id = 'event_music_night_2026';
-
-alter table public.audience
-  add column if not exists photo_url text;
-
-create table if not exists public.event_people (
-  id text primary key,
-  event_id text not null,
-  category text not null check (category in ('performer', 'anchor', 'musician', 'organizer')),
-  name text not null,
-  role text,
-  instrument text,
-  photo_url text,
-  age text,
-  work text,
-  workplace text,
-  intro text,
-  achievements text,
-  display_order integer default 0,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-
-create index if not exists idx_event_people_event on public.event_people(event_id);
-create index if not exists idx_event_people_category on public.event_people(category);
-
-create table if not exists public.event_analytics_snapshots (
-  id uuid primary key default gen_random_uuid(),
-  event_id text not null,
-  event_name text not null,
-  snapshot jsonb not null default '{}'::jsonb,
-  created_at timestamptz default now()
-);
-
-create index if not exists idx_event_analytics_event on public.event_analytics_snapshots(event_id);
-
-create table if not exists public.audience_memory_cards (
-  id uuid primary key default gen_random_uuid(),
-  event_id text not null,
-  audience_id text not null,
-  audience_name text not null,
-  photo_url text,
-  engagement_score integer default 0,
-  engagement_tag text,
-  snapshot jsonb not null default '{}'::jsonb,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now(),
-  unique(event_id, audience_id)
-);
-
-create index if not exists idx_memory_cards_event on public.audience_memory_cards(event_id);
-
--- Prototype policies. Replace with authenticated-admin policies before production.
-alter table public.event_people enable row level security;
-alter table public.event_analytics_snapshots enable row level security;
-alter table public.audience_memory_cards enable row level security;
-
-drop policy if exists "Public read event people" on public.event_people;
-create policy "Public read event people" on public.event_people for select to anon, authenticated using (true);
-
-drop policy if exists "Prototype write event people" on public.event_people;
-create policy "Prototype write event people" on public.event_people for all to anon, authenticated using (true) with check (true);
-
-drop policy if exists "Public read analytics snapshots" on public.event_analytics_snapshots;
-create policy "Public read analytics snapshots" on public.event_analytics_snapshots for select to anon, authenticated using (true);
-
-drop policy if exists "Prototype insert analytics snapshots" on public.event_analytics_snapshots;
-create policy "Prototype insert analytics snapshots" on public.event_analytics_snapshots for insert to anon, authenticated with check (true);
-
-drop policy if exists "Public read memory cards" on public.audience_memory_cards;
-create policy "Public read memory cards" on public.audience_memory_cards for select to anon, authenticated using (true);
-
-drop policy if exists "Prototype write memory cards" on public.audience_memory_cards;
-create policy "Prototype write memory cards" on public.audience_memory_cards for all to anon, authenticated using (true) with check (true);
-
-drop policy if exists "Prototype audience photo update" on public.audience;
-create policy "Prototype audience photo update" on public.audience for update to anon, authenticated using (true) with check (true);
-
--- Public event-media bucket for prototype photo uploads.
-insert into storage.buckets (id, name, public)
-values ('event-media', 'event-media', true)
-on conflict (id) do update set public = true;
-
-drop policy if exists "Event media public read" on storage.objects;
-create policy "Event media public read" on storage.objects for select to anon, authenticated using (bucket_id = 'event-media');
-
-drop policy if exists "Event media prototype upload" on storage.objects;
-create policy "Event media prototype upload" on storage.objects for insert to anon, authenticated with check (bucket_id = 'event-media');
-
-drop policy if exists "Event media prototype update" on storage.objects;
-create policy "Event media prototype update" on storage.objects for update to anon, authenticated using (bucket_id = 'event-media') with check (bucket_id = 'event-media');
-
-do $$
-begin
-  begin alter publication supabase_realtime add table public.event_people; exception when duplicate_object then null; end;
-  begin alter publication supabase_realtime add table public.event_analytics_snapshots; exception when duplicate_object then null; end;
-  begin alter publication supabase_realtime add table public.audience_memory_cards; exception when duplicate_object then null; end;
-end $$;
-`
-
+}
 
 function flattenStaticPeople() {
   return [
@@ -207,16 +138,22 @@ function flattenStaticPeople() {
 function mergePeople(peopleRows = []) {
   const staticPeople = flattenStaticPeople();
   const byId = new Map(peopleRows.map((person) => [person.id, person]));
+
   const mergedStatic = staticPeople.map((person) => {
     const dbPerson = byId.get(person.id) || {};
     return {
       ...person,
       ...dbPerson,
       photo: dbPerson.photo_url || dbPerson.photo || person.photo || '',
+      _fromDb: Boolean(byId.has(person.id)),
     };
   });
+
   const staticIds = new Set(staticPeople.map((person) => person.id));
-  const extras = peopleRows.filter((person) => !staticIds.has(person.id));
+  const extras = peopleRows
+    .filter((person) => !staticIds.has(person.id))
+    .map((person) => ({ ...person, photo: person.photo_url || person.photo || '', _fromDb: true }));
+
   return [...mergedStatic, ...extras].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
 }
 
@@ -232,17 +169,53 @@ function getEngagementProfile(voteCount, reactionCount) {
 
 async function uploadEventMedia(file, folder, filenameBase) {
   if (!supabase || !file) return { url: '', error: new Error('Supabase or file missing') };
+
   const safeName = (filenameBase || 'image').replace(/[^a-zA-Z0-9_-]/g, '_');
   const extension = (file.name.split('.').pop() || 'jpg').toLowerCase();
   const path = `${folder}/${safeName}_${Date.now()}.${extension}`;
+
   const { error } = await supabase.storage.from(MEDIA_BUCKET).upload(path, file, {
     upsert: true,
     contentType: file.type || 'image/jpeg',
     cacheControl: '3600',
   });
+
   if (error) return { url: '', error };
+
   const { data } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
   return { url: data?.publicUrl || '', error: null };
+}
+
+async function saveEventPerson(person, file = null) {
+  if (!supabase) return { error: new Error('Supabase is not connected') };
+
+  let photoUrl = person.photo_url || person.photo || '';
+
+  if (file) {
+    const upload = await uploadEventMedia(file, `people/${APP_EVENT_ID}`, person.id || person.name);
+    if (upload.error) return { error: upload.error };
+    photoUrl = upload.url;
+  }
+
+  const row = {
+    id: person.id || `${person.category}_${Date.now()}`,
+    event_id: APP_EVENT_ID,
+    category: person.category,
+    name: person.name,
+    role: person.role || person.instrument || null,
+    instrument: person.instrument || null,
+    photo_url: photoUrl || null,
+    age: person.age || null,
+    work: person.work || null,
+    workplace: person.workplace || null,
+    intro: person.intro || null,
+    achievements: person.achievements || null,
+    display_order: Number(person.display_order) || 99,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = await supabase.from('event_people').upsert(row, { onConflict: 'id' });
+  return { error };
 }
 
 function downloadBlob(blob, filename) {
@@ -263,28 +236,32 @@ async function buildMemoryCardBlob({ name, photoUrl, score, tag }) {
   const ctx = canvas.getContext('2d');
 
   const gradient = ctx.createLinearGradient(0, 0, 1200, 675);
-  gradient.addColorStop(0, '#0f172a');
-  gradient.addColorStop(0.55, '#1e3a5f');
-  gradient.addColorStop(1, '#312e81');
+  gradient.addColorStop(0, '#e0f2fe');
+  gradient.addColorStop(0.5, '#f0f9ff');
+  gradient.addColorStop(1, '#dbeafe');
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.strokeStyle = 'rgba(186,230,253,0.18)';
-  ctx.lineWidth = 2;
-  for (let x = 20; x < 1200; x += 70) {
+  ctx.fillStyle = 'rgba(255,255,255,0.72)';
+  ctx.fillRect(38, 38, 1124, 599);
+
+  ctx.strokeStyle = 'rgba(14,116,144,0.12)';
+  ctx.lineWidth = 3;
+  for (let i = 0; i < 60; i += 1) {
+    const x = 30 + ((i * 79) % 1160);
+    const y = (i * 97) % 640;
     ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x - 120, 675);
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - 16, y + 48);
     ctx.stroke();
   }
 
-  ctx.fillStyle = '#e0f2fe';
-  ctx.font = '700 34px Arial';
-  ctx.fillText('TOFANI VAYRA 9', 64, 72);
-
-  ctx.fillStyle = 'rgba(224,242,254,0.75)';
-  ctx.font = '500 20px Arial';
-  ctx.fillText('YOUR MUSIC NIGHT MEMORY', 64, 108);
+  ctx.fillStyle = '#075985';
+  ctx.font = '800 34px Arial';
+  ctx.fillText('TOFANI VAYRA 9', 70, 90);
+  ctx.fillStyle = '#0f766e';
+  ctx.font = '700 20px Arial';
+  ctx.fillText('YOUR MUSIC NIGHT MEMORY', 70, 124);
 
   let photoDrawn = false;
   if (photoUrl) {
@@ -296,15 +273,16 @@ async function buildMemoryCardBlob({ name, photoUrl, score, tag }) {
         image.onerror = () => resolve(false);
         image.src = photoUrl;
       });
+
       if (image.complete && image.naturalWidth) {
         ctx.save();
         ctx.beginPath();
-        ctx.arc(170, 290, 105, 0, Math.PI * 2);
+        ctx.arc(180, 320, 110, 0, Math.PI * 2);
         ctx.clip();
-        const ratio = Math.max(210 / image.width, 210 / image.height);
+        const ratio = Math.max(220 / image.width, 220 / image.height);
         const drawW = image.width * ratio;
         const drawH = image.height * ratio;
-        ctx.drawImage(image, 170 - drawW / 2, 290 - drawH / 2, drawW, drawH);
+        ctx.drawImage(image, 180 - drawW / 2, 320 - drawH / 2, drawW, drawH);
         ctx.restore();
         photoDrawn = true;
       }
@@ -314,35 +292,35 @@ async function buildMemoryCardBlob({ name, photoUrl, score, tag }) {
   }
 
   if (!photoDrawn) {
-    ctx.fillStyle = 'rgba(125,211,252,0.2)';
+    ctx.fillStyle = '#bae6fd';
     ctx.beginPath();
-    ctx.arc(170, 290, 105, 0, Math.PI * 2);
+    ctx.arc(180, 320, 110, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#e0f2fe';
-    ctx.font = '700 72px Arial';
+    ctx.fillStyle = '#075985';
+    ctx.font = '800 80px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText((name || 'A').charAt(0).toUpperCase(), 170, 316);
+    ctx.fillText((name || 'A').charAt(0).toUpperCase(), 180, 348);
     ctx.textAlign = 'left';
   }
 
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '700 54px Arial';
-  ctx.fillText(name || 'Audience Member', 330, 245);
-  ctx.fillStyle = '#bae6fd';
-  ctx.font = '500 24px Arial';
-  ctx.fillText(tag, 330, 292);
+  ctx.fillStyle = '#0f172a';
+  ctx.font = '800 56px Arial';
+  ctx.fillText(name || 'Audience Member', 350, 250);
+  ctx.fillStyle = '#0369a1';
+  ctx.font = '700 25px Arial';
+  ctx.fillText(tag, 350, 298);
 
-  ctx.fillStyle = 'rgba(255,255,255,0.14)';
-  ctx.fillRect(330, 350, 760, 26);
-  ctx.fillStyle = '#7dd3fc';
-  ctx.fillRect(330, 350, 760 * (score / 100), 26);
-  ctx.fillStyle = '#e0f2fe';
-  ctx.font = '700 28px Arial';
-  ctx.fillText(`ENGAGEMENT  ${score}%`, 330, 410);
+  ctx.fillStyle = 'rgba(15,23,42,0.10)';
+  ctx.fillRect(350, 355, 760, 28);
+  ctx.fillStyle = '#0284c7';
+  ctx.fillRect(350, 355, 760 * (score / 100), 28);
+  ctx.fillStyle = '#0f172a';
+  ctx.font = '800 28px Arial';
+  ctx.fillText(`ENGAGEMENT  ${score}%`, 350, 414);
 
-  ctx.fillStyle = 'rgba(224,242,254,0.75)';
-  ctx.font = '500 22px Arial';
-  ctx.fillText('You were part of the music, not just the audience.', 64, 610);
+  ctx.fillStyle = '#155e75';
+  ctx.font = '600 22px Arial';
+  ctx.fillText('You were part of the music, not just the audience.', 70, 610);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
@@ -352,15 +330,56 @@ async function buildMemoryCardBlob({ name, photoUrl, score, tag }) {
   });
 }
 
-function RainOverlay() {
-  const drops = Array.from({ length: 18 }, (_, index) => index);
+function RainThemeStyles() {
   return (
-    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-20">
+    <style>{`
+      @keyframes rainFall {
+        0% { transform: translate3d(0, -15vh, 0); opacity: 0; }
+        10% { opacity: .55; }
+        90% { opacity: .4; }
+        100% { transform: translate3d(-18px, 115vh, 0); opacity: 0; }
+      }
+      .rain-drop {
+        position: absolute;
+        top: -20vh;
+        width: 2px;
+        height: 72px;
+        border-radius: 999px;
+        background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(14,116,144,.45));
+        animation: rainFall linear infinite;
+      }
+      .rain-theme [class*="bg-slate-950"] { background: rgba(248,252,255,.88) !important; }
+      .rain-theme [class*="bg-slate-900"] { background: rgba(255,255,255,.82) !important; }
+      .rain-theme [class*="bg-slate-800"] { background: rgba(224,242,254,.86) !important; }
+      .rain-theme [class*="border-slate-8"] { border-color: rgba(100,116,139,.22) !important; }
+      .rain-theme [class*="border-slate-7"] { border-color: rgba(100,116,139,.25) !important; }
+      .rain-theme [class*="bg-purple-950"] { background: rgba(224,231,255,.72) !important; }
+      .rain-theme [class*="bg-sky-950"] { background: rgba(240,249,255,.84) !important; }
+      .rain-theme [class*="text-slate-1"] { color: #0f172a !important; }
+      .rain-theme [class*="text-slate-2"] { color: #334155 !important; }
+      .rain-theme [class*="text-slate-3"] { color: #475569 !important; }
+      .rain-theme [class*="text-slate-4"] { color: #64748b !important; }
+      .rain-theme [class*="text-slate-5"] { color: #64748b !important; }
+      .rain-theme [class*="text-slate-6"] { color: #475569 !important; }
+      .rain-theme [class*="bg-slate-950"] .text-white,
+      .rain-theme [class*="bg-slate-900"] .text-white { color: #0f172a !important; }
+    `}</style>
+  );
+}
+
+function RainOverlay() {
+  const drops = Array.from({ length: 34 }, (_, index) => index);
+  return (
+    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-70">
       {drops.map((drop) => (
         <span
           key={drop}
-          className="absolute top-[-15%] h-20 w-px bg-sky-200/50 animate-pulse"
-          style={{ left: `${(drop * 17) % 100}%`, animationDelay: `${drop * 0.18}s` }}
+          className="rain-drop"
+          style={{
+            left: `${(drop * 19) % 100}%`,
+            animationDuration: `${1.8 + (drop % 5) * 0.35}s`,
+            animationDelay: `${-(drop * 0.19)}s`,
+          }}
         />
       ))}
     </div>
@@ -373,11 +392,8 @@ export default function App() {
   const [audienceSession, setAudienceSession] = useState(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [activeAdminTab, setActiveAdminTab] = useState('overview');
-  const [showSqlModal, setShowSqlModal] = useState(false);
 
-  const [supabaseEvents, setSupabaseEvents] = useState([]);
   const [supabasePerformances, setSupabasePerformances] = useState([]);
-  const [supabaseMusicians, setSupabaseMusicians] = useState([]);
   const [supabaseAudience, setSupabaseAudience] = useState([]);
   const [supabaseInteractions, setSupabaseInteractions] = useState([]);
   const [supabaseVotes, setSupabaseVotes] = useState([]);
@@ -386,16 +402,57 @@ export default function App() {
   const [analyticsSnapshots, setAnalyticsSnapshots] = useState([]);
   const [supabaseMemoryCards, setSupabaseMemoryCards] = useState([]);
 
+  const isAdminRoute = currentRoute.startsWith('#/admin');
+
+  const refreshLiveData = async () => {
+    if (!supabase) return;
+
+    const [performancesResult, interactionsResult, votesResult, reactionsResult, peopleResult] = await Promise.all([
+      supabase.from('performances').select('*').eq('event_id', APP_EVENT_ID).order('display_order', { ascending: true }),
+      supabase.from('interactions').select('*').eq('event_id', APP_EVENT_ID).order('created_at', { ascending: true }),
+      supabase.from('interaction_votes').select('*'),
+      supabase.from('performance_reactions').select('*'),
+      supabase.from('event_people').select('*').eq('event_id', APP_EVENT_ID).order('display_order', { ascending: true }),
+    ]);
+
+    if (!performancesResult.error) setSupabasePerformances(performancesResult.data || []);
+    else console.error('Live performances refresh error:', performancesResult.error);
+
+    if (!interactionsResult.error) setSupabaseInteractions(interactionsResult.data || []);
+    else console.error('Live interactions refresh error:', interactionsResult.error);
+
+    if (!votesResult.error) setSupabaseVotes(votesResult.data || []);
+    else console.error('Live votes refresh error:', votesResult.error);
+
+    if (!reactionsResult.error) setSupabaseReactions(reactionsResult.data || []);
+    else console.error('Live reactions refresh error:', reactionsResult.error);
+
+    if (!peopleResult.error) setSupabasePeople(peopleResult.data || []);
+    else console.error('Live people refresh error:', peopleResult.error);
+
+    if (isAdminRoute) {
+      const [audienceResult, snapshotsResult, memoryCardsResult] = await Promise.all([
+        supabase.from('audience').select('*').eq('event_id', APP_EVENT_ID).order('joined_at', { ascending: true }),
+        supabase.from('event_analytics_snapshots').select('*').eq('event_id', APP_EVENT_ID).order('created_at', { ascending: false }),
+        supabase.from('audience_memory_cards').select('*').eq('event_id', APP_EVENT_ID).order('updated_at', { ascending: false }),
+      ]);
+
+      if (!audienceResult.error) setSupabaseAudience(audienceResult.data || []);
+      else console.error('Audience refresh error:', audienceResult.error);
+
+      if (!snapshotsResult.error) setAnalyticsSnapshots(snapshotsResult.data || []);
+      if (!memoryCardsResult.error) setSupabaseMemoryCards(memoryCardsResult.data || []);
+    }
+  };
+
   useEffect(() => {
     const loadEventData = async () => {
       if (!supabase) return;
 
-      const [eventsResult, performancesResult, musiciansResult, audienceResult, interactionsResult, votesResult, reactionsResult, peopleResult, snapshotsResult, memoryCardsResult] = await Promise.all([
-        supabase.from('events').select('*').eq('id', APP_EVENT_ID),
+      const [performancesResult, audienceResult, interactionsResult, votesResult, reactionsResult, peopleResult, snapshotsResult, memoryCardsResult] = await Promise.all([
         supabase.from('performances').select('*').eq('event_id', APP_EVENT_ID).order('display_order', { ascending: true }),
-        supabase.from('musicians').select('*'),
         supabase.from('audience').select('*').eq('event_id', APP_EVENT_ID).order('joined_at', { ascending: true }),
-        supabase.from('interactions').select('*').eq('event_id', APP_EVENT_ID).order('created_at', { ascending: false }),
+        supabase.from('interactions').select('*').eq('event_id', APP_EVENT_ID).order('created_at', { ascending: true }),
         supabase.from('interaction_votes').select('*'),
         supabase.from('performance_reactions').select('*'),
         supabase.from('event_people').select('*').eq('event_id', APP_EVENT_ID).order('display_order', { ascending: true }),
@@ -403,20 +460,16 @@ export default function App() {
         supabase.from('audience_memory_cards').select('*').eq('event_id', APP_EVENT_ID).order('updated_at', { ascending: false }),
       ]);
 
-      if (eventsResult.error) console.error('Events error:', eventsResult.error);
       if (performancesResult.error) console.error('Performances error:', performancesResult.error);
-      if (musiciansResult.error) console.error('Musicians error:', musiciansResult.error);
       if (audienceResult.error) console.error('Audience error:', audienceResult.error);
       if (interactionsResult.error) console.error('Interactions error:', interactionsResult.error);
       if (votesResult.error) console.error('Votes error:', votesResult.error);
       if (reactionsResult.error) console.error('Reactions error:', reactionsResult.error);
-      if (peopleResult.error) console.warn('People table not ready yet:', peopleResult.error);
-      if (snapshotsResult.error) console.warn('Analytics snapshot table not ready yet:', snapshotsResult.error);
-      if (memoryCardsResult.error) console.warn('Memory card table not ready yet:', memoryCardsResult.error);
+      if (peopleResult.error) console.warn('People error:', peopleResult.error);
+      if (snapshotsResult.error) console.warn('Analytics snapshot error:', snapshotsResult.error);
+      if (memoryCardsResult.error) console.warn('Memory card error:', memoryCardsResult.error);
 
-      setSupabaseEvents(eventsResult.data || []);
       setSupabasePerformances(performancesResult.data || []);
-      setSupabaseMusicians(musiciansResult.data || []);
       setSupabaseAudience(audienceResult.data || []);
       setSupabaseInteractions(interactionsResult.data || []);
       setSupabaseVotes(votesResult.data || []);
@@ -430,71 +483,238 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!supabase) return undefined;
+  if (!supabase) return;
 
-    const channel = supabase
-      .channel('music-night-live-all')
-      .on(
-  'postgres_changes',
-  { event: '*', schema: 'public', table: 'performances' },
-  (payload) => {
-    console.log('🔥 PERFORMANCE REALTIME EVENT:', payload);
+  const refreshLiveData = async () => {
+    const [
+      performancesResult,
+      interactionsResult,
+      votesResult,
+      reactionsResult,
+      audienceResult,
+      peopleResult,
+      snapshotsResult,
+      memoryCardsResult,
+    ] = await Promise.all([
+      supabase
+        .from('performances')
+        .select('*')
+        .eq('event_id', APP_EVENT_ID)
+        .order('display_order', { ascending: true }),
 
-    setSupabasePerformances((current) =>
-      applyRealtimeRowChange(current, payload)
-    );
-  }
-)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'performances' }, (payload) => {
-        setSupabasePerformances((current) => applyRealtimeRowChange(current, payload));
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'interactions' }, (payload) => {
-        setSupabaseInteractions((current) => applyRealtimeRowChange(current, payload));
-      })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'interaction_votes' }, (payload) => {
-        setSupabaseVotes((current) => current.some((row) => row.id === payload.new.id) ? current : [...current, payload.new]);
-      })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'performance_reactions' }, (payload) => {
-        setSupabaseReactions((current) => current.some((row) => row.id === payload.new.id) ? current : [...current, payload.new]);
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'audience' }, (payload) => {
-        setSupabaseAudience((current) => applyRealtimeRowChange(current, payload));
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_people' }, (payload) => {
-        setSupabasePeople((current) => applyRealtimeRowChange(current, payload));
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_analytics_snapshots' }, (payload) => {
-        setAnalyticsSnapshots((current) => applyRealtimeRowChange(current, payload));
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'audience_memory_cards' }, (payload) => {
-        setSupabaseMemoryCards((current) => applyRealtimeRowChange(current, payload));
-      })
-      .subscribe((status) => {
-        console.log('🔥 REALTIME STATUS:', status);
-      });
+      supabase
+        .from('interactions')
+        .select('*')
+        .eq('event_id', APP_EVENT_ID)
+        .order('created_at', { ascending: false }),
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+      supabase
+        .from('interaction_votes')
+        .select('*'),
 
-  useEffect(() => {
-    const handleHashChange = () => {
-      setCurrentRoute(window.location.hash || '#/');
-    };
+      supabase
+        .from('performance_reactions')
+        .select('*'),
 
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
+      supabase
+        .from('audience')
+        .select('*')
+        .eq('event_id', APP_EVENT_ID)
+        .order('joined_at', { ascending: true }),
 
-  useEffect(() => {
-    try {
-      const savedSession = localStorage.getItem(SESSION_KEY);
-      if (savedSession) setAudienceSession(JSON.parse(savedSession));
-    } catch (error) {
-      console.warn('Session restore error', error);
+      supabase
+        .from('event_people')
+        .select('*')
+        .eq('event_id', APP_EVENT_ID)
+        .order('display_order', { ascending: true }),
+
+      supabase
+        .from('event_analytics_snapshots')
+        .select('*')
+        .eq('event_id', APP_EVENT_ID)
+        .order('created_at', { ascending: false }),
+
+      supabase
+        .from('audience_memory_cards')
+        .select('*')
+        .eq('event_id', APP_EVENT_ID)
+        .order('updated_at', { ascending: false }),
+    ]);
+
+    if (!performancesResult.error) {
+      setSupabasePerformances(performancesResult.data || []);
     }
+
+    if (!interactionsResult.error) {
+      setSupabaseInteractions(interactionsResult.data || []);
+    }
+
+    if (!votesResult.error) {
+      setSupabaseVotes(votesResult.data || []);
+    }
+
+    if (!reactionsResult.error) {
+      setSupabaseReactions(reactionsResult.data || []);
+    }
+
+    if (!audienceResult.error) {
+      setSupabaseAudience(audienceResult.data || []);
+    }
+
+    if (!peopleResult.error) {
+      setSupabasePeople(peopleResult.data || []);
+    }
+
+    if (!snapshotsResult.error) {
+      setAnalyticsSnapshots(snapshotsResult.data || []);
+    }
+
+    if (!memoryCardsResult.error) {
+      setSupabaseMemoryCards(memoryCardsResult.data || []);
+    }
+  };
+
+  refreshLiveData();
+
+  const interval = setInterval(refreshLiveData, 2000);
+
+  return () => clearInterval(interval);
+}, []);
+
+useEffect(() => {
+  const handleHashChange = () => {
+    setCurrentRoute(window.location.hash || '#/');
+  };
+
+  window.addEventListener('hashchange', handleHashChange);
+
+  return () => {
+    window.removeEventListener('hashchange', handleHashChange);
+  };
+}, []);
+
+      useEffect(() => {
+    if (!supabase) return;
+
+    const refreshLiveData = async () => {
+      const [
+        performancesResult,
+        interactionsResult,
+        votesResult,
+        reactionsResult,
+        audienceResult,
+        peopleResult,
+        snapshotsResult,
+        memoryCardsResult,
+      ] = await Promise.all([
+        supabase
+          .from('performances')
+          .select('*')
+          .eq('event_id', APP_EVENT_ID)
+          .order('display_order', { ascending: true }),
+
+        supabase
+          .from('interactions')
+          .select('*')
+          .eq('event_id', APP_EVENT_ID)
+          .order('created_at', { ascending: false }),
+
+        supabase
+          .from('interaction_votes')
+          .select('*'),
+
+        supabase
+          .from('performance_reactions')
+          .select('*'),
+
+        supabase
+          .from('audience')
+          .select('*')
+          .eq('event_id', APP_EVENT_ID)
+          .order('joined_at', { ascending: true }),
+
+        supabase
+          .from('event_people')
+          .select('*')
+          .eq('event_id', APP_EVENT_ID)
+          .order('display_order', { ascending: true }),
+
+        supabase
+          .from('event_analytics_snapshots')
+          .select('*')
+          .eq('event_id', APP_EVENT_ID)
+          .order('created_at', { ascending: false }),
+
+        supabase
+          .from('audience_memory_cards')
+          .select('*')
+          .eq('event_id', APP_EVENT_ID)
+          .order('updated_at', { ascending: false }),
+      ]);
+
+      if (!performancesResult.error) {
+        setSupabasePerformances(performancesResult.data || []);
+      }
+
+      if (!interactionsResult.error) {
+        setSupabaseInteractions(interactionsResult.data || []);
+      }
+
+      if (!votesResult.error) {
+        setSupabaseVotes(votesResult.data || []);
+      }
+
+      if (!reactionsResult.error) {
+        setSupabaseReactions(reactionsResult.data || []);
+      }
+
+      if (!audienceResult.error) {
+        setSupabaseAudience(audienceResult.data || []);
+      }
+
+      if (!peopleResult.error) {
+        setSupabasePeople(peopleResult.data || []);
+      }
+
+      if (!snapshotsResult.error) {
+        setAnalyticsSnapshots(snapshotsResult.data || []);
+      }
+
+      if (!memoryCardsResult.error) {
+        setSupabaseMemoryCards(memoryCardsResult.data || []);
+      }
+    };
+
+    refreshLiveData();
+
+    const interval = setInterval(refreshLiveData, 2000);
+
+    return () => clearInterval(interval);
   }, []);
+
+ useEffect(() => {
+  const handleHashChange = () => {
+    setCurrentRoute(window.location.hash || '#/');
+  };
+
+  window.addEventListener('hashchange', handleHashChange);
+
+  return () => {
+    window.removeEventListener('hashchange', handleHashChange);
+  };
+}, []);
+
+useEffect(() => {
+  try {
+    const savedSession = localStorage.getItem(SESSION_KEY);
+
+    if (savedSession) {
+      setAudienceSession(JSON.parse(savedSession));
+    }
+  } catch (error) {
+    console.warn('Session restore error', error);
+  }
+}, []);
 
   useEffect(() => {
     const handleSync = (data) => {
@@ -525,7 +745,6 @@ export default function App() {
     };
 
     window.addEventListener('storage', onStorage);
-
     return () => {
       window.removeEventListener('mn_db_update', onCustomEvent);
       window.removeEventListener('storage', onStorage);
@@ -562,8 +781,7 @@ export default function App() {
     if (photoFile && supabase) {
       const upload = await uploadEventMedia(photoFile, `audience/${APP_EVENT_ID}`, sessionId);
       if (upload.error) {
-        console.error('Audience photo upload error:', upload.error);
-        alert(`Photo upload failed: ${upload.error.message}. You can continue without a photo.`);
+        alert(`Photo upload failed: ${upload.error.message}`);
       } else {
         photoUrl = upload.url;
       }
@@ -577,40 +795,8 @@ export default function App() {
       joinedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    try {
-      localStorage.setItem(SESSION_KEY, JSON.stringify(newSession));
-    } catch (error) {
-      console.warn('Session write error', error);
-    }
+    localStorage.setItem(SESSION_KEY, JSON.stringify(newSession));
     setAudienceSession(newSession);
-
-    updateDatabase((prev) => {
-      const exists = prev.audience.some((audience) => audience.session_id === sessionId);
-      if (exists) {
-        return {
-          ...prev,
-          audience: prev.audience.map((audience) => audience.session_id === sessionId
-            ? { ...audience, nickname: cleanNickname, photo_url: photoUrl, last_active_at: new Date().toISOString() }
-            : audience),
-        };
-      }
-
-      return {
-        ...prev,
-        audience: [
-          ...prev.audience,
-          {
-            id: `aud_${Date.now()}`,
-            event_id: APP_EVENT_ID,
-            nickname: cleanNickname,
-            session_id: sessionId,
-            photo_url: photoUrl,
-            joined_at: newSession.joinedAt,
-            last_active_at: new Date().toISOString(),
-          },
-        ],
-      };
-    });
 
     if (supabase) {
       const { data: existingAudience, error: lookupError } = await supabase
@@ -620,7 +806,9 @@ export default function App() {
         .eq('session_id', sessionId)
         .limit(1);
 
-      if (!lookupError && (!existingAudience || existingAudience.length === 0)) {
+      if (!lookupError && existingAudience?.length) {
+        await supabase.from('audience').update({ nickname: cleanNickname, photo_url: photoUrl || null }).eq('id', existingAudience[0].id);
+      } else if (!lookupError) {
         const { error: insertError } = await supabase.from('audience').insert({
           event_id: APP_EVENT_ID,
           nickname: cleanNickname,
@@ -628,8 +816,6 @@ export default function App() {
           photo_url: photoUrl || null,
         });
         if (insertError) console.error('Audience registration error:', insertError);
-      } else if (!lookupError && existingAudience?.length) {
-        await supabase.from('audience').update({ nickname: cleanNickname, photo_url: photoUrl || null }).eq('id', existingAudience[0].id);
       }
     }
 
@@ -647,16 +833,16 @@ export default function App() {
     const nextSession = { ...audienceSession, photoUrl: upload.url };
     localStorage.setItem(SESSION_KEY, JSON.stringify(nextSession));
     setAudienceSession(nextSession);
+    refreshLiveData();
   };
 
-
   const nowPlayingPerformance = supabasePerformances.find((performance) => performance.status === 'playing') || null;
+  const audienceVoteCount = useMemo(() => supabaseVotes.filter((vote) => vote.audience_id === audienceSession?.sessionId).length, [supabaseVotes, audienceSession]);
+  const audienceReactionCount = useMemo(() => supabaseReactions.filter((reaction) => reaction.audience_id === audienceSession?.sessionId).length, [supabaseReactions, audienceSession]);
 
   useEffect(() => {
     if (!supabase || !audienceSession?.sessionId) return;
-    const myVotes = supabaseVotes.filter((vote) => vote.audience_id === audienceSession.sessionId).length;
-    const myReactions = supabaseReactions.filter((reaction) => reaction.audience_id === audienceSession.sessionId).length;
-    const profile = getEngagementProfile(myVotes, myReactions);
+    const profile = getEngagementProfile(audienceVoteCount, audienceReactionCount);
     supabase.from('audience_memory_cards').upsert({
       event_id: APP_EVENT_ID,
       audience_id: audienceSession.sessionId,
@@ -664,55 +850,32 @@ export default function App() {
       photo_url: audienceSession.photoUrl || null,
       engagement_score: profile.score,
       engagement_tag: profile.tag,
-      snapshot: { votes: myVotes, reactions: myReactions },
+      snapshot: { votes: audienceVoteCount, reactions: audienceReactionCount },
       updated_at: new Date().toISOString(),
     }, { onConflict: 'event_id,audience_id' }).then(({ error }) => {
       if (error) console.warn('Memory card sync skipped:', error.message);
     });
-  }, [audienceSession, supabaseVotes, supabaseReactions]);
+  }, [audienceSession, audienceVoteCount, audienceReactionCount]);
 
   const audienceData = supabaseAudience.length > 0 ? supabaseAudience : dbData.audience;
-  const musiciansData = supabaseMusicians.length > 0 ? supabaseMusicians : dbData.musicians;
   const eventName = EVENT_DISPLAY_NAME;
   const people = useMemo(() => mergePeople(supabasePeople), [supabasePeople]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-950 via-slate-900 to-indigo-950 text-slate-100 font-sans selection:bg-sky-400/40 antialiased relative overflow-x-hidden">
+    <div className="rain-theme min-h-screen bg-gradient-to-br from-sky-100 via-slate-50 to-indigo-100 text-slate-800 font-sans selection:bg-sky-300/40 antialiased relative overflow-x-hidden">
+      <RainThemeStyles />
       <RainOverlay />
-      <div className="bg-slate-900/90 border-b border-slate-800 text-xs py-2 px-4 backdrop-blur sticky top-0 z-50 flex items-center justify-between flex-wrap gap-2">
+
+      <div className="bg-white/85 border-b border-sky-200/60 text-xs py-2 px-4 backdrop-blur sticky top-0 z-50 flex items-center justify-between flex-wrap gap-2 shadow-sm">
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 font-bold text-purple-400">
-            <Music className="w-4 h-4" />
-            <span>Music Night Live</span>
-          </div>
-          <span className="text-slate-600">|</span>
-          <span className="text-slate-400 font-mono text-[11px] hidden sm:inline">
-            Event: <strong className="text-slate-200">{eventName}</strong>
-          </span>
+          <div className="flex items-center gap-1.5 font-black text-sky-700"><CloudRain className="w-4 h-4" /><span>Music Night Live</span></div>
+          <span className="text-slate-400">|</span>
+          <span className="text-slate-500 font-mono text-[11px] hidden sm:inline">Event: <strong className="text-slate-700">{eventName}</strong></span>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowSqlModal(true)}
-            className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-purple-300 px-2.5 py-1 rounded-lg border border-purple-500/20 text-[11px] font-medium transition"
-          >
-            <Database className="w-3 h-3 text-purple-400" /> Supabase SQL
-          </button>
-
-          <div className="flex items-center bg-slate-950 p-0.5 rounded-lg border border-slate-800">
-            <button
-              onClick={() => navigate(audienceSession ? '#/event' : '#/')}
-              className={`px-2 py-1 rounded-md text-[11px] font-medium transition ${currentRoute.startsWith('#/') && !currentRoute.startsWith('#/admin') ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}
-            >
-              Audience
-            </button>
-            <button
-              onClick={() => navigate('#/admin')}
-              className={`px-2 py-1 rounded-md text-[11px] font-medium transition ${currentRoute.startsWith('#/admin') ? 'bg-pink-600 text-white' : 'text-slate-400 hover:text-white'}`}
-            >
-              Admin Room
-            </button>
-          </div>
+        <div className="flex items-center bg-white/80 p-0.5 rounded-lg border border-sky-200/80">
+          <button onClick={() => navigate(audienceSession ? '#/event' : '#/')} className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition ${currentRoute.startsWith('#/') && !currentRoute.startsWith('#/admin') ? 'bg-sky-600 text-white' : 'text-slate-500 hover:text-sky-700'}`}>Audience</button>
+          <button onClick={() => navigate('#/admin')} className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition ${currentRoute.startsWith('#/admin') ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-indigo-700'}`}>Admin Room</button>
         </div>
       </div>
 
@@ -721,65 +884,41 @@ export default function App() {
       ) : currentRoute === '#/event' ? (
         <AudienceHome
           session={audienceSession}
-          dbData={dbData}
-          musicians={musiciansData}
           nowPlaying={nowPlayingPerformance}
           supabaseInteractions={supabaseInteractions}
           supabaseVotes={supabaseVotes}
           supabaseReactions={supabaseReactions}
           people={people}
-          audienceProfile={supabaseAudience.find((row) => row.session_id === audienceSession?.sessionId) || dbData.audience.find((row) => row.session_id === audienceSession?.sessionId) || null}
+          audienceProfile={supabaseAudience.find((row) => row.session_id === audienceSession?.sessionId) || null}
           onAudiencePhotoUpload={handleAudiencePhotoUpload}
           onChangeNickname={() => navigate('#/join')}
         />
       ) : currentRoute === '#/admin/login' || (!isAdminLoggedIn && currentRoute.startsWith('#/admin')) ? (
-        <AdminLogin
-          onLogin={() => {
-            setIsAdminLoggedIn(true);
-            navigate('#/admin');
-          }}
-        />
+        <AdminLogin onLogin={() => { setIsAdminLoggedIn(true); navigate('#/admin'); }} />
       ) : currentRoute.startsWith('#/admin') ? (
         <AdminDashboard
           dbData={dbData}
           updateDatabase={updateDatabase}
           activeTab={activeAdminTab}
           setActiveTab={setActiveAdminTab}
-          onLogout={() => {
-            setIsAdminLoggedIn(false);
-            navigate('#/admin/login');
-          }}
+          onLogout={() => { setIsAdminLoggedIn(false); navigate('#/admin/login'); }}
           nowPlaying={nowPlayingPerformance}
           supabasePerformances={supabasePerformances}
           supabaseInteractions={supabaseInteractions}
           supabaseVotes={supabaseVotes}
           supabaseReactions={supabaseReactions}
           audienceCount={audienceData.length}
-          supabaseAudience={supabaseAudience}
+          supabaseAudience={audienceData}
           people={people}
           analyticsSnapshots={analyticsSnapshots}
           supabaseMemoryCards={supabaseMemoryCards}
+          onRefresh={refreshLiveData}
         />
       ) : (
         <AudienceLanding session={audienceSession} onJoin={handleAudienceJoin} onContinue={() => navigate('#/event')} />
       )}
-
-      {showSqlModal && <SupabaseSqlModal onClose={() => setShowSqlModal(false)} />}
     </div>
   );
-}
-
-function applyRealtimeRowChange(current, payload) {
-  if (payload.eventType === 'INSERT') {
-    return current.some((row) => row.id === payload.new.id) ? current : [payload.new, ...current];
-  }
-  if (payload.eventType === 'UPDATE') {
-    return current.map((row) => row.id === payload.new.id ? payload.new : row);
-  }
-  if (payload.eventType === 'DELETE') {
-    return current.filter((row) => row.id !== payload.old.id);
-  }
-  return current;
 }
 
 function AudienceLanding({ session, onJoin, onContinue }) {
@@ -794,35 +933,29 @@ function AudienceLanding({ session, onJoin, onContinue }) {
   return (
     <div className="min-h-screen flex items-center justify-center p-5 relative z-10">
       <div className="w-full max-w-md">
-        <div className="bg-sky-950/80 border border-sky-200/10 rounded-3xl p-7 shadow-2xl text-center backdrop-blur-xl">
-          <div className="w-20 h-20 mx-auto rounded-3xl bg-sky-300/10 border border-sky-200/20 flex items-center justify-center mb-5">
-            <CloudRain className="w-10 h-10 text-sky-200" />
-          </div>
-          <p className="text-xs uppercase tracking-[0.25em] text-sky-200 font-bold mb-2">Welcome to</p>
-          <h1 className="text-3xl font-black text-white tracking-tight">{EVENT_DISPLAY_NAME}</h1>
-          <p className="text-sm text-sky-100/65 mt-3 leading-relaxed">Experience the performances, interact with the stage, and be part of the evening.</p>
-          <div className="h-px bg-sky-100/10 my-6" />
+        <div className="bg-white/82 border border-sky-200 rounded-3xl p-7 shadow-2xl text-center backdrop-blur-xl">
+          <div className="w-20 h-20 mx-auto rounded-3xl bg-sky-100 border border-sky-200 flex items-center justify-center mb-5"><CloudRain className="w-10 h-10 text-sky-600" /></div>
+          <p className="text-xs uppercase tracking-[0.25em] text-sky-700 font-black mb-2">Welcome to</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">{EVENT_DISPLAY_NAME}</h1>
+          <p className="text-sm text-slate-500 mt-3 leading-relaxed">Experience the performances, interact with the stage, and keep your own rainy-night music memory.</p>
+          <div className="h-px bg-sky-100 my-6" />
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="text-left">
-              <label className="text-xs font-bold text-sky-100/70 uppercase tracking-wider">Your Name</label>
-              <input type="text" value={nickname} onChange={(event) => setNickname(event.target.value)} placeholder="Enter your name" className="w-full mt-2 bg-slate-950/70 border border-sky-100/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-sky-100/30 outline-none focus:border-sky-300 focus:ring-1 focus:ring-sky-300 transition" maxLength={30} autoComplete="off" />
-            </div>
-            <div className="text-left">
-              <label className="text-xs font-bold text-sky-100/70 uppercase tracking-wider">Photo for your memory card <span className="normal-case text-sky-100/30">(optional)</span></label>
-              <input type="file" accept="image/*" onChange={(event) => setPhotoFile(event.target.files?.[0] || null)} className="w-full mt-2 text-xs text-sky-100/60 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-200/10 file:px-3 file:py-2 file:text-xs file:font-bold file:text-sky-100" />
-            </div>
-            <button type="submit" disabled={!nickname.trim()} className="w-full bg-sky-500 hover:bg-sky-400 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 rounded-xl py-3.5 font-black text-sm transition flex items-center justify-center gap-2">Join {EVENT_DISPLAY_NAME} <ArrowRight className="w-4 h-4" /></button>
+            <div className="text-left"><label className="text-xs font-black text-slate-600 uppercase tracking-wider">Your Name</label><input type="text" value={nickname} onChange={(event) => setNickname(event.target.value)} placeholder="Enter your name" className="w-full mt-2 bg-white border border-sky-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-300 transition" maxLength={30} autoComplete="off" /></div>
+            <div className="text-left"><label className="text-xs font-black text-slate-600 uppercase tracking-wider">Photo for your memory card <span className="normal-case text-slate-400">(optional)</span></label><input type="file" accept="image/*" onChange={(event) => setPhotoFile(event.target.files?.[0] || null)} className="w-full mt-2 text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-100 file:px-3 file:py-2 file:text-xs file:font-black file:text-sky-700" /></div>
+            <button type="submit" disabled={!nickname.trim()} className="w-full bg-sky-600 hover:bg-sky-500 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl py-3.5 font-black text-sm transition flex items-center justify-center gap-2">Join {EVENT_DISPLAY_NAME} <ArrowRight className="w-4 h-4" /></button>
           </form>
-          {session?.nickname && <button onClick={onContinue} className="w-full mt-3 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-xl py-3 text-sm font-semibold transition">Continue as {session.nickname}</button>}
-          <div className="mt-7 flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest text-sky-100/35"><Radio className="w-3 h-3" /> Live Event <span>•</span> Audience Experience</div>
+          {session?.nickname && <button onClick={onContinue} className="w-full mt-3 bg-white hover:bg-sky-50 text-slate-600 rounded-xl py-3 text-sm font-bold transition border border-sky-200">Continue as {session.nickname}</button>}
+          <div className="mt-7 flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest text-slate-400"><Radio className="w-3 h-3" /> Live Event <span>•</span> Audience Experience</div>
         </div>
-        <p className="text-center text-[10px] text-sky-100/35 mt-5">WATCH → FEEL → PARTICIPATE → REMEMBER</p>
+        
+        <p className="text-center text-[10px] text-slate-400 mt-5">Made by - Suhani Gaurav Joshi</p>
+
       </div>
     </div>
   );
 }
 
-function AudienceHome({ session, dbData, musicians, nowPlaying, supabaseInteractions, supabaseVotes, supabaseReactions, people, audienceProfile, onAudiencePhotoUpload, onChangeNickname }) {
+function AudienceHome({ session, nowPlaying, supabaseInteractions, supabaseVotes, supabaseReactions, people, audienceProfile, onAudiencePhotoUpload, onChangeNickname }) {
   const nickname = session?.nickname || 'Guest';
   const [showPeopleModal, setShowPeopleModal] = useState(false);
   const [peopleTab, setPeopleTab] = useState('anchor');
@@ -830,7 +963,7 @@ function AudienceHome({ session, dbData, musicians, nowPlaying, supabaseInteract
   const [reactionMessage, setReactionMessage] = useState('');
 
   const liveInteraction = useMemo(() => supabaseInteractions.find((interaction) => interaction.event_id === APP_EVENT_ID && interaction.status === 'live') || null, [supabaseInteractions]);
-  const currentPerformer = people.find((person) => person.category === 'performer' && person.name === nowPlaying?.performer) || people.find((person) => person.category === 'performer') || null;
+  const currentPerformer = people.find((person) => person.category === 'performer' && person.name === nowPlaying?.performer) || null;
   const musicianPeople = people.filter((person) => person.category === 'musician');
   const anchorPeople = people.filter((person) => person.category === 'anchor');
   const organizerPeople = people.filter((person) => person.category === 'organizer');
@@ -861,7 +994,7 @@ function AudienceHome({ session, dbData, musicians, nowPlaying, supabaseInteract
     else setReactionMessage('Reaction sent ✓');
   };
 
-  const interactionResults = liveInteraction ? liveInteraction.options.map((option) => {
+  const interactionResults = liveInteraction ? (liveInteraction.options || []).map((option) => {
     const votes = supabaseVotes.filter((vote) => vote.interaction_id === liveInteraction.id && vote.selected_option === option).length;
     const total = supabaseVotes.filter((vote) => vote.interaction_id === liveInteraction.id).length;
     return { option, votes, percentage: total ? Math.round((votes / total) * 100) : 0 };
@@ -882,13 +1015,13 @@ function AudienceHome({ session, dbData, musicians, nowPlaying, supabaseInteract
   const handleShareCard = async () => {
     const blob = await buildMemoryCardBlob({ name: nickname, photoUrl, score: engagement.score, tag: engagement.tag });
     const file = new File([blob], `${EVENT_DISPLAY_NAME.replace(/\s+/g, '-')}-memory.png`, { type: 'image/png' });
-    if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
-      try {
+    try {
+      if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
         await navigator.share({ title: `${EVENT_DISPLAY_NAME} Memory`, text: `${nickname} • ${engagement.tag}`, files: [file] });
         return;
-      } catch (error) {
-        if (error?.name === 'AbortError') return;
       }
+    } catch (error) {
+      if (error?.name === 'AbortError') return;
     }
     downloadBlob(blob, `${EVENT_DISPLAY_NAME.replace(/\s+/g, '-')}-memory.png`);
   };
@@ -896,32 +1029,33 @@ function AudienceHome({ session, dbData, musicians, nowPlaying, supabaseInteract
   return (
     <>
       <div className="max-w-md mx-auto p-4 pb-20 space-y-5 relative z-10">
-        <div className="flex items-center justify-between bg-sky-950/70 border border-sky-100/10 rounded-2xl p-4 backdrop-blur shadow-md">
-          <div><span className="text-[11px] font-bold text-sky-100/50 uppercase tracking-wider block">Audience Member</span><h2 className="text-lg font-bold text-white">Good evening, {nickname} 👋</h2></div>
-          <button onClick={onChangeNickname} className="text-xs text-sky-200 hover:text-white bg-sky-300/10 px-2.5 py-1 rounded-lg border border-sky-200/20 font-medium transition">Change</button>
+        <div className="bg-white/82 border border-sky-200 rounded-2xl p-4 backdrop-blur shadow-md flex items-center justify-between"><div><span className="text-[11px] font-black text-slate-400 uppercase tracking-wider block">Audience Member</span><h2 className="text-lg font-black text-slate-900">Good evening, {nickname} 👋</h2></div><button onClick={onChangeNickname} className="text-xs text-sky-700 hover:text-sky-900 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-200 font-bold transition">Change</button></div>
+
+        <div className="bg-white/86 border border-sky-200 rounded-3xl p-6 shadow-2xl relative overflow-hidden text-center">
+          <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-sky-200/40 rounded-full blur-2xl pointer-events-none" />
+          <div className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-widest text-sky-700 bg-sky-100 px-3.5 py-1 rounded-full border border-sky-200 mb-4"><CloudRain className="w-4 h-4" /> Now Playing</div>
+          {nowPlaying ? <div className="space-y-4"><h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight">🎤 {nowPlaying.title}</h1><p className="text-xl text-sky-700 font-black">{nowPlaying.performer}</p>{currentPerformer && <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">{currentPerformer.intro}</p>}<div className="pt-1 flex justify-center items-center gap-1"><span className="w-1.5 h-4 bg-sky-500 rounded-full animate-bounce" /><span className="w-1.5 h-6 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.2s]" /><span className="w-1.5 h-3 bg-cyan-500 rounded-full animate-bounce [animation-delay:0.4s]" /></div></div> : <div className="py-6"><Radio className="w-10 h-10 text-slate-300 mx-auto mb-2 animate-pulse" /><p className="text-slate-500 text-sm font-bold">Intermission / Preparing Next Act</p></div>}
         </div>
 
-        <div className="bg-gradient-to-br from-sky-950 via-slate-900 to-indigo-950 border border-sky-200/15 rounded-3xl p-6 shadow-2xl relative overflow-hidden text-center">
-          <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-sky-300/10 rounded-full blur-2xl pointer-events-none" />
-          <div className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-widest text-sky-200 bg-sky-300/10 px-3.5 py-1 rounded-full border border-sky-200/20 mb-4"><CloudRain className="w-4 h-4" /> Now Playing</div>
-          {nowPlaying ? <div className="space-y-4"><h1 className="text-3xl md:text-4xl font-black text-white tracking-tight font-serif leading-tight">🎤 {nowPlaying.title}</h1><p className="text-xl text-sky-200 font-semibold">{nowPlaying.performer}</p>{currentPerformer && <p className="text-xs text-sky-100/70 leading-relaxed max-w-xs mx-auto">{currentPerformer.intro}</p>}<div className="pt-1 flex justify-center items-center gap-1"><span className="w-1.5 h-4 bg-sky-300 rounded-full animate-bounce" /><span className="w-1.5 h-6 bg-indigo-300 rounded-full animate-bounce [animation-delay:0.2s]" /><span className="w-1.5 h-3 bg-cyan-300 rounded-full animate-bounce [animation-delay:0.4s]" /></div></div> : <div className="py-6"><Radio className="w-10 h-10 text-sky-100/25 mx-auto mb-2 animate-pulse" /><p className="text-sky-100/50 text-sm font-medium">Intermission / Preparing Next Act</p></div>}
-        </div>
+        {nowPlaying && currentPerformer && <PersonFeatureCard title="Know the Performer" person={currentPerformer} onClick={() => openPeople('performer')} />}
 
-        {nowPlaying && currentPerformer && <PersonFeatureCard title="Know the Performer" person={currentPerformer} buttonText="Know more" onClick={() => openPeople('performer')} accent="sky" />}
+        {liveInteraction && <div className="bg-white/84 border border-emerald-200 rounded-3xl p-5 shadow-xl"><div className="flex items-center justify-between mb-2"><div className="inline-flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-widest text-emerald-700"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Live Interaction</div>{hasVoted && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}</div><h3 className="text-lg font-black text-slate-900">{liveInteraction.question || liveInteraction.title}</h3><p className="text-xs text-slate-500 mt-1">{liveInteraction.type === 'guess_song' ? 'Guess the song' : 'Tap one option'}</p><div className="space-y-2 mt-4">{interactionResults.map(({ option, votes, percentage }) => <button key={option} disabled={hasVoted} onClick={() => handleVote(option)} className={`w-full relative overflow-hidden border rounded-xl px-3 py-3 text-left transition ${hasVoted ? 'border-slate-200 bg-slate-50' : 'border-slate-200 hover:border-emerald-300 bg-white'}`}><div className="absolute inset-y-0 left-0 bg-emerald-100/70" style={{ width: hasVoted ? `${percentage}%` : '0%' }} /><div className="relative flex items-center justify-between gap-3"><span className="text-sm text-slate-800 font-bold">{option}</span>{hasVoted && <span className="text-xs font-black text-emerald-700">{percentage}%</span>}</div>{hasVoted && <div className="relative mt-1 text-[10px] text-slate-500">{votes} vote{votes === 1 ? '' : 's'}</div>}</button>)}</div>{voteMessage && <p className="text-xs text-emerald-700 mt-3 font-bold">{voteMessage}</p>}</div>}
 
-        {liveInteraction && <div className="bg-slate-900/85 border border-emerald-300/25 rounded-3xl p-5 shadow-xl"><div className="flex items-center justify-between mb-2"><div className="inline-flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-widest text-emerald-300"><span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" /> Live Interaction</div>{hasVoted && <CheckCircle2 className="w-4 h-4 text-emerald-300" />}</div><h3 className="text-lg font-black text-white">{liveInteraction.question || liveInteraction.title}</h3><p className="text-xs text-slate-400 mt-1">{liveInteraction.type === 'guess_song' ? 'Guess the song' : 'Tap one option'}</p><div className="space-y-2 mt-4">{interactionResults.map(({ option, votes, percentage }) => <button key={option} disabled={hasVoted} onClick={() => handleVote(option)} className={`w-full relative overflow-hidden border rounded-xl px-3 py-3 text-left transition ${hasVoted ? 'border-slate-700 bg-slate-950' : 'border-slate-700 hover:border-emerald-300 bg-slate-950'}`}>{hasVoted && <div className="absolute inset-y-0 left-0 bg-emerald-300/10" style={{ width: `${percentage}%` }} />}<div className="relative flex items-center justify-between gap-3"><span className="text-sm text-white font-medium">{option}</span>{hasVoted && <span className="text-xs font-bold text-emerald-300">{percentage}%</span>}</div>{hasVoted && <div className="relative mt-1 text-[10px] text-slate-500">{votes} vote{votes === 1 ? '' : 's'}</div>}</button>)}</div>{voteMessage && <p className="text-xs text-emerald-300 mt-3">{voteMessage}</p>}</div>}
+        {nowPlaying && <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-xl"><div className="flex items-center justify-between"><div><h3 className="text-sm font-black text-slate-900">React to the performance</h3><p className="text-[11px] text-slate-500 mt-1">One reaction per performance</p></div><Heart className="w-5 h-5 text-pink-500" /></div><div className="grid grid-cols-4 gap-2 mt-4">{performanceReactionCounts.map(({ reaction, count }) => <button key={reaction} disabled={Boolean(myReaction)} onClick={() => handleReaction(reaction)} className={`rounded-2xl py-3 border transition ${myReaction === reaction ? 'bg-pink-100 border-pink-300' : 'bg-white border-slate-200 hover:border-sky-300'}`}><div className="text-xl">{reaction}</div><div className="text-[10px] text-slate-500 mt-1">{count}</div></button>)}</div>{reactionMessage && <p className="text-xs text-pink-700 mt-3 font-bold">{reactionMessage}</p>}</div>}
 
-        {nowPlaying && <div className="bg-slate-900/85 border border-cyan-200/15 rounded-3xl p-5 shadow-xl"><div className="flex items-center justify-between"><div><h3 className="text-sm font-black text-white">React to the performance</h3><p className="text-[11px] text-slate-400 mt-1">One reaction per performance</p></div><Heart className="w-5 h-5 text-pink-300" /></div><div className="grid grid-cols-4 gap-2 mt-4">{performanceReactionCounts.map(({ reaction, count }) => <button key={reaction} disabled={Boolean(myReaction)} onClick={() => handleReaction(reaction)} className={`rounded-2xl py-3 border transition ${myReaction === reaction ? 'bg-pink-500/20 border-pink-300/60' : 'bg-slate-950 border-slate-800 hover:border-cyan-200/50'}`}><div className="text-xl">{reaction}</div><div className="text-[10px] text-slate-400 mt-1">{count}</div></button>)}</div>{reactionMessage && <p className="text-xs text-pink-200 mt-3">{reactionMessage}</p>}</div>}
+        <div className="bg-white/84 border border-indigo-200 rounded-3xl p-5 shadow"><div className="flex items-center justify-between mb-4"><div><h3 className="text-sm font-black text-slate-900">Meet the Performers</h3><p className="text-[11px] text-slate-500 mt-1">The voices performing live tonight</p></div><Music className="w-5 h-5 text-indigo-600" /></div><div className="grid grid-cols-2 gap-3">{people.filter((person) => person.category === 'performer').map((person) => <PersonMiniPhotoCard key={person.id || person.name} person={person} />)}</div><button onClick={() => openPeople('performer')} className="w-full mt-4 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 border border-indigo-200 rounded-xl py-2.5 text-xs font-black transition">Know More: Performers</button></div>
 
-        <div className="bg-slate-900/80 border border-sky-200/10 rounded-3xl p-5 backdrop-blur"><div className="flex items-center justify-between mb-4"><div><h3 className="text-sm font-bold text-white">Know the Musicians</h3><p className="text-[11px] text-slate-400 mt-1">The people creating the live sound tonight</p></div><Volume2 className="w-5 h-5 text-sky-200" /></div><div className="grid grid-cols-2 gap-3">{musicianPeople.map((person) => <PersonMiniPhotoCard key={person.id || person.name} person={person} />)}</div><button onClick={() => openPeople('musician')} className="w-full mt-4 bg-sky-300/10 hover:bg-sky-300/15 text-sky-100 border border-sky-200/15 rounded-xl py-2.5 text-xs font-bold transition">See musician details</button></div>
+        <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><div className="flex items-center justify-between mb-4"><div><h3 className="text-sm font-black text-slate-900">Know the Musicians</h3><p className="text-[11px] text-slate-500 mt-1">The people creating the live sound tonight</p></div><Volume2 className="w-5 h-5 text-sky-600" /></div><div className="grid grid-cols-2 gap-3">{musicianPeople.map((person) => <PersonMiniPhotoCard key={person.id || person.name} person={person} />)}</div><button onClick={() => openPeople('musician')} className="w-full mt-4 bg-sky-100 hover:bg-sky-200 text-sky-800 border border-sky-200 rounded-xl py-2.5 text-xs font-black transition">See musician details</button></div>
 
-        <div className="bg-slate-900/80 border border-sky-200/10 rounded-3xl p-5 backdrop-blur"><div className="flex items-center justify-between"><div><h3 className="text-sm font-bold text-white">Anchors & Organising Team</h3><p className="text-[11px] text-slate-400 mt-1">Meet the people making the evening happen</p></div><Sparkles className="w-5 h-5 text-sky-200" /></div><div className="grid grid-cols-2 gap-3 mt-4">{anchorPeople.slice(0, 2).map((person) => <PersonMiniPhotoCard key={person.id || person.name} person={person} />)}</div><button onClick={() => openPeople('anchor')} className="w-full mt-4 bg-sky-300/10 hover:bg-sky-300/15 text-sky-100 border border-sky-200/15 rounded-xl py-2.5 text-xs font-bold transition">Know More: Anchors & Team</button></div>
+        <div className="bg-white/84 border border-indigo-200 rounded-3xl p-5 shadow"><div className="flex items-center justify-between"><div><h3 className="text-sm font-black text-slate-900">Anchors & Organising Team</h3><p className="text-[11px] text-slate-500 mt-1">Meet the people making the evening happen</p></div><Sparkles className="w-5 h-5 text-indigo-600" /></div><div className="grid grid-cols-2 gap-3 mt-4">{[...anchorPeople, ...organizerPeople].map((person) => <PersonMiniPhotoCard key={person.id || person.name} person={person} />)}</div><button onClick={() => openPeople('anchor')} className="w-full mt-4 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 border border-indigo-200 rounded-xl py-2.5 text-xs font-black transition">Know More: Anchors & Team</button></div>
 
-        <div className="bg-gradient-to-r from-sky-950/80 to-indigo-950/70 border border-sky-200/10 rounded-3xl p-5"><div className="flex items-center justify-between"><div><div className="text-xs font-bold uppercase tracking-widest text-sky-200 flex items-center gap-2"><Zap className="w-4 h-4" /> Your Memory Card</div><h3 className="text-xl font-black text-white mt-2">{engagement.tag}</h3><p className="text-xs text-sky-100/60 mt-1">Built from your live participation tonight.</p></div><div className="text-3xl font-black text-sky-200">{engagement.score}%</div></div><div className="h-3 rounded-full bg-white/10 mt-4 overflow-hidden"><div className="h-full bg-sky-300 rounded-full" style={{ width: `${engagement.score}%` }} /></div><div className="mt-4 rounded-2xl border border-sky-100/10 bg-slate-950/40 p-3 flex items-center gap-3"><div className="w-14 h-14 rounded-xl overflow-hidden bg-sky-300/10 border border-sky-100/10 flex items-center justify-center text-xl text-sky-100">{photoUrl ? <img src={photoUrl} alt={nickname} className="w-full h-full object-cover" /> : (nickname.charAt(0).toUpperCase())}</div><div className="flex-1"><p className="text-xs text-sky-100/45">Memory card name</p><p className="text-sm font-bold text-white">{nickname}</p>{!photoUrl && <p className="text-[10px] text-sky-100/40 mt-1">Add a photo for a personal memory card.</p>}</div>{!photoUrl && <label className="cursor-pointer text-[10px] font-bold text-sky-100 bg-sky-300/10 border border-sky-100/10 rounded-lg px-2 py-1.5"><Camera className="w-3 h-3 inline mr-1" /> Add<input type="file" accept="image/*" className="hidden" onChange={(event) => onAudiencePhotoUpload(event.target.files?.[0])} /></label>}</div><div className="flex gap-2 mt-3"><button onClick={handleDownloadCard} className="flex-1 bg-sky-300 text-slate-950 font-black text-xs rounded-xl py-2.5 flex items-center justify-center gap-2"><Download className="w-4 h-4" /> Download</button><button onClick={handleShareCard} className="flex-1 bg-slate-800 text-white font-bold text-xs rounded-xl py-2.5 flex items-center justify-center gap-2 border border-slate-700"><Share2 className="w-4 h-4" /> Share</button></div></div>
+        <div className="bg-white/90 border border-sky-200 rounded-3xl p-5 shadow-xl"><div className="flex items-center justify-between"><div><div className="text-xs font-black uppercase tracking-widest text-sky-700 flex items-center gap-2"><Zap className="w-4 h-4" /> Your Memory Card</div><h3 className="text-xl font-black text-slate-900 mt-2">{engagement.tag}</h3><p className="text-xs text-slate-500 mt-1">Built from your live participation tonight.</p></div><div className="text-3xl font-black text-sky-700">{engagement.score}%</div></div><div className="h-3 rounded-full bg-slate-200 mt-4 overflow-hidden"><div className="h-full bg-gradient-to-r from-sky-500 to-cyan-400 rounded-full" style={{ width: `${engagement.score}%` }} /></div><div className="mt-4 rounded-2xl border border-sky-200 bg-sky-50 p-3 flex items-center gap-3"><div className="w-14 h-14 rounded-xl overflow-hidden bg-sky-100 border border-sky-200 flex items-center justify-center text-xl text-sky-700">{photoUrl ? <img src={photoUrl} alt={nickname} className="w-full h-full object-cover" /> : nickname.charAt(0).toUpperCase()}</div><div className="flex-1"><p className="text-xs text-slate-400">Memory card name</p><p className="text-sm font-black text-slate-900">{nickname}</p>{!photoUrl && <p className="text-[10px] text-slate-400 mt-1">Add a photo for a personal memory card.</p>}</div>{!photoUrl && <label className="cursor-pointer text-[10px] font-black text-sky-700 bg-white border border-sky-200 rounded-lg px-2 py-1.5"><Camera className="w-3 h-3 inline mr-1" /> Add<input type="file" accept="image/*" className="hidden" onChange={(event) => onAudiencePhotoUpload(event.target.files?.[0])} /></label>}</div><div className="flex gap-2 mt-3"><button onClick={handleDownloadCard} className="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-black text-xs rounded-xl py-2.5 flex items-center justify-center gap-2"><Download className="w-4 h-4" /> Download</button><button onClick={handleShareCard} className="flex-1 bg-white text-slate-700 font-black text-xs rounded-xl py-2.5 flex items-center justify-center gap-2 border border-slate-200"><Share2 className="w-4 h-4" /> Share</button></div></div>
 
-        <div className="bg-slate-900/65 border border-sky-200/10 rounded-3xl p-5"><div className="flex items-center gap-2 text-sky-200 text-xs font-bold uppercase tracking-widest"><Zap className="w-4 h-4" /> Your Music Night</div><div className="grid grid-cols-2 gap-3 mt-4"><StatBox label="Votes" value={myVotes.length} /><StatBox label="Reactions" value={myReactions.length} /></div></div>
-        <div className="text-center text-[10px] uppercase font-bold tracking-widest text-sky-100/30 pt-2">WATCH → EXPERIENCE → PARTICIPATE → REMEMBER</div>
-      </div>
+        <div className="bg-white/84 border border-sky-200 rounded-3xl p-5"><div className="flex items-center gap-2 text-sky-700 text-xs font-black uppercase tracking-widest"><Zap className="w-4 h-4" /> Your Music Night</div><div className="grid grid-cols-2 gap-3 mt-4"><StatBox label="Votes" value={myVotes.length} /><StatBox label="Reactions" value={myReactions.length} /></div></div>
+        <div className="text-center text-[10px] uppercase font-black tracking-widest text-slate-400 pt-2">WATCH → EXPERIENCE → PARTICIPATE → REMEMBER</div>
+      
+      <div className="text-center text-[10px] uppercase font-black tracking-widest text-slate-400 pt-2">Made by - Suhani Gaurav Joshi</div>
+    </div>
 
       {showPeopleModal && <EventPeopleModal people={people} initialTab={peopleTab} currentPerformer={currentPerformer} onClose={() => setShowPeopleModal(false)} />}
     </>
@@ -929,15 +1063,15 @@ function AudienceHome({ session, dbData, musicians, nowPlaying, supabaseInteract
 }
 
 function PersonFeatureCard({ title, person, onClick }) {
-  return <div className="bg-slate-900/85 border border-sky-200/15 rounded-3xl p-5"><div className="flex items-center gap-4"><div className="w-16 h-16 rounded-2xl overflow-hidden bg-sky-300/10 border border-sky-200/15 flex items-center justify-center text-2xl">{person.photo ? <img src={person.photo} alt={person.name} className="w-full h-full object-cover" /> : '🎤'}</div><div className="flex-1"><p className="text-[10px] uppercase tracking-widest text-sky-200 font-bold">{title}</p><h3 className="text-lg font-black text-white mt-1">{person.name}</h3><p className="text-xs text-slate-400 mt-1">{person.role}</p></div></div><p className="text-xs text-sky-100/65 leading-relaxed mt-3">{person.intro}</p><button onClick={onClick} className="mt-3 text-xs font-bold text-sky-200">Know more →</button></div>;
+  return <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><div className="flex items-center gap-4"><div className="w-20 h-20 rounded-2xl overflow-hidden bg-sky-100 border border-sky-200 flex items-center justify-center text-2xl">{person.photo ? <img src={person.photo} alt={person.name} className="w-full h-full object-cover" /> : '🎤'}</div><div className="flex-1"><p className="text-[10px] uppercase tracking-widest text-sky-700 font-black">{title}</p><h3 className="text-lg font-black text-slate-900 mt-1">{person.name}</h3><p className="text-xs text-slate-500 mt-1">{person.role || person.instrument}</p></div></div><p className="text-xs text-slate-500 leading-relaxed mt-3">{person.intro}</p><button onClick={onClick} className="mt-3 text-xs font-black text-sky-700">Know more →</button></div>;
 }
 
 function PersonMiniPhotoCard({ person }) {
-  return <div className="bg-slate-950/70 border border-sky-200/10 p-3 rounded-2xl"><div className="w-full aspect-square max-h-32 rounded-xl overflow-hidden bg-sky-300/10 border border-sky-100/10 flex items-center justify-center text-2xl">{person.photo ? <img src={person.photo} alt={person.name} className="w-full h-full object-cover" /> : (person.icon || (person.category === 'musician' ? instrumentEmoji(person.instrument) : '🎙️'))}</div><p className="text-sm font-bold text-white mt-2 truncate">{person.name}</p><p className="text-[11px] text-sky-200/70 truncate">{person.role || person.instrument}</p></div>;
+  return <div className="bg-white border border-slate-200 p-3 rounded-2xl shadow-sm"><div className="w-full aspect-square max-h-32 rounded-xl overflow-hidden bg-sky-50 border border-sky-100 flex items-center justify-center text-2xl">{person.photo ? <img src={person.photo} alt={person.name} className="w-full h-full object-cover" /> : (person.category === 'musician' ? instrumentEmoji(person.instrument) : person.category === 'anchor' ? '🎙️' : '✨')}</div><p className="text-sm font-black text-slate-900 mt-2 truncate">{person.name}</p><p className="text-[11px] text-slate-500 truncate">{person.role || person.instrument}</p></div>;
 }
 
 function StatBox({ label, value }) {
-  return <div className="bg-slate-950 border border-sky-200/10 rounded-2xl p-3 text-center"><div className="text-2xl font-black text-white">{value}</div><div className="text-[10px] uppercase font-bold tracking-wider text-slate-500 mt-1">{label}</div></div>;
+  return <div className="bg-white border border-slate-200 rounded-2xl p-3 text-center shadow-sm"><div className="text-2xl font-black text-slate-900">{value}</div><div className="text-[10px] uppercase font-black tracking-wider text-slate-500 mt-1">{label}</div></div>;
 }
 
 function instrumentEmoji(instrument) {
@@ -954,45 +1088,42 @@ function EventPeopleModal({ people, currentPerformer, initialTab, onClose }) {
   };
   const currentGroup = groups[tab] || groups.performer;
 
-  return <div className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4"><div className="bg-sky-950 border border-sky-100/10 rounded-3xl w-full max-w-md max-h-[90vh] overflow-hidden shadow-2xl"><div className="p-4 border-b border-sky-100/10 flex items-center justify-between"><div><p className="text-[10px] uppercase tracking-widest text-sky-200 font-bold">{EVENT_DISPLAY_NAME}</p><h2 className="text-lg font-black text-white">Know More</h2></div><button onClick={onClose} className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white"><X className="w-5 h-5" /></button></div><div className="flex gap-2 p-3 overflow-x-auto border-b border-sky-100/10">{Object.entries(groups).map(([key, group]) => <button key={key} onClick={() => setTab(key)} className={`whitespace-nowrap px-3 py-2 rounded-xl text-[11px] font-bold border ${tab === key ? 'bg-sky-300 text-slate-950 border-sky-200' : 'bg-slate-950 text-slate-400 border-slate-800'}`}>{group.icon} {group.title}</button>)}</div><div className="overflow-y-auto max-h-[calc(90vh-130px)] p-4 space-y-4">{tab === 'performer' && currentPerformer && <div className="mb-2"><p className="text-[9px] uppercase tracking-widest text-sky-200 font-bold mb-2">Performing now</p><PersonDetailCard person={currentPerformer} /></div>}{currentGroup.people.length === 0 ? <div className="py-10 text-center text-slate-500 text-xs">No team members added yet.</div> : currentGroup.people.map((person) => <PersonDetailCard key={person.id || person.name} person={person} />)}</div></div></div>;
+  return <div className="fixed inset-0 z-[100] bg-sky-950/30 backdrop-blur-md flex items-center justify-center p-4"><div className="bg-white border border-sky-200 rounded-3xl w-full max-w-md max-h-[90vh] overflow-hidden shadow-2xl"><div className="p-4 border-b border-sky-100 flex items-center justify-between"><div><p className="text-[10px] uppercase tracking-widest text-sky-700 font-black">{EVENT_DISPLAY_NAME}</p><h2 className="text-lg font-black text-slate-900">Know More</h2></div><button onClick={onClose} className="p-2 rounded-xl bg-sky-50 text-slate-400 hover:text-slate-700"><X className="w-5 h-5" /></button></div><div className="flex gap-2 p-3 overflow-x-auto border-b border-sky-100">{Object.entries(groups).map(([key, group]) => <button key={key} onClick={() => setTab(key)} className={`whitespace-nowrap px-3 py-2 rounded-xl text-[11px] font-black border ${tab === key ? 'bg-sky-600 text-white border-sky-500' : 'bg-white text-slate-500 border-slate-200'}`}>{group.icon} {group.title}</button>)}</div><div className="overflow-y-auto max-h-[calc(90vh-130px)] p-4 space-y-4">{tab === 'performer' && currentPerformer && <div className="mb-2"><p className="text-[9px] uppercase tracking-widest text-sky-700 font-black mb-2">Performing now</p><PersonDetailCard person={currentPerformer} /></div>}{currentGroup.people.length === 0 ? <div className="py-10 text-center text-slate-400 text-xs">No team members added yet.</div> : currentGroup.people.map((person) => <PersonDetailCard key={person.id || person.name} person={person} />)}</div></div></div>;
 }
 
 function PersonDetailCard({ person }) {
-  return <div className="bg-slate-950/85 border border-sky-200/10 rounded-2xl p-4"><div className="flex items-start gap-3"><div className="w-14 h-14 rounded-xl bg-sky-300/10 border border-sky-100/10 flex items-center justify-center text-xl overflow-hidden">{person.photo ? <img src={person.photo} alt={person.name} className="w-full h-full object-cover" /> : (person.icon || (person.category === 'musician' ? instrumentEmoji(person.instrument) : person.category === 'anchor' ? '🎙️' : person.category === 'organizer' ? '✨' : '🎤'))}</div><div className="flex-1"><h4 className="text-sm font-bold text-white">{person.name}</h4><p className="text-xs text-sky-200/80">{person.role || person.instrument}</p></div></div><p className="text-xs text-sky-100/65 leading-relaxed mt-3">{person.intro || 'Part of the team behind the evening.'}</p><div className="grid grid-cols-2 gap-2 mt-3"><InfoBox label="Age" value={person.age || '—'} /><InfoBox label="Work" value={person.work || '—'} /><div className="col-span-2"><InfoBox label="Workplace" value={person.workplace || '—'} /></div></div><div className="mt-2"><InfoBox label="Achievements" value={person.achievements || '—'} /></div></div>;
+  return <div className="bg-sky-50/80 border border-sky-100 rounded-2xl p-4"><div className="flex items-start gap-3"><div className="w-16 h-16 rounded-xl bg-white border border-sky-200 flex items-center justify-center text-xl overflow-hidden">{person.photo ? <img src={person.photo} alt={person.name} className="w-full h-full object-cover" /> : (person.category === 'musician' ? instrumentEmoji(person.instrument) : person.category === 'anchor' ? '🎙️' : person.category === 'organizer' ? '✨' : '🎤')}</div><div className="flex-1"><h4 className="text-sm font-black text-slate-900">{person.name}</h4><p className="text-xs text-sky-700 font-bold">{person.role || person.instrument}</p></div></div><p className="text-xs text-slate-500 leading-relaxed mt-3">{person.intro || 'Part of the team behind the evening.'}</p><div className="grid grid-cols-2 gap-2 mt-3"><InfoBox label="Age" value={person.age || '—'} /><InfoBox label="Work" value={person.work || '—'} /><div className="col-span-2"><InfoBox label="Workplace" value={person.workplace || '—'} /></div></div><div className="mt-2"><InfoBox label="Achievements" value={person.achievements || '—'} /></div></div>;
 }
 
 function InfoBox({ label, value }) {
-  return <div className="bg-slate-900 rounded-xl p-2.5"><p className="text-[9px] uppercase text-slate-500 font-bold">{label}</p><p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">{value}</p></div>;
+  return <div className="bg-white rounded-xl p-2.5 border border-sky-100"><p className="text-[9px] uppercase text-slate-400 font-black">{label}</p><p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">{value}</p></div>;
 }
+
 function AdminLogin({ onLogin }) {
-  const [email, setEmail] = useState('admin@musicnight.live');
-  const [password, setPassword] = useState('stage2026');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    onLogin();
+    if (password === ADMIN_PASSWORD) {
+      setError('');
+      onLogin();
+    } else {
+      setError('Incorrect admin password.');
+    }
   };
 
   return (
-    <div className="min-h-[calc(100vh-42px)] flex items-center justify-center p-6 max-w-md mx-auto">
-      <div className="w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6">
-        <div className="text-center space-y-2">
-          <div className="inline-flex p-3 bg-purple-500/10 border border-purple-500/20 rounded-2xl text-purple-400 mb-2"><Lock className="w-8 h-8" /></div>
-          <h2 className="text-2xl font-black text-white tracking-tight font-serif">Stage Control Login</h2>
-          <p className="text-xs text-slate-400">Authorized Event Admin Control Room Access</p>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div><label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Admin Email</label><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required className="w-full bg-slate-950 border border-slate-700 focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none" /></div>
-          <div><label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Password</label><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required className="w-full bg-slate-950 border border-slate-700 focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none" /></div>
-          <button type="submit" className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2">Enter Control Dashboard <ArrowRight className="w-4 h-4" /></button>
-        </form>
-        <div className="text-center pt-2 border-t border-slate-800"><p className="text-[11px] text-slate-500">Prototype admin gate — connect Supabase Auth before production.</p></div>
+    <div className="min-h-[calc(100vh-42px)] flex items-center justify-center p-6 relative z-10">
+      <div className="w-full max-w-md bg-white/86 border border-sky-200 rounded-3xl p-6 shadow-2xl space-y-6">
+        <div className="text-center space-y-2"><div className="inline-flex p-3 bg-sky-100 border border-sky-200 rounded-2xl text-sky-700 mb-2"><Lock className="w-8 h-8" /></div><h2 className="text-2xl font-black text-slate-900 tracking-tight">Admin Control Room</h2><p className="text-xs text-slate-500">{EVENT_DISPLAY_NAME}</p></div>
+        <form onSubmit={handleSubmit} className="space-y-4"><div><label className="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">Admin Password</label><input autoFocus type="password" value={password} onChange={(event) => setPassword(event.target.value)} required className="w-full bg-white border border-sky-200 focus:border-sky-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none" /></div>{error && <p className="text-xs font-bold text-rose-600">{error}</p>}<button type="submit" className="w-full bg-sky-600 hover:bg-sky-500 text-white font-black py-3 rounded-xl text-sm transition flex items-center justify-center gap-2">Enter Control Dashboard <ArrowRight className="w-4 h-4" /></button></form>
       </div>
     </div>
   );
 }
 
-function AdminDashboard({ dbData, updateDatabase, activeTab, setActiveTab, onLogout, nowPlaying, supabasePerformances, supabaseInteractions, supabaseVotes, supabaseReactions, audienceCount, supabaseAudience, people, analyticsSnapshots, supabaseMemoryCards }) {
+function AdminDashboard({ dbData, updateDatabase, activeTab, setActiveTab, onLogout, nowPlaying, supabasePerformances, supabaseInteractions, supabaseVotes, supabaseReactions, audienceCount, supabaseAudience, people, analyticsSnapshots, supabaseMemoryCards, onRefresh }) {
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'performances', label: 'Performances', icon: ListMusic },
@@ -1003,37 +1134,22 @@ function AdminDashboard({ dbData, updateDatabase, activeTab, setActiveTab, onLog
     { id: 'analytics', label: 'Analytics', icon: Activity },
   ];
 
-  return <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6 relative z-10"><div className="bg-sky-950/75 border border-sky-100/10 rounded-3xl p-5 shadow-xl flex flex-wrap items-center justify-between gap-4 backdrop-blur"><div className="flex items-center gap-3"><div className="p-3 bg-sky-300/10 border border-sky-200/15 rounded-2xl text-sky-200"><CloudRain className="w-6 h-6 animate-pulse" /></div><div><span className="text-[10px] font-extrabold uppercase tracking-widest text-sky-200 bg-sky-300/10 px-2 py-0.5 rounded-full border border-sky-200/10">Live Control Room</span><h1 className="text-2xl font-black text-white tracking-tight font-serif">{EVENT_DISPLAY_NAME}</h1></div></div><div className="flex items-center gap-3"><div className="bg-slate-950/70 px-3 py-1.5 rounded-xl border border-sky-100/10 text-xs flex items-center gap-2"><Users className="w-4 h-4 text-sky-200" /><span className="text-slate-400">Audience:</span><strong className="text-white font-bold text-sm">{audienceCount}</strong></div><button onClick={onLogout} className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 transition text-xs flex items-center gap-1"><LogOut className="w-4 h-4" /> Logout</button></div></div><div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-sky-100/10">{tabs.map((tab) => { const Icon = tab.icon; const isActive = activeTab === tab.id; return <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${isActive ? 'bg-sky-400 text-slate-950 shadow-lg' : 'bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800'}`}><Icon className="w-4 h-4" /><span>{tab.label}</span></button>; })}</div>{activeTab === 'overview' && <AdminOverviewTab nowPlaying={nowPlaying} dbData={dbData} audienceCount={audienceCount} />}{activeTab === 'performances' && <AdminPerformancesTab supabasePerformances={supabasePerformances} />}{activeTab === 'musicians' && <AdminMusiciansTab dbData={dbData} updateDatabase={updateDatabase} />}{activeTab === 'people' && <AdminPeopleTab people={people} />}{activeTab === 'audience' && <AdminAudienceTab dbData={dbData} audienceCount={audienceCount} supabaseAudience={supabaseAudience} />}{activeTab === 'interactions' && <AdminInteractionsTab supabaseInteractions={supabaseInteractions} supabaseVotes={supabaseVotes} />}{activeTab === 'analytics' && <AdminAnalyticsTab supabasePerformances={supabasePerformances} supabaseInteractions={supabaseInteractions} supabaseVotes={supabaseVotes} supabaseReactions={supabaseReactions} supabaseAudience={supabaseAudience} people={people} analyticsSnapshots={analyticsSnapshots} supabaseMemoryCards={supabaseMemoryCards} />}</div>;
+  return <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6 relative z-10"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-xl flex flex-wrap items-center justify-between gap-4 backdrop-blur"><div className="flex items-center gap-3"><div className="p-3 bg-sky-100 border border-sky-200 rounded-2xl text-sky-700"><CloudRain className="w-6 h-6 animate-pulse" /></div><div><span className="text-[10px] font-black uppercase tracking-widest text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full border border-sky-200">Live Control Room</span><h1 className="text-2xl font-black text-slate-900 tracking-tight">{EVENT_DISPLAY_NAME}</h1></div></div><div className="flex items-center gap-3"><div className="bg-white/80 px-3 py-1.5 rounded-xl border border-sky-200 text-xs flex items-center gap-2"><Users className="w-4 h-4 text-sky-700" /><span className="text-slate-500">Audience:</span><strong className="text-slate-900 font-black text-sm">{audienceCount}</strong></div><button onClick={onLogout} className="p-2 bg-white hover:bg-sky-50 text-slate-600 rounded-xl border border-slate-200 transition text-xs flex items-center gap-1"><LogOut className="w-4 h-4" /> Logout</button></div></div><div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-sky-200">{tabs.map((tab) => { const Icon = tab.icon; const isActive = activeTab === tab.id; return <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition whitespace-nowrap ${isActive ? 'bg-sky-600 text-white shadow-lg' : 'bg-white/80 text-slate-500 hover:text-sky-700 border border-slate-200'}`}><Icon className="w-4 h-4" /><span>{tab.label}</span></button>; })}</div>{activeTab === 'overview' && <AdminOverviewTab nowPlaying={nowPlaying} people={people} audienceCount={audienceCount} />}{activeTab === 'performances' && <AdminPerformancesTab supabasePerformances={supabasePerformances} onRefresh={onRefresh} />}{activeTab === 'musicians' && <AdminMusiciansTab people={people} onRefresh={onRefresh} />}{activeTab === 'people' && <AdminPeopleTab people={people} onRefresh={onRefresh} />}{activeTab === 'audience' && <AdminAudienceTab audience={supabaseAudience} audienceCount={audienceCount} supabaseVotes={supabaseVotes} supabaseReactions={supabaseReactions} supabaseInteractions={supabaseInteractions} />}{activeTab === 'interactions' && <AdminInteractionsTab supabaseInteractions={supabaseInteractions} supabaseVotes={supabaseVotes} supabaseAudience={supabaseAudience} supabaseReactions={supabaseReactions} supabasePerformances={supabasePerformances} />}{activeTab === 'analytics' && <AdminAnalyticsTab supabasePerformances={supabasePerformances} supabaseInteractions={supabaseInteractions} supabaseVotes={supabaseVotes} supabaseReactions={supabaseReactions} supabaseAudience={supabaseAudience} people={people} analyticsSnapshots={analyticsSnapshots} supabaseMemoryCards={supabaseMemoryCards} onRefresh={onRefresh} />}</div>;
 }
 
-function AdminOverviewTab({ nowPlaying, dbData, audienceCount }) {
+function AdminOverviewTab({ nowPlaying, people, audienceCount }) {
+  const musicianCount = people.filter((person) => person.category === 'musician').length;
   const endCurrentPerformance = async () => {
     if (!supabase || !nowPlaying) return;
     const { error } = await supabase.from('performances').update({ status: 'completed' }).eq('id', nowPlaying.id);
     if (error) alert(`Could not end performance: ${error.message}`);
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <InfoCard title="Event Status"><div className="flex items-center justify-between"><h3 className="text-lg font-bold text-white">{EVENT_DISPLAY_NAME}</h3><span className="px-2.5 py-1 rounded-full text-xs font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">LIVE</span></div><p className="text-xs text-slate-400 mt-2">Date: 2026-10-15</p></InfoCard>
-        <InfoCard title="Live Audience"><div className="flex items-center justify-between"><h3 className="text-3xl font-black text-purple-400">{audienceCount}</h3><Users className="w-8 h-8 text-purple-500/40" /></div><p className="text-xs text-slate-400">Connected sessions</p></InfoCard>
-        <InfoCard title="Stage Musicians"><div className="flex items-center justify-between"><h3 className="text-3xl font-black text-pink-400">{dbData.musicians.length}</h3><Music className="w-8 h-8 text-pink-500/40" /></div><p className="text-xs text-slate-400">Configured musicians</p></InfoCard>
-      </div>
-
-      <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-purple-950/40 border border-purple-500/30 rounded-3xl p-6 space-y-4 shadow-xl">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-          <div className="flex items-center gap-2"><Disc className="w-5 h-5 text-purple-400" /><h3 className="text-base font-bold text-white">Current Stage Performance</h3></div>
-          {nowPlaying && <button onClick={endCurrentPerformance} className="text-xs font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 px-3 py-1.5 rounded-xl border border-rose-500/30">End Performance</button>}
-        </div>
-        {nowPlaying ? <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center"><div><span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">Now Playing</span><h2 className="text-2xl font-black text-white font-serif mt-1">🎤 {nowPlaying.title}</h2><p className="text-sm font-semibold text-purple-300 mt-1">Performer: {nowPlaying.performer}</p><p className="text-xs text-slate-400 mt-0.5">Original: {nowPlaying.song_artist || '—'}</p></div><div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800"><span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Live Musicians On Stage</span><div className="flex flex-wrap gap-2">{dbData.musicians.map((musician) => <span key={musician.id} className="text-xs font-semibold bg-purple-950/50 text-purple-200 border border-purple-500/20 px-2.5 py-1 rounded-lg">{musician.name} ({musician.instrument})</span>)}</div></div></div> : <div className="text-center py-6 text-slate-400 text-sm">No active song set.</div>}
-      </div>
-    </div>
-  );
+  return <div className="space-y-6"><div className="grid grid-cols-1 md:grid-cols-3 gap-4"><InfoCard title="Event Status"><div className="flex items-center justify-between"><h3 className="text-lg font-black text-slate-900">{EVENT_DISPLAY_NAME}</h3><span className="px-2.5 py-1 rounded-full text-xs font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">LIVE</span></div><p className="text-xs text-slate-500 mt-2">Date: 2026-10-15</p></InfoCard><InfoCard title="Live Audience"><div className="flex items-center justify-between"><h3 className="text-3xl font-black text-sky-700">{audienceCount}</h3><Users className="w-8 h-8 text-sky-300" /></div><p className="text-xs text-slate-500">Connected sessions</p></InfoCard><InfoCard title="Stage Musicians"><div className="flex items-center justify-between"><h3 className="text-3xl font-black text-indigo-700">{musicianCount}</h3><Music className="w-8 h-8 text-indigo-300" /></div><p className="text-xs text-slate-500">People in the music team</p></InfoCard></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-6 space-y-4 shadow-xl"><div className="flex items-center justify-between border-b border-sky-100 pb-3"><div className="flex items-center gap-2"><Music className="w-5 h-5 text-sky-700" /><h3 className="text-base font-black text-slate-900">Current Stage Performance</h3></div>{nowPlaying && <button onClick={endCurrentPerformance} className="text-xs font-black text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-xl border border-rose-200">End Performance</button>}</div>{nowPlaying ? <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center"><div><span className="text-[10px] font-black text-sky-700 uppercase tracking-wider">Now Playing</span><h2 className="text-2xl font-black text-slate-900 mt-1">🎤 {nowPlaying.title}</h2><p className="text-sm font-black text-sky-700 mt-1">Performer: {nowPlaying.performer}</p><p className="text-xs text-slate-500 mt-0.5">Original: {nowPlaying.song_artist || '—'}</p></div><div className="bg-sky-50 p-4 rounded-2xl border border-sky-100"><span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-2">Live Musicians</span><div className="flex flex-wrap gap-2">{people.filter((person) => person.category === 'musician').map((musician) => <span key={musician.id} className="text-xs font-black bg-white text-sky-800 border border-sky-100 px-2.5 py-1 rounded-lg">{musician.name} ({musician.instrument || musician.role})</span>)}</div></div></div> : <div className="text-center py-6 text-slate-400 text-sm font-bold">No active song set.</div>}</div></div>;
 }
 
 function InfoCard({ title, children }) {
-  return <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3"><span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{title}</span>{children}</div>;
+  return <div className="bg-white/84 border border-sky-200 rounded-2xl p-5 space-y-3 shadow-sm"><span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">{title}</span>{children}</div>;
 }
 
 function AdminPerformancesTab({ supabasePerformances }) {
@@ -1043,18 +1159,12 @@ function AdminPerformancesTab({ supabasePerformances }) {
   const [editingId, setEditingId] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  const resetForm = () => {
-    setSongName('');
-    setPerformerName('');
-    setArtistName('');
-    setEditingId(null);
-  };
+  const resetForm = () => { setSongName(''); setPerformerName(''); setArtistName(''); setEditingId(null); };
 
   const handleAddOrUpdate = async (event) => {
     event.preventDefault();
     if (!supabase || !songName.trim() || !performerName.trim() || busy) return;
     setBusy(true);
-
     if (editingId) {
       const { error } = await supabase.from('performances').update({ title: songName.trim(), performer: performerName.trim(), song_artist: artistName.trim() }).eq('id', editingId);
       if (error) alert(`Could not update performance: ${error.message}`);
@@ -1063,55 +1173,16 @@ function AdminPerformancesTab({ supabasePerformances }) {
       const { error } = await supabase.from('performances').insert({ id: newId, event_id: APP_EVENT_ID, title: songName.trim(), performer: performerName.trim(), song_artist: artistName.trim(), display_order: supabasePerformances.length + 1, status: 'queued' });
       if (error) alert(`Could not add performance: ${error.message}`);
     }
-
     resetForm();
     setBusy(false);
   };
 
   const handleSetPlaying = async (id) => {
     if (!supabase) return;
-
-    console.log('🔥 MAKE LIVE CLICKED:', id);
-
-    const { data: currentLive, error: findError } = await supabase
-      .from('performances')
-      .select('id, status')
-      .eq('event_id', APP_EVENT_ID)
-      .eq('status', 'playing');
-
-    if (findError) {
-      console.error('🚨 FIND LIVE ERROR:', findError);
-      alert(`Could not read current performance: ${findError.message}`);
-      return;
-    }
-
-    if (currentLive?.length) {
-      const { error: stopError } = await supabase
-        .from('performances')
-        .update({ status: 'queued' })
-        .eq('event_id', APP_EVENT_ID)
-        .eq('status', 'playing');
-
-      if (stopError) {
-        console.error('🚨 STOP ERROR:', stopError);
-        alert(`Could not stop current performance: ${stopError.message}`);
-        return;
-      }
-    }
-
-    const { error: playError } = await supabase
-      .from('performances')
-      .update({ status: 'playing' })
-      .eq('id', id)
-      .eq('event_id', APP_EVENT_ID);
-
-    if (playError) {
-      console.error('🚨 MAKE LIVE ERROR:', playError);
-      alert(`Could not make live: ${playError.message}`);
-      return;
-    }
-
-    console.log('✅ PERFORMANCE IS LIVE:', id);
+    const { error: stopError } = await supabase.from('performances').update({ status: 'queued' }).eq('event_id', APP_EVENT_ID).eq('status', 'playing');
+    if (stopError) return alert(`Could not stop current performance: ${stopError.message}`);
+    const { error } = await supabase.from('performances').update({ status: 'playing' }).eq('id', id).eq('event_id', APP_EVENT_ID);
+    if (error) alert(`Could not make live: ${error.message}`);
   };
 
   const handleEndPerformance = async (id) => {
@@ -1127,126 +1198,51 @@ function AdminPerformancesTab({ supabasePerformances }) {
     if (editingId === id) resetForm();
   };
 
-  return (
-    <div className="space-y-6">
-      <form onSubmit={handleAddOrUpdate} className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-lg space-y-4">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2"><Plus className="w-4 h-4 text-purple-400" />{editingId ? 'Edit Performance' : 'Add New Performance'}</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <FormInput label="Song Name" value={songName} setValue={setSongName} placeholder="e.g. Tum Hi Ho" />
-          <FormInput label="Performer" value={performerName} setValue={setPerformerName} placeholder="e.g. Aarushi" />
-          <FormInput label="Original Artist" value={artistName} setValue={setArtistName} placeholder="e.g. Mohit Chauhan" required={false} />
-        </div>
-        <div className="flex gap-2"><button type="submit" className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-4 py-2 rounded-xl">{busy ? 'Saving…' : editingId ? 'Save Changes' : 'Add Performance'}</button>{editingId && <button type="button" onClick={resetForm} className="bg-slate-800 text-slate-300 font-bold text-xs px-4 py-2 rounded-xl">Cancel</button>}</div>
-      </form>
-
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-3">
-        <div className="flex items-center justify-between"><div><h3 className="text-sm font-bold text-white">Event Performance List</h3><p className="text-[10px] text-slate-500 mt-1">Control what the audience sees live</p></div><span className="text-[10px] text-emerald-400 font-bold uppercase flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />Live Control</span></div>
-        <div className="space-y-2">
-          {supabasePerformances.map((performance, index) => {
-            const isPlaying = performance.status === 'playing';
-            return <div key={performance.id} className={`p-4 rounded-2xl border flex flex-wrap items-center justify-between gap-3 ${isPlaying ? 'bg-purple-950/40 border-purple-500/50' : 'bg-slate-950/60 border-slate-800'}`}>
-              <div className="flex items-center gap-3"><span className="w-7 h-7 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center font-bold text-xs">{index + 1}</span><div><h4 className="text-sm font-bold text-white flex items-center gap-2">{performance.title}{isPlaying && <span className="text-[9px] font-extrabold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">LIVE NOW</span>}</h4><p className="text-xs text-purple-300">Singer: {performance.performer}</p>{performance.song_artist && <p className="text-[10px] text-slate-500 mt-0.5">Original: {performance.song_artist}</p>}</div></div>
-              <div className="flex items-center gap-2">
-                {!isPlaying && <button onClick={() => handleSetPlaying(performance.id)} className="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 font-bold text-xs px-3 py-1.5 rounded-xl border border-emerald-500/30 flex items-center gap-1"><PlayCircle className="w-3.5 h-3.5" />Make Live</button>}
-                {isPlaying && <button onClick={() => handleEndPerformance(performance.id)} className="bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 font-bold text-xs px-3 py-1.5 rounded-xl border border-rose-500/30">End Performance</button>}
-                <button onClick={() => { setEditingId(performance.id); setSongName(performance.title || ''); setPerformerName(performance.performer || ''); setArtistName(performance.song_artist || ''); }} className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg"><Edit3 className="w-3.5 h-3.5" /></button>
-                <button onClick={() => handleDelete(performance.id)} className="p-1.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
-              </div>
-            </div>;
-          })}
-        </div>
-      </div>
-    </div>
-  );
+  return <div className="space-y-6"><form onSubmit={handleAddOrUpdate} className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg space-y-4"><h3 className="text-sm font-black text-slate-900 flex items-center gap-2"><Plus className="w-4 h-4 text-sky-700" />{editingId ? 'Edit Performance' : 'Add New Performance'}</h3><div className="grid grid-cols-1 sm:grid-cols-3 gap-3"><FormInput label="Song Name" value={songName} setValue={setSongName} placeholder="e.g. Tum Hi Ho" /><FormInput label="Performer" value={performerName} setValue={setPerformerName} placeholder="e.g. Aarushi" /><FormInput label="Original Artist" value={artistName} setValue={setArtistName} placeholder="e.g. Mohit Chauhan" required={false} /></div><div className="flex gap-2"><button type="submit" className="bg-sky-600 hover:bg-sky-500 text-white font-black text-xs px-4 py-2 rounded-xl">{busy ? 'Saving…' : editingId ? 'Save Changes' : 'Add Performance'}</button>{editingId && <button type="button" onClick={resetForm} className="bg-white text-slate-600 font-black text-xs px-4 py-2 rounded-xl border border-slate-200">Cancel</button>}</div></form><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 space-y-3"><div className="flex items-center justify-between"><div><h3 className="text-sm font-black text-slate-900">Event Performance List</h3><p className="text-[10px] text-slate-500 mt-1">Control what the audience sees live</p></div><span className="text-[10px] text-emerald-700 font-black uppercase flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />Live Control</span></div><div className="space-y-2">{supabasePerformances.map((performance, index) => { const isPlaying = performance.status === 'playing'; return <div key={performance.id} className={`p-4 rounded-2xl border flex flex-wrap items-center justify-between gap-3 ${isPlaying ? 'bg-sky-50 border-sky-300' : 'bg-white border-slate-200'}`}><div className="flex items-center gap-3"><span className="w-7 h-7 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center font-black text-xs">{index + 1}</span><div><h4 className="text-sm font-black text-slate-900 flex items-center gap-2">{performance.title}{isPlaying && <span className="text-[9px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">LIVE NOW</span>}</h4><p className="text-xs text-sky-700 font-bold">Singer: {performance.performer}</p>{performance.song_artist && <p className="text-[10px] text-slate-500 mt-0.5">Original: {performance.song_artist}</p>}</div></div><div className="flex items-center gap-2">{!isPlaying && <button onClick={() => handleSetPlaying(performance.id)} className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-black text-xs px-3 py-1.5 rounded-xl border border-emerald-200 flex items-center gap-1"><PlayCircle className="w-3.5 h-3.5" />Make Live</button>}{isPlaying && <button onClick={() => handleEndPerformance(performance.id)} className="bg-rose-50 hover:bg-rose-100 text-rose-700 font-black text-xs px-3 py-1.5 rounded-xl border border-rose-200">End Performance</button>}<button onClick={() => { setEditingId(performance.id); setSongName(performance.title || ''); setPerformerName(performance.performer || ''); setArtistName(performance.song_artist || ''); }} className="p-1.5 bg-white hover:bg-sky-50 text-slate-600 rounded-lg border border-slate-200"><Edit3 className="w-3.5 h-3.5" /></button><button onClick={() => handleDelete(performance.id)} className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg border border-rose-100"><Trash2 className="w-3.5 h-3.5" /></button></div></div>; })}</div></div></div>;
 }
 
 function FormInput({ label, value, setValue, placeholder, required = true }) {
-  return <div><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</label><input type="text" value={value} onChange={(event) => setValue(event.target.value)} placeholder={placeholder} required={required} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-purple-500" /></div>;
+  return <div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">{label}</label><input type="text" value={value} onChange={(event) => setValue(event.target.value)} placeholder={placeholder} required={required} className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-sky-500" /></div>;
 }
 
-function AdminMusiciansTab({ dbData, updateDatabase }) {
+function AdminMusiciansTab({ people, onRefresh }) {
   const [name, setName] = useState('');
   const [instrument, setInstrument] = useState('Guitar');
-
-  const handleAddMusician = (event) => {
-    event.preventDefault();
-    if (!name.trim()) return;
-    updateDatabase((prev) => ({ ...prev, musicians: [...prev.musicians, { id: `mus_${Date.now()}`, event_id: APP_EVENT_ID, name: name.trim(), instrument }] }));
-    setName('');
-  };
-
-  return (
-    <div className="space-y-6">
-      <form onSubmit={handleAddMusician} className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-lg space-y-4">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2"><Plus className="w-4 h-4 text-pink-400" /> Add Live Stage Musician</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <FormInput label="Musician Name" value={name} setValue={setName} placeholder="e.g. Rahul, Meera..." />
-          <div><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Instrument</label><select value={instrument} onChange={(event) => setInstrument(event.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-purple-500"><option>Guitar</option><option>Keyboard</option><option>Drums</option><option>Bass</option><option>Violin</option><option>Flute</option><option>Tabla</option></select></div>
-        </div>
-        <button type="submit" className="bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs px-4 py-2 rounded-xl">Add Musician</button>
-      </form>
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-3"><h3 className="text-sm font-bold text-white">Configured Musicians</h3><div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{dbData.musicians.map((musician) => <div key={musician.id} className="bg-slate-950 border border-slate-800 p-3.5 rounded-2xl flex items-center justify-between"><div><p className="text-sm font-bold text-white">{musician.name}</p><p className="text-xs text-purple-400">{musician.instrument}</p></div><button onClick={() => updateDatabase((prev) => ({ ...prev, musicians: prev.musicians.filter((row) => row.id !== musician.id) }))} className="p-1.5 text-rose-400 hover:bg-rose-950/40 rounded-lg"><Trash2 className="w-4 h-4" /></button></div>)}</div></div>
-    </div>
-  );
-}
-
-function AdminAudienceTab({ dbData, audienceCount, supabaseAudience }) {
-  const audience = supabaseAudience.length > 0 ? supabaseAudience : dbData.audience;
-  return <div className="bg-slate-900 border border-sky-100/10 rounded-3xl p-5 space-y-4 shadow-lg"><div className="flex items-center justify-between"><h3 className="text-sm font-bold text-white flex items-center gap-2"><Users className="w-4 h-4 text-sky-200" /> Live Audience Directory ({audienceCount})</h3><span className="text-xs text-emerald-300 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">Realtime</span></div><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-800 text-slate-400 uppercase font-extrabold text-[10px]"><th className="pb-3 pl-2">Audience Member</th><th className="pb-3">Joined</th><th className="pb-3">Session</th><th className="pb-3 pr-2 text-right">Status</th></tr></thead><tbody className="divide-y divide-slate-800/60">{audience.length ? audience.map((member) => <tr key={member.id || member.session_id}><td className="py-3 pl-2 font-bold text-white"><div className="flex items-center gap-2"><div className="w-8 h-8 rounded-full overflow-hidden bg-sky-300/10 text-sky-200 border border-sky-200/10 flex items-center justify-center font-bold text-xs">{member.photo_url ? <img src={member.photo_url} alt={member.nickname} className="w-full h-full object-cover" /> : (member.nickname?.[0]?.toUpperCase() || 'A')}</div>{member.nickname}</div></td><td className="py-3 text-slate-300">{formatJoined(member.joined_at)}</td><td className="py-3 font-mono text-[11px] text-slate-500">{member.session_id?.slice(0, 16)}...</td><td className="py-3 pr-2 text-right"><span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20"><span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />Active</span></td></tr>) : <tr><td colSpan="4" className="py-8 text-center text-slate-500">No audience members yet.</td></tr>}</tbody></table></div></div>;
-}
-
-function formatJoined(value) {
-  if (!value) return '—';
-  if (value.includes('AM') || value.includes('PM')) return value;
-  return new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-function AdminPeopleTab({ people }) {
-  const [category, setCategory] = useState('organizer');
-  const [name, setName] = useState('');
-  const [role, setRole] = useState('');
+  const [photoFile, setPhotoFile] = useState(null);
   const [saving, setSaving] = useState(false);
+  const musicians = people.filter((person) => person.category === 'musician');
 
-  const uploadPhoto = async (person, file) => {
-    if (!supabase || !file) return;
-    const upload = await uploadEventMedia(file, `people/${APP_EVENT_ID}`, person.id || person.name);
-    if (upload.error) {
-      alert(`Photo upload failed: ${upload.error.message}`);
-      return;
-    }
-    const row = {
-      id: person.id || `${person.category}_${Date.now()}`,
-      event_id: APP_EVENT_ID,
-      category: person.category,
-      name: person.name,
-      role: person.role || person.instrument || '',
-      instrument: person.instrument || null,
-      photo_url: upload.url,
-      age: person.age || null,
-      work: person.work || null,
-      workplace: person.workplace || null,
-      intro: person.intro || null,
-      achievements: person.achievements || null,
-      display_order: person.display_order || 0,
-    };
-    const { error } = await supabase.from('event_people').upsert(row, { onConflict: 'id' });
-    if (error) alert(`Could not save person: ${error.message}`);
-  };
-
-  const addOrganizer = async (event) => {
+  const handleAddMusician = async (event) => {
     event.preventDefault();
-    if (!supabase || !name.trim()) return;
+    if (!supabase || !name.trim() || saving) return;
     setSaving(true);
-    const id = `organizer_${Date.now()}`;
-    const { error } = await supabase.from('event_people').insert({ id, event_id: APP_EVENT_ID, category, name: name.trim(), role: role.trim() || 'Organising Team', display_order: 99 });
+    const result = await saveEventPerson({ category: 'musician', name: name.trim(), role: instrument, instrument, display_order: 99 }, photoFile);
     setSaving(false);
-    if (error) {
-      alert(`Could not add team member: ${error.message}`);
+    if (result.error) {
+      alert(`Could not add musician: ${result.error.message}`);
       return;
     }
     setName('');
-    setRole('');
+    setPhotoFile(null);
+    await onRefresh?.();
   };
+
+  const deleteMusician = async (person) => {
+    if (!supabase || !person._fromDb || !window.confirm(`Delete ${person.name}?`)) return;
+    const { error } = await supabase.from('event_people').delete().eq('id', person.id);
+    if (error) return alert(`Could not delete musician: ${error.message}`);
+    onRefresh?.();
+  };
+
+  return <div className="space-y-6"><form onSubmit={handleAddMusician} className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg space-y-4"><h3 className="text-sm font-black text-slate-900 flex items-center gap-2"><Plus className="w-4 h-4 text-indigo-700" /> Add Live Stage Musician + Photo</h3><div className="grid grid-cols-1 sm:grid-cols-3 gap-3"><FormInput label="Musician Name" value={name} setValue={setName} placeholder="e.g. Rahul" /><div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Instrument</label><select value={instrument} onChange={(event) => setInstrument(event.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none"><option>Guitar</option><option>Keyboard</option><option>Drums</option><option>Bass</option><option>Violin</option><option>Flute</option><option>Tabla</option></select></div><div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Photograph</label><input type="file" accept="image/*" onChange={(event) => setPhotoFile(event.target.files?.[0] || null)} className="w-full text-xs text-slate-500 file:mr-2 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:text-xs file:font-black file:text-indigo-700" /></div></div><button type="submit" disabled={saving} className="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-300 text-white font-black text-xs px-4 py-2.5 rounded-xl">{saving ? 'Saving…' : 'Add Musician'}</button></form><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 space-y-3"><h3 className="text-sm font-black text-slate-900">Configured Musicians</h3><div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{musicians.map((musician) => <div key={musician.id} className="bg-white border border-slate-200 p-3.5 rounded-2xl"><div className="flex items-center gap-3"><div className="w-14 h-14 rounded-xl overflow-hidden bg-sky-50 border border-sky-100 flex items-center justify-center">{musician.photo ? <img src={musician.photo} alt={musician.name} className="w-full h-full object-cover" /> : instrumentEmoji(musician.instrument)}</div><div className="flex-1"><p className="text-sm font-black text-slate-900">{musician.name}</p><p className="text-xs text-sky-700 font-bold">{musician.instrument || musician.role}</p></div>{musician._fromDb && <button onClick={() => deleteMusician(musician)} className="p-1.5 text-rose-700 hover:bg-rose-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>}</div></div>)}</div></div></div>;
+}
+
+function AdminPeopleTab({ people, onRefresh }) {
+  const blank = { category: 'organizer', name: '', role: '', instrument: 'Guitar', age: '', work: '', workplace: '', intro: '', achievements: '', display_order: 99 };
+  const [form, setForm] = useState(blank);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const grouped = {
     performer: people.filter((person) => person.category === 'performer'),
@@ -1255,29 +1251,96 @@ function AdminPeopleTab({ people }) {
     organizer: people.filter((person) => person.category === 'organizer'),
   };
 
-  const section = (key, title, icon) => <div className="bg-slate-900 border border-sky-100/10 rounded-3xl p-5"><div className="flex items-center gap-2 mb-4"><span className="text-lg">{icon}</span><h3 className="text-sm font-bold text-white">{title}</h3></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{grouped[key].map((person) => <div key={person.id || person.name} className="bg-slate-950/70 border border-sky-100/10 rounded-2xl p-3"><div className="flex items-center gap-3"><div className="w-14 h-14 rounded-xl overflow-hidden bg-sky-300/10 border border-sky-200/10 flex items-center justify-center text-xl">{person.photo ? <img src={person.photo} alt={person.name} className="w-full h-full object-cover" /> : (person.category === 'musician' ? instrumentEmoji(person.instrument) : person.category === 'anchor' ? '🎙️' : person.category === 'organizer' ? '✨' : '🎤')}</div><div className="flex-1"><p className="text-sm font-bold text-white">{person.name}</p><p className="text-[11px] text-sky-200/70">{person.role || person.instrument}</p></div></div><label className="mt-3 cursor-pointer block text-center text-[11px] font-bold text-sky-200 bg-sky-300/10 border border-sky-200/10 rounded-xl px-3 py-2">{person.photo ? 'Replace Photo' : 'Upload Photo'}<input type="file" accept="image/*" className="hidden" onChange={(event) => uploadPhoto(person, event.target.files?.[0])} /></label></div>)}</div></div>;
+  const setField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
-  return <div className="space-y-6"><div className="bg-slate-900 border border-sky-100/10 rounded-3xl p-5"><div className="flex items-start justify-between gap-3"><div><h3 className="text-sm font-bold text-white">People & Team</h3><p className="text-xs text-slate-400 mt-1">Upload photos once and they stay attached to this event for the audience and future archives.</p></div><Camera className="w-5 h-5 text-sky-200" /></div><form onSubmit={addOrganizer} className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5"><div><label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Category</label><select value={category} onChange={(event) => setCategory(event.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"><option value="organizer">Organising Team</option><option value="anchor">Anchor</option><option value="performer">Performer</option><option value="musician">Musician</option></select></div><FormInput label="Name" value={name} setValue={setName} placeholder="Name" /><FormInput label="Role" value={role} setValue={setRole} placeholder="e.g. Event Head" required={false} /><div className="sm:col-span-3"><button type="submit" disabled={saving} className="bg-sky-300 text-slate-950 font-black text-xs px-4 py-2.5 rounded-xl">{saving ? 'Saving…' : 'Add Person / Team Member'}</button></div></form></div>{section('performer', 'Performers', '🎤')}{section('anchor', 'Anchors / MoC', '🎙️')}{section('musician', 'Musicians', '🎼')}{section('organizer', 'Organising Team', '✨')}</div>;
+  const reset = () => {
+    setForm(blank);
+    setPhotoFile(null);
+    setEditingId(null);
+  };
+
+  const submit = async (event) => {
+    event.preventDefault();
+    if (!supabase || !form.name.trim() || saving) return;
+    setSaving(true);
+    const result = await saveEventPerson({ ...form, id: editingId || `${form.category}_${Date.now()}`, name: form.name.trim() }, photoFile);
+    setSaving(false);
+    if (result.error) {
+      alert(`Could not save person: ${result.error.message}`);
+      return;
+    }
+    reset();
+    await onRefresh?.();
+  };
+
+  const editPerson = (person) => {
+    setEditingId(person.id);
+    setForm({
+      category: person.category || 'organizer',
+      name: person.name || '',
+      role: person.role || '',
+      instrument: person.instrument || 'Guitar',
+      age: person.age || '',
+      work: person.work || '',
+      workplace: person.workplace || '',
+      intro: person.intro || '',
+      achievements: person.achievements || '',
+      display_order: person.display_order || 99,
+    });
+    setPhotoFile(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const deletePerson = async (person) => {
+    if (!supabase || !person._fromDb || !window.confirm(`Delete ${person.name}?`)) return;
+    const { error } = await supabase.from('event_people').delete().eq('id', person.id);
+    if (error) return alert(`Could not delete person: ${error.message}`);
+    onRefresh?.();
+  };
+
+  const updatePhoto = async (person, file) => {
+    if (!file) return;
+    const result = await saveEventPerson(person, file);
+    if (result.error) alert(`Photo upload failed: ${result.error.message}`);
+    else onRefresh?.();
+  };
+
+  const section = (key, title, icon) => <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><div className="flex items-center gap-2 mb-4"><span className="text-lg">{icon}</span><h3 className="text-sm font-black text-slate-900">{title}</h3></div><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">{grouped[key].map((person) => <div key={person.id || person.name} className="bg-white border border-slate-200 rounded-2xl p-3"><div className="flex items-center gap-3"><div className="w-16 h-16 rounded-xl overflow-hidden bg-sky-50 border border-sky-100 flex items-center justify-center text-xl">{person.photo ? <img src={person.photo} alt={person.name} className="w-full h-full object-cover" /> : (person.category === 'musician' ? instrumentEmoji(person.instrument) : person.category === 'anchor' ? '🎙️' : person.category === 'organizer' ? '✨' : '🎤')}</div><div className="flex-1 min-w-0"><p className="text-sm font-black text-slate-900 truncate">{person.name}</p><p className="text-[11px] text-sky-700 truncate">{person.role || person.instrument}</p></div></div><div className="flex gap-2 mt-3"><button onClick={() => editPerson(person)} className="flex-1 bg-sky-50 text-sky-700 border border-sky-200 rounded-xl py-2 text-[11px] font-black"><Edit3 className="w-3 h-3 inline mr-1" />Edit</button><label className="flex-1 cursor-pointer text-center bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-xl py-2 text-[11px] font-black">{person.photo ? 'Replace Photo' : 'Upload Photo'}<input type="file" accept="image/*" className="hidden" onChange={(event) => updatePhoto(person, event.target.files?.[0])} /></label>{person._fromDb && <button onClick={() => deletePerson(person)} className="p-2 text-rose-700 bg-rose-50 border border-rose-100 rounded-xl"><Trash2 className="w-4 h-4" /></button>}</div></div>)}</div></div>;
+
+  return <div className="space-y-6"><form onSubmit={submit} className="bg-white/88 border border-sky-200 rounded-3xl p-5 shadow-xl space-y-4"><div className="flex items-start justify-between gap-3"><div><h3 className="text-sm font-black text-slate-900">People & Team</h3><p className="text-xs text-slate-500 mt-1">Add performers, anchors, musicians and organisers with photographs and Know More details.</p></div><Camera className="w-5 h-5 text-sky-700" /></div><div className="grid grid-cols-1 sm:grid-cols-3 gap-3"><div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Category</label><select value={form.category} onChange={(event) => setField('category', event.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800"><option value="performer">Performer</option><option value="anchor">Anchor</option><option value="musician">Musician</option><option value="organizer">Organising Team</option></select></div><FormInput label="Name" value={form.name} setValue={(value) => setField('name', value)} placeholder="Name" /><FormInput label="Role" value={form.role} setValue={(value) => setField('role', value)} placeholder="e.g. Event Head / Vocalist" required={false} /></div>{form.category === 'musician' && <div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Instrument</label><select value={form.instrument} onChange={(event) => setField('instrument', event.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800"><option>Guitar</option><option>Keyboard</option><option>Drums</option><option>Bass</option><option>Violin</option><option>Flute</option><option>Tabla</option></select></div>}<div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><FormInput label="Age" value={form.age} setValue={(value) => setField('age', value)} placeholder="21" required={false} /><div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Photograph</label><input type="file" accept="image/*" onChange={(event) => setPhotoFile(event.target.files?.[0] || null)} className="w-full text-xs text-slate-500 file:mr-2 file:rounded-lg file:border-0 file:bg-sky-50 file:px-3 file:py-2 file:text-xs file:font-black file:text-sky-700" /></div></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><FormInput label="Work" value={form.work} setValue={(value) => setField('work', value)} placeholder="Student / Musician" required={false} /><FormInput label="Workplace" value={form.workplace} setValue={(value) => setField('workplace', value)} placeholder="Navrachana University" required={false} /></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><TextAreaInput label="Intro" value={form.intro} setValue={(value) => setField('intro', value)} placeholder="Short audience-facing introduction" /><TextAreaInput label="Achievements" value={form.achievements} setValue={(value) => setField('achievements', value)} placeholder="Achievements / experience" /></div><div className="flex gap-2"><button type="submit" disabled={saving} className="bg-sky-600 hover:bg-sky-500 disabled:bg-slate-300 text-white font-black text-xs px-4 py-2.5 rounded-xl">{saving ? 'Saving…' : editingId ? 'Save Person' : 'Add Person'}</button>{editingId && <button type="button" onClick={reset} className="bg-white text-slate-600 font-black text-xs px-4 py-2.5 rounded-xl border border-slate-200">Cancel</button>}</div></form>{section('performer', 'Performers', '🎤')}{section('anchor', 'Anchors / MoC', '🎙️')}{section('musician', 'Musicians', '🎼')}{section('organizer', 'Organising Team', '✨')}</div>;
 }
 
-function AdminInteractionsTab({ supabaseInteractions, supabaseVotes }) {
+function TextAreaInput({ label, value, setValue, placeholder }) {
+  return <div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">{label}</label><textarea value={value} onChange={(event) => setValue(event.target.value)} placeholder={placeholder} rows={4} className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-sky-500 resize-none" /></div>;
+}
+
+function AdminAudienceTab({ audience, audienceCount, supabaseVotes, supabaseReactions, supabaseInteractions }) {
+  const audienceMap = useMemo(() => new Map(audience.map((member) => [member.session_id, member])), [audience]);
+
+  return <div className="space-y-6"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="flex items-center justify-between"><h3 className="text-sm font-black text-slate-900 flex items-center gap-2"><Users className="w-4 h-4 text-sky-700" /> Live Audience Directory ({audienceCount})</h3><span className="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">Live sync</span></div><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase font-black text-[10px]"><th className="pb-3 pl-2">Audience</th><th className="pb-3">Joined</th><th className="pb-3">Votes</th><th className="pb-3">Reactions</th><th className="pb-3 pr-2 text-right">Status</th></tr></thead><tbody className="divide-y divide-slate-200">{audience.length ? audience.map((member) => { const votes = supabaseVotes.filter((vote) => vote.audience_id === member.session_id).length; const reactions = supabaseReactions.filter((reaction) => reaction.audience_id === member.session_id).length; return <tr key={member.id || member.session_id}><td className="py-3 pl-2 font-black text-slate-900"><div className="flex items-center gap-2"><div className="w-9 h-9 rounded-full overflow-hidden bg-sky-100 text-sky-700 border border-sky-200 flex items-center justify-center font-black text-xs">{member.photo_url ? <img src={member.photo_url} alt={member.nickname} className="w-full h-full object-cover" /> : (member.nickname?.[0]?.toUpperCase() || 'A')}</div><div><div>{member.nickname}</div><div className="text-[9px] font-mono text-slate-400">{member.session_id?.slice(0, 12)}...</div></div></div></td><td className="py-3 text-slate-500">{formatJoined(member.joined_at || member.created_at)}</td><td className="py-3 font-black text-sky-700">{votes}</td><td className="py-3 font-black text-pink-600">{reactions}</td><td className="py-3 pr-2 text-right"><span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />Active</span></td></tr>; }) : <tr><td colSpan="5" className="py-8 text-center text-slate-500">No audience members yet.</td></tr>}</tbody></table></div></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><h3 className="text-sm font-black text-slate-900">Audience Response Summary</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase text-[9px]"><th className="pb-3">Question</th><th className="pb-3">Audience</th><th className="pb-3">Answer</th><th className="pb-3">Time</th></tr></thead><tbody className="divide-y divide-slate-200">{supabaseInteractions.flatMap((interaction) => supabaseVotes.filter((vote) => vote.interaction_id === interaction.id).map((vote) => <tr key={vote.id}><td className="py-2 font-bold text-slate-800">{interaction.question}</td><td className="py-2 text-slate-600">{audienceMap.get(vote.audience_id)?.nickname || 'Unknown'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>))}</tbody></table></div></div></div>;
+}
+
+function formatJoined(value) {
+  if (!value) return '—';
+  if (typeof value === 'string' && (value.includes('AM') || value.includes('PM'))) return value;
+  return new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function AdminInteractionsTab({ supabaseInteractions, supabaseVotes, supabaseAudience, supabaseReactions, supabasePerformances }) {
   const [interactionType, setInteractionType] = useState('poll');
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['', '']);
   const [correctOption, setCorrectOption] = useState('');
   const [saving, setSaving] = useState(false);
+  const [selectedInteraction, setSelectedInteraction] = useState(null);
 
   const interactions = supabaseInteractions.filter((interaction) => ['poll', 'guess_song'].includes(interaction.type));
+  const audienceMap = useMemo(() => new Map(supabaseAudience.map((member) => [member.session_id, member])), [supabaseAudience]);
+  const performanceMap = useMemo(() => new Map(supabasePerformances.map((performance) => [performance.id, performance])), [supabasePerformances]);
 
   const addOption = () => setOptions((current) => current.length < 4 ? [...current, ''] : current);
   const updateOption = (index, value) => setOptions((current) => current.map((option, optionIndex) => optionIndex === index ? value : option));
-
-  const reset = () => {
-    setQuestion('');
-    setOptions(['', '']);
-    setCorrectOption('');
-    setInteractionType('poll');
-  };
+  const reset = () => { setQuestion(''); setOptions(['', '']); setCorrectOption(''); setInteractionType('poll'); };
 
   const handleCreate = async () => {
     if (!supabase || saving) return;
@@ -1305,6 +1368,13 @@ function AdminInteractionsTab({ supabaseInteractions, supabaseVotes }) {
     reset();
   };
 
+  const addDefault = (preset) => {
+    setInteractionType(preset.type);
+    setQuestion(preset.question);
+    setOptions(preset.options);
+    setCorrectOption('');
+  };
+
   const handleMakeLive = async (id) => {
     if (!supabase) return;
     const { error: stopError } = await supabase.from('interactions').update({ status: 'stopped' }).eq('event_id', APP_EVENT_ID).eq('status', 'live');
@@ -1320,23 +1390,17 @@ function AdminInteractionsTab({ supabaseInteractions, supabaseVotes }) {
   };
 
   const countVotes = (interactionId) => supabaseVotes.filter((vote) => vote.interaction_id === interactionId).length;
+  const responseRows = selectedInteraction ? supabaseVotes.filter((vote) => vote.interaction_id === selectedInteraction.id) : [];
 
-  return <div className="space-y-6">
-    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-5"><div><h3 className="text-sm font-bold text-white">Create Live Interaction</h3><p className="text-xs text-slate-500 mt-1">Polls and Guess the Song are broadcast instantly to every audience screen.</p></div><span className="text-[10px] uppercase font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">Supabase Realtime</span></div>
-      <div className="flex gap-2 mb-4"><button onClick={() => { setInteractionType('poll'); setCorrectOption(''); }} className={`px-3 py-2 rounded-xl text-xs font-bold border ${interactionType === 'poll' ? 'bg-purple-600 text-white border-purple-500' : 'bg-slate-950 text-slate-400 border-slate-700'}`}>Poll</button><button onClick={() => setInteractionType('guess_song')} className={`px-3 py-2 rounded-xl text-xs font-bold border ${interactionType === 'guess_song' ? 'bg-pink-600 text-white border-pink-500' : 'bg-slate-950 text-slate-400 border-slate-700'}`}>Guess the Song</button></div>
-      <div className="space-y-4"><FormInput label="Question" value={question} setValue={setQuestion} placeholder={interactionType === 'poll' ? 'Which song should we hear next?' : 'Which song is this?'} required />
-        <div><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Options</label><div className="space-y-2">{options.map((option, index) => <input key={index} value={option} onChange={(event) => updateOption(index, event.target.value)} placeholder={`Option ${index + 1}`} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500" />)}</div>{options.length < 4 && <button onClick={addOption} className="mt-3 text-xs font-bold text-purple-400">+ Add Option</button>}</div>
-        {interactionType === 'guess_song' && <div><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Correct Answer</label><select value={correctOption} onChange={(event) => setCorrectOption(event.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white"><option value="">Select correct answer</option>{options.filter(Boolean).map((option) => <option key={option} value={option}>{option}</option>)}</select></div>}
-        <button onClick={handleCreate} disabled={saving} className="bg-purple-600 hover:bg-purple-500 disabled:bg-slate-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl">{saving ? 'Creating…' : 'Create Interaction'}</button>
-      </div>
-    </div>
+  return <div className="space-y-6"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="flex flex-wrap items-start justify-between gap-3 mb-5"><div><h3 className="text-sm font-black text-slate-900">Create Live Interaction</h3><p className="text-xs text-slate-500 mt-1">Create a poll, make it live, and audience screens update within about 2 seconds.</p></div><span className="text-[10px] uppercase font-black text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-1 rounded-full">Live sync active</span></div><div className="flex gap-2 mb-4"><button onClick={() => { setInteractionType('poll'); setCorrectOption(''); }} className={`px-3 py-2 rounded-xl text-xs font-black border ${interactionType === 'poll' ? 'bg-sky-600 text-white border-sky-500' : 'bg-white text-slate-500 border-slate-200'}`}>Poll</button><button onClick={() => setInteractionType('guess_song')} className={`px-3 py-2 rounded-xl text-xs font-black border ${interactionType === 'guess_song' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-white text-slate-500 border-slate-200'}`}>Guess the Song</button></div><div className="flex flex-wrap gap-2 mb-5">{DEFAULT_INTERACTIONS.map((preset, index) => <button key={index} onClick={() => addDefault(preset)} className="bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-700 px-3 py-1.5 rounded-lg text-[10px] font-black">Use default {index + 1}</button>)}</div><div className="space-y-4"><FormInput label="Question" value={question} setValue={setQuestion} placeholder="Ask the audience..." required /><div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Options</label><div className="space-y-2">{options.map((option, index) => <input key={index} value={option} onChange={(event) => updateOption(index, event.target.value)} placeholder={`Option ${index + 1}`} className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-sky-500" />)}</div>{options.length < 4 && <button onClick={addOption} className="mt-3 text-xs font-black text-sky-700">+ Add Option</button>}</div>{interactionType === 'guess_song' && <div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Correct Answer</label><select value={correctOption} onChange={(event) => setCorrectOption(event.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800"><option value="">Select correct answer</option>{options.filter(Boolean).map((option) => <option key={option} value={option}>{option}</option>)}</select></div>}<button onClick={handleCreate} disabled={saving} className="bg-sky-600 hover:bg-sky-500 disabled:bg-slate-300 text-white font-black text-xs px-4 py-2.5 rounded-xl">{saving ? 'Creating…' : 'Create Interaction'}</button></div></div>
 
-    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5"><div className="mb-5"><h3 className="text-sm font-bold text-white">Created Interactions</h3><p className="text-xs text-slate-500 mt-1">Only one live interaction is shown to the audience at a time.</p></div><div className="space-y-3">{interactions.length === 0 ? <p className="text-xs text-slate-500 text-center py-8">No interactions created yet.</p> : interactions.map((interaction) => { const isLive = interaction.status === 'live'; return <div key={interaction.id} className={`p-4 rounded-2xl border ${isLive ? 'bg-purple-950/40 border-purple-500/50' : 'bg-slate-950/60 border-slate-800'}`}><div className="flex items-start justify-between gap-4"><div><div className="flex items-center gap-2"><span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">{interaction.type === 'guess_song' ? 'Guess' : 'Poll'}</span>{isLive && <span className="text-[9px] uppercase font-bold text-emerald-400">LIVE</span>}</div><h4 className="text-sm font-bold text-white mt-2">{interaction.question}</h4><div className="flex flex-wrap gap-2 mt-2">{interaction.options?.map((option, index) => <span key={index} className="text-[10px] bg-slate-800 text-slate-300 px-2 py-1 rounded-lg">{option}</span>)}</div><p className="text-[10px] text-slate-500 mt-2">{countVotes(interaction.id)} response{countVotes(interaction.id) === 1 ? '' : 's'}</p></div><div>{isLive ? <button onClick={() => handleStop(interaction.id)} className="bg-rose-600/20 text-rose-400 font-bold text-xs px-3 py-1.5 rounded-xl border border-rose-500/30">Stop</button> : <button onClick={() => handleMakeLive(interaction.id)} className="bg-emerald-600/20 text-emerald-400 font-bold text-xs px-3 py-1.5 rounded-xl border border-emerald-500/30">Make Live</button>}</div></div></div>; })}</div></div>
+  <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="mb-5"><h3 className="text-sm font-black text-slate-900">Created Interactions + Percent Analysis</h3><p className="text-xs text-slate-500 mt-1">Every question stays in Supabase for future event planning.</p></div><div className="space-y-3">{interactions.length === 0 ? <p className="text-xs text-slate-500 text-center py-8">No interactions created yet.</p> : interactions.map((interaction) => { const isLive = interaction.status === 'live'; const total = countVotes(interaction.id); return <div key={interaction.id} className={`p-4 rounded-2xl border ${isLive ? 'bg-sky-50 border-sky-300' : 'bg-white border-slate-200'}`}><div className="flex items-start justify-between gap-4"><div className="flex-1"><div className="flex items-center gap-2"><span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{interaction.type === 'guess_song' ? 'Guess' : 'Poll'}</span>{isLive && <span className="text-[9px] uppercase font-black text-emerald-700">LIVE</span>}</div><h4 className="text-sm font-black text-slate-900 mt-2">{interaction.question}</h4><div className="space-y-2 mt-3">{(interaction.options || []).map((option) => { const votes = supabaseVotes.filter((vote) => vote.interaction_id === interaction.id && vote.selected_option === option).length; const percentage = total ? Math.round((votes / total) * 100) : 0; return <div key={option} className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs"><div><div className="flex justify-between"><span className="text-slate-600 font-bold">{option}</span><span className="text-sky-700 font-black">{percentage}%</span></div><div className="h-2 bg-slate-100 rounded-full mt-1 overflow-hidden"><div className="h-full bg-sky-500 rounded-full" style={{ width: `${percentage}%` }} /></div></div><span className="text-slate-400 font-bold">{votes}</span></div>; })}</div><p className="text-[10px] text-slate-400 mt-3">{total} total response{total === 1 ? '' : 's'}</p></div><div className="flex flex-col gap-2">{isLive ? <button onClick={() => handleStop(interaction.id)} className="bg-rose-50 text-rose-700 font-black text-xs px-3 py-1.5 rounded-xl border border-rose-200">Stop</button> : <button onClick={() => handleMakeLive(interaction.id)} className="bg-emerald-50 text-emerald-700 font-black text-xs px-3 py-1.5 rounded-xl border border-emerald-200">Make Live</button>}<button onClick={() => setSelectedInteraction(selectedInteraction?.id === interaction.id ? null : interaction)} className="bg-sky-50 text-sky-700 font-black text-xs px-3 py-1.5 rounded-xl border border-sky-200">{selectedInteraction?.id === interaction.id ? 'Hide Responses' : 'See Responses'}</button></div></div>{selectedInteraction?.id === interaction.id && <div className="mt-4 bg-white border border-sky-100 rounded-2xl p-3"><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">Audience Name</th><th className="pb-2">Answer</th><th className="pb-2">Time</th></tr></thead><tbody className="divide-y divide-slate-100">{responseRows.length ? responseRows.map((vote) => <tr key={vote.id}><td className="py-2 font-black text-slate-800">{audienceMap.get(vote.audience_id)?.nickname || 'Unknown audience'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>) : <tr><td colSpan="3" className="py-5 text-center text-slate-400">No responses yet.</td></tr>}</tbody></table></div></div>}</div>; })}</div></div>
+
+  <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="flex items-center justify-between mb-4"><div><h3 className="text-sm font-black text-slate-900">Reaction Log</h3><p className="text-xs text-slate-500 mt-1">Audience member + performance + reaction, stored for future planning.</p></div><Heart className="w-5 h-5 text-pink-600" /></div><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">Audience</th><th className="pb-2">Performance</th><th className="pb-2">Reaction</th><th className="pb-2">Time</th></tr></thead><tbody className="divide-y divide-slate-100">{supabaseReactions.length ? supabaseReactions.map((reaction) => <tr key={reaction.id}><td className="py-2 font-black text-slate-800">{audienceMap.get(reaction.audience_id)?.nickname || 'Unknown audience'}</td><td className="py-2 text-slate-600">{performanceMap.get(reaction.performance_id)?.title || reaction.performance_id}</td><td className="py-2 text-lg">{reaction.reaction}</td><td className="py-2 text-slate-400">{new Date(reaction.created_at).toLocaleTimeString()}</td></tr>) : <tr><td colSpan="4" className="py-5 text-center text-slate-400">No reactions yet.</td></tr>}</tbody></table></div></div>
   </div>;
 }
 
-function AdminAnalyticsTab({ supabasePerformances, supabaseInteractions, supabaseVotes, supabaseReactions, supabaseAudience, people, analyticsSnapshots, supabaseMemoryCards }) {
+function AdminAnalyticsTab({ supabasePerformances, supabaseInteractions, supabaseVotes, supabaseReactions, supabaseAudience, people, analyticsSnapshots, supabaseMemoryCards, onRefresh }) {
   const [saving, setSaving] = useState(false);
   const interactionIds = new Set(supabaseInteractions.map((interaction) => interaction.id));
   const performanceIds = new Set(supabasePerformances.map((performance) => performance.id));
@@ -1350,15 +1414,8 @@ function AdminAnalyticsTab({ supabasePerformances, supabaseInteractions, supabas
     return { ...member, votes, reactions, ...profile };
   });
 
-  const topPerformance = [...supabasePerformances].map((performance) => ({
-    ...performance,
-    reactions: eventReactions.filter((reaction) => reaction.performance_id === performance.id).length,
-  })).sort((a, b) => b.reactions - a.reactions).slice(0, 5);
-
-  const topInteractions = [...supabaseInteractions].map((interaction) => ({
-    ...interaction,
-    responses: eventVotes.filter((vote) => vote.interaction_id === interaction.id).length,
-  })).sort((a, b) => b.responses - a.responses).slice(0, 5);
+  const topPerformance = [...supabasePerformances].map((performance) => ({ ...performance, reactions: eventReactions.filter((reaction) => reaction.performance_id === performance.id).length })).sort((a, b) => b.reactions - a.reactions).slice(0, 5);
+  const topInteractions = [...supabaseInteractions].map((interaction) => ({ ...interaction, responses: eventVotes.filter((vote) => vote.interaction_id === interaction.id).length })).sort((a, b) => b.responses - a.responses).slice(0, 5);
 
   const saveSnapshot = async () => {
     if (!supabase || saving) return;
@@ -1378,6 +1435,27 @@ function AdminAnalyticsTab({ supabasePerformances, supabaseInteractions, supabas
     const { error } = await supabase.from('event_analytics_snapshots').insert({ event_id: APP_EVENT_ID, event_name: EVENT_DISPLAY_NAME, snapshot });
     setSaving(false);
     if (error) alert(`Could not save planning snapshot: ${error.message}`);
+    else await onRefresh?.();
+  };
+
+  const generateAllMemoryCards = async () => {
+    if (!supabase || !audienceEngagement.length) return alert('No audience members found yet.');
+    const rows = audienceEngagement.map((member) => ({
+      event_id: APP_EVENT_ID,
+      audience_id: member.session_id,
+      audience_name: member.nickname || 'Audience Guest',
+      photo_url: member.photo_url || null,
+      engagement_score: member.score,
+      engagement_tag: member.tag,
+      snapshot: { votes: member.votes, reactions: member.reactions },
+      updated_at: new Date().toISOString(),
+    }));
+    const { error } = await supabase.from('audience_memory_cards').upsert(rows, { onConflict: 'event_id,audience_id' });
+    if (error) alert(`Could not generate memory cards: ${error.message}`);
+    else {
+      alert('Memory cards generated for the current audience.');
+      await onRefresh?.();
+    }
   };
 
   const exportAllData = () => {
@@ -1398,24 +1476,9 @@ function AdminAnalyticsTab({ supabasePerformances, supabaseInteractions, supabas
     downloadBlob(blob, `${EVENT_DISPLAY_NAME.replace(/\s+/g, '-')}-event-data.json`);
   };
 
-  return <div className="space-y-6"><div className="grid grid-cols-1 md:grid-cols-4 gap-4"><Metric title="Audience" value={supabaseAudience.length} icon={<Users className="w-5 h-5" />} /><Metric title="Votes" value={eventVotes.length} icon={<MessageCircle className="w-5 h-5" />} /><Metric title="Reactions" value={eventReactions.length} icon={<Heart className="w-5 h-5" />} /><Metric title="Performances" value={supabasePerformances.length} icon={<Music className="w-5 h-5" />} /></div><div className="bg-slate-900 border border-sky-100/10 rounded-3xl p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm font-bold text-white">Event Data Archive</h3><p className="text-xs text-slate-400 mt-1">Save snapshots for future event planning and export all raw data.</p></div><div className="flex gap-2"><button onClick={saveSnapshot} disabled={saving} className="bg-sky-300 text-slate-950 font-black text-xs px-3 py-2 rounded-xl flex items-center gap-2"><Save className="w-4 h-4" />{saving ? 'Saving…' : 'Save Snapshot'}</button><button onClick={exportAllData} className="bg-slate-800 text-white font-bold text-xs px-3 py-2 rounded-xl border border-slate-700 flex items-center gap-2"><Download className="w-4 h-4" />Export All Data</button></div></div><div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4"><div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-4"><h4 className="text-xs font-bold uppercase tracking-widest text-sky-200">Top Performances by Reactions</h4><div className="space-y-2 mt-3">{topPerformance.length ? topPerformance.map((performance) => <div key={performance.id} className="flex items-center justify-between text-xs"><span className="text-slate-300">{performance.title} • {performance.performer}</span><strong className="text-sky-200">{performance.reactions}</strong></div>) : <p className="text-slate-500 text-xs">No reactions yet.</p>}</div></div><div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-4"><h4 className="text-xs font-bold uppercase tracking-widest text-sky-200">Top Interactions by Responses</h4><div className="space-y-2 mt-3">{topInteractions.length ? topInteractions.map((interaction) => <div key={interaction.id} className="flex items-center justify-between text-xs"><span className="text-slate-300">{interaction.question}</span><strong className="text-sky-200">{interaction.responses}</strong></div>) : <p className="text-slate-500 text-xs">No interaction responses yet.</p>}</div></div></div></div><div className="bg-slate-900 border border-sky-100/10 rounded-3xl p-5"><div className="flex items-center gap-2 mb-4"><BarChart3 className="w-5 h-5 text-sky-200" /><h3 className="text-sm font-bold text-white">Audience Engagement Profiles</h3></div><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-800 text-slate-500 uppercase text-[9px]"><th className="pb-3">Name</th><th className="pb-3">Votes</th><th className="pb-3">Reactions</th><th className="pb-3">Engagement</th><th className="pb-3">Music Tag</th></tr></thead><tbody className="divide-y divide-slate-800">{audienceEngagement.map((member) => <tr key={member.session_id}><td className="py-3 font-bold text-white">{member.nickname}</td><td className="py-3 text-slate-300">{member.votes}</td><td className="py-3 text-slate-300">{member.reactions}</td><td className="py-3 min-w-40"><div className="h-2 rounded-full bg-slate-800 overflow-hidden"><div className="h-full bg-sky-300" style={{ width: `${member.score}%` }} /></div><span className="text-[10px] text-sky-200">{member.score}%</span></td><td className="py-3 text-sky-100/70">{member.tag}</td></tr>)}</tbody></table>{audienceEngagement.length === 0 && <p className="text-xs text-slate-500 text-center py-6">Audience participation will appear here.</p>}</div></div><div className="bg-slate-900 border border-sky-100/10 rounded-3xl p-5"><h3 className="text-sm font-bold text-white">Saved Planning Snapshots</h3><div className="space-y-2 mt-4">{analyticsSnapshots.length ? analyticsSnapshots.map((snapshot) => <div key={snapshot.id} className="bg-slate-950/70 border border-slate-800 rounded-2xl p-3 flex items-center justify-between"><div><p className="text-xs font-bold text-white">{snapshot.event_name}</p><p className="text-[10px] text-slate-500">{new Date(snapshot.created_at).toLocaleString()}</p></div><div className="text-[10px] text-sky-200">{snapshot.snapshot?.audience_count || 0} audience • {snapshot.snapshot?.total_votes || 0} votes • {snapshot.snapshot?.total_reactions || 0} reactions</div></div>) : <p className="text-xs text-slate-500">No snapshots saved yet.</p>}</div></div></div>;
+  return <div className="space-y-6"><div className="grid grid-cols-1 md:grid-cols-4 gap-4"><Metric title="Audience" value={supabaseAudience.length} icon={<Users className="w-5 h-5" />} /><Metric title="Votes" value={eventVotes.length} icon={<MessageCircle className="w-5 h-5" />} /><Metric title="Reactions" value={eventReactions.length} icon={<Heart className="w-5 h-5" />} /><Metric title="Performances" value={supabasePerformances.length} icon={<Music className="w-5 h-5" />} /></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm font-black text-slate-900">Event Data Archive</h3><p className="text-xs text-slate-500 mt-1">Raw event data stays in Supabase. Save planning snapshots whenever you need a historical checkpoint.</p></div><div className="flex gap-2 flex-wrap"><button onClick={saveSnapshot} disabled={saving} className="bg-sky-600 text-white font-black text-xs px-3 py-2 rounded-xl flex items-center gap-2"><Save className="w-4 h-4" />{saving ? 'Saving…' : 'Save Snapshot'}</button><button onClick={generateAllMemoryCards} className="bg-indigo-600 text-white font-black text-xs px-3 py-2 rounded-xl flex items-center gap-2"><Sparkles className="w-4 h-4" />Generate Memory Cards</button><button onClick={exportAllData} className="bg-white text-slate-700 font-black text-xs px-3 py-2 rounded-xl border border-slate-200 flex items-center gap-2"><Download className="w-4 h-4" />Export All Data</button></div></div></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><h4 className="text-xs font-black uppercase tracking-widest text-sky-700">Top Performances by Reactions</h4><div className="space-y-2 mt-3">{topPerformance.length ? topPerformance.map((performance) => <div key={performance.id} className="flex items-center justify-between text-xs"><span className="text-slate-600 font-bold">{performance.title} • {performance.performer}</span><strong className="text-sky-700">{performance.reactions}</strong></div>) : <p className="text-slate-500 text-xs">No reactions yet.</p>}</div></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><h4 className="text-xs font-black uppercase tracking-widest text-sky-700">Top Interactions by Responses</h4><div className="space-y-2 mt-3">{topInteractions.length ? topInteractions.map((interaction) => <div key={interaction.id} className="flex items-center justify-between text-xs"><span className="text-slate-600 font-bold truncate mr-3">{interaction.question}</span><strong className="text-sky-700">{interaction.responses}</strong></div>) : <p className="text-slate-500 text-xs">No interaction responses yet.</p>}</div></div></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><div className="flex items-center gap-2 mb-4"><BarChart3 className="w-5 h-5 text-sky-700" /><h3 className="text-sm font-black text-slate-900">Audience Engagement Profiles</h3></div><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase text-[9px]"><th className="pb-3">Name</th><th className="pb-3">Votes</th><th className="pb-3">Reactions</th><th className="pb-3">Engagement</th><th className="pb-3">Music Tag</th></tr></thead><tbody className="divide-y divide-slate-200">{audienceEngagement.map((member) => <tr key={member.session_id}><td className="py-3 font-black text-slate-900">{member.nickname}</td><td className="py-3 text-slate-600">{member.votes}</td><td className="py-3 text-slate-600">{member.reactions}</td><td className="py-3 min-w-40"><div className="h-2 rounded-full bg-slate-200 overflow-hidden"><div className="h-full bg-sky-500" style={{ width: `${member.score}%` }} /></div><span className="text-[10px] text-sky-700 font-bold">{member.score}%</span></td><td className="py-3 text-slate-600">{member.tag}</td></tr>)}</tbody></table>{audienceEngagement.length === 0 && <p className="text-xs text-slate-500 text-center py-6">Audience participation will appear here.</p>}</div></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow"><h3 className="text-sm font-black text-slate-900">Saved Planning Snapshots</h3><div className="space-y-2 mt-4">{analyticsSnapshots.length ? analyticsSnapshots.map((snapshot) => <div key={snapshot.id} className="bg-white border border-slate-200 rounded-2xl p-3 flex items-center justify-between gap-3"><div><p className="text-xs font-black text-slate-900">{snapshot.event_name}</p><p className="text-[10px] text-slate-500">{new Date(snapshot.created_at).toLocaleString()}</p></div><div className="text-[10px] text-sky-700 font-bold">{snapshot.snapshot?.audience_count || 0} audience • {snapshot.snapshot?.total_votes || 0} votes • {snapshot.snapshot?.total_reactions || 0} reactions</div></div>) : <p className="text-xs text-slate-500">No snapshots saved yet.</p>}</div></div></div>;
 }
 
 function Metric({ title, value, icon }) {
-  return <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5"><div className="flex items-center justify-between"><span className="text-[10px] uppercase font-bold tracking-wider text-slate-500">{title}</span><span className="text-purple-400">{icon}</span></div><div className="text-3xl font-black text-white mt-2">{value}</div></div>;
-}
-
-function SupabaseSqlModal({ onClose }) {
-  const [copied, setCopied] = useState(false);
-  const copySchema = async () => {
-    try {
-      await navigator.clipboard.writeText(SUPABASE_SQL_SCHEMA);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.warn('Clipboard error', error);
-    }
-  };
-
-  return <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4"><div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl"><div className="p-4 border-b border-slate-800 flex items-center justify-between"><div className="flex items-center gap-2 font-bold text-sm text-white"><Database className="w-4 h-4 text-purple-400" />Supabase Database Schema</div><button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"><X className="w-5 h-5" /></button></div><div className="p-4 overflow-y-auto flex-1 font-mono text-xs text-slate-300 bg-slate-950"><pre className="whitespace-pre-wrap select-all">{SUPABASE_SQL_SCHEMA}</pre></div><div className="p-4 border-t border-slate-800 flex justify-between items-center gap-3 bg-slate-900"><p className="text-xs text-slate-400">Reference schema for the interaction features.</p><button onClick={copySchema} className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5">{copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}{copied ? 'Copied' : 'Copy SQL'}</button></div></div></div>;
+  return <div className="bg-white/84 border border-sky-200 rounded-2xl p-5 shadow"><div className="flex items-center justify-between"><span className="text-[10px] uppercase font-black tracking-wider text-slate-500">{title}</span><span className="text-sky-700">{icon}</span></div><div className="text-3xl font-black text-slate-900 mt-2">{value}</div></div>;
 }
