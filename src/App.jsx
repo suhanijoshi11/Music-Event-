@@ -823,7 +823,8 @@ export default function App() {
             session_id: sessionId,
             photo_url: photoUrl || null,
           });
-          if (fallbackError) console.error('Audience registration error:', fallbackError);
+          if (fallbackError) console.error('AUDIENCE REGISTRATION ERROR:', fallbackError);
+          console.error('Audience registration error:', insertError);
         }
       }
     }
