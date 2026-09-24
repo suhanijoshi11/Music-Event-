@@ -794,6 +794,10 @@ export default function App() {
         .eq('session_id', sessionId)
         .limit(1);
 
+      if (lookupError) {
+      console.error('AUDIENCE LOOKUP ERROR:', lookupError);
+      }
+
       if (!lookupError && existingAudience?.length) {
         const { error: updateError } = await supabase
           .from('audience')
