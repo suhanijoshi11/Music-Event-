@@ -123,20 +123,13 @@ function uiTextWithName(language, key, name) {
   return uiText(language, key).replace('{name}', name);
 }
 
-const REACTION_OPTIONS = [
-  { value: '❤️ Beautiful', emoji: '❤️', label: 'Beautiful' },
-  { value: '🎶 Soulful', emoji: '🎶', label: 'Soulful' },
-  { value: '👏 Great Work', emoji: '👏', label: 'Great Work' },
-  { value: '✨ Mesmerizing', emoji: '✨', label: 'Mesmerizing' },
-  { value: '🔥 Energetic', emoji: '🔥', label: 'Energetic' },
-  { value: '💫 Amazing', emoji: '💫', label: 'Amazing' },
-  { value: '🎤 Powerful', emoji: '🎤', label: 'Powerful' },
-  { value: '🌟 Brilliant', emoji: '🌟', label: 'Brilliant' },
-  { value: '🥹 Touching', emoji: '🥹', label: 'Touching' },
-  { value: '💖 Heartfelt', emoji: '💖', label: 'Heartfelt' },
-  { value: '🎵 Musical', emoji: '🎵', label: 'Musical' },
-  { value: '👌 Well Performed', emoji: '👌', label: 'Well Performed' },
-];
+const REACTION_OPTIONS = ['❤️', '🔥', '👏', '✨'];
+const REACTION_LABELS = {
+  '❤️': 'Beautiful',
+  '🔥': 'Energetic',
+  '👏': 'Great Work',
+  '✨': 'Soulful',
+};
 
 const DEFAULT_INTERACTIONS = [
   {
@@ -160,19 +153,41 @@ const INITIAL_SEED_DATA = {
   event: {
     id: APP_EVENT_ID,
     name: EVENT_DISPLAY_NAME,
-    event_date: '2026-10-24',
+    event_date: '2026-10-15',
     status: 'live',
     created_at: new Date().toISOString(),
   },
-  performances: [],
-  musicians: [],
+  performances: [
+    { id: 'perf_1', event_id: APP_EVENT_ID, title: 'Tum Se Hi', performer: 'Aarushi', song_artist: 'Mohit Chauhan', display_order: 1, status: 'playing' },
+    { id: 'perf_2', event_id: APP_EVENT_ID, title: 'Agar Tum Saath Ho', performer: 'Riya', song_artist: 'Alka Yagnik & Arijit Singh', display_order: 2, status: 'queued' },
+    { id: 'perf_3', event_id: APP_EVENT_ID, title: 'Pehla Nasha', performer: 'Dev', song_artist: 'Udit Narayan & Sadhana Sargam', display_order: 3, status: 'queued' },
+    { id: 'perf_4', event_id: APP_EVENT_ID, title: 'Gallan Goodiyaan', performer: 'Group Performance', song_artist: 'Various Artists', display_order: 4, status: 'queued' },
+  ],
+  musicians: [
+    { id: 'mus_1', event_id: APP_EVENT_ID, name: 'Rahul', instrument: 'Guitar' },
+    { id: 'mus_2', event_id: APP_EVENT_ID, name: 'Meera', instrument: 'Keyboard' },
+    { id: 'mus_3', event_id: APP_EVENT_ID, name: 'Aarav', instrument: 'Drums' },
+    { id: 'mus_4', event_id: APP_EVENT_ID, name: 'Karan', instrument: 'Bass' },
+  ],
   audience: [],
 };
 
 const EVENT_INTRO_DATA = {
-  performers: [],
-  anchors: [],
-  musicians: [],
+  performers: [
+    { id: 'performer_1', name: 'Aarushi', role: 'Performer', photo: '', age: '21', work: 'Student', workplace: 'Navrachana University', intro: 'A soulful voice bringing Bollywood melodies to life on the Tofani Vayra 9 stage.', achievements: 'Trained vocalist with a passion for Bollywood and contemporary music.' },
+    { id: 'performer_2', name: 'Riya', role: 'Performer', photo: '', age: '20', work: 'Student', workplace: 'Navrachana University', intro: 'A versatile singer known for expressive vocals and emotional performances.', achievements: 'Regular stage performer and music enthusiast.' },
+    { id: 'performer_3', name: 'Dev', role: 'Performer', photo: '', age: '21', work: 'Student', workplace: 'Navrachana University', intro: 'Bringing a fresh energy and expressive style to the live stage.', achievements: 'Passionate performer with an interest in live music.' },
+  ],
+  anchors: [
+    { id: 'anchor_1', name: 'Your Anchor', role: 'Anchor / MoC', photo: '', age: '22', work: 'Student', workplace: 'Navrachana University', intro: 'Keeping the evening lively, engaging and connected from one performance to the next.', achievements: 'Experienced in stage hosting and audience interaction.' },
+    { id: 'anchor_2', name: 'Co-Anchor', role: 'Anchor / MoC', photo: '', age: '21', work: 'Student', workplace: 'Navrachana University', intro: 'Adding energy, humour and warmth to the Music Night experience.', achievements: 'Active stage host and event presenter.' },
+  ],
+  musicians: [
+    { id: 'mus_1', name: 'Rahul', instrument: 'Guitar', photo: '', age: '22', work: 'Musician', workplace: 'Independent', intro: 'Adding melodic depth and live guitar energy to every performance.', achievements: 'Live guitarist with experience accompanying vocal performances.' },
+    { id: 'mus_2', name: 'Meera', instrument: 'Keyboard', photo: '', age: '22', work: 'Musician', workplace: 'Independent', intro: 'Creating the harmonic foundation behind the evening’s performances.', achievements: 'Keyboardist experienced in live stage accompaniment.' },
+    { id: 'mus_3', name: 'Aarav', instrument: 'Drums', photo: '', age: '23', work: 'Musician', workplace: 'Independent', intro: 'Bringing rhythm, energy and groove to the live stage.', achievements: 'Live drummer with experience in group performances.' },
+    { id: 'mus_4', name: 'Karan', instrument: 'Bass', photo: '', age: '22', work: 'Musician', workplace: 'Independent', intro: 'Holding the rhythm section together with a strong live bass presence.', achievements: 'Bass player experienced in live ensemble performances.' },
+  ],
   organizers: [],
 };
 
@@ -215,7 +230,9 @@ function flattenStaticPeople() {
 }
 
 function mergePeople(peopleRows = []) {
-  const staticPeople = flattenStaticPeople();
+  // Performers are intentionally taken from Supabase so old demo performers
+  // do not reappear after the admin adds the real event performers.
+  const staticPeople = flattenStaticPeople().filter((person) => person.category !== 'performer');
   const byId = new Map(peopleRows.map((person) => [person.id, person]));
 
   const mergedStatic = staticPeople.map((person) => {
@@ -482,6 +499,36 @@ function RainOverlay() {
   );
 }
 
+function applyRealtimeRowChange(currentRows, payload, key = 'id') {
+  if (!payload) return currentRows;
+  const row = payload.eventType === 'DELETE' ? payload.old : payload.new;
+  if (!row) return currentRows;
+  const rowKey = row[key];
+  const index = currentRows.findIndex((item) => item[key] === rowKey);
+
+  if (payload.eventType === 'INSERT') {
+    if (index !== -1) {
+      const next = [...currentRows];
+      next[index] = row;
+      return next;
+    }
+    return [...currentRows, row];
+  }
+
+  if (payload.eventType === 'UPDATE') {
+    if (index === -1) return [...currentRows, row];
+    const next = [...currentRows];
+    next[index] = row;
+    return next;
+  }
+
+  if (payload.eventType === 'DELETE') {
+    return currentRows.filter((item) => item[key] !== rowKey);
+  }
+
+  return currentRows;
+}
+
 export default function App() {
   const [currentRoute, setCurrentRoute] = useState(window.location.hash || '#/');
   const [dbData, setDbData] = useState(getLocalDB);
@@ -622,6 +669,42 @@ export default function App() {
     const interval = setInterval(refreshLiveData, 2000);
     return () => clearInterval(interval);
   }, [isAdminRoute]);
+
+  useEffect(() => {
+    if (!supabase) return undefined;
+
+    const channel = supabase
+      .channel('tofani-vayra-live-data')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'audience', filter: `event_id=eq.${APP_EVENT_ID}` }, (payload) => {
+        setSupabaseAudience((current) => {
+          const next = applyRealtimeRowChange(current, payload);
+          setLiveAudienceCount(next.length);
+          return next;
+        });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'performances', filter: `event_id=eq.${APP_EVENT_ID}` }, (payload) => {
+        setSupabasePerformances((current) => applyRealtimeRowChange(current, payload));
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'interactions', filter: `event_id=eq.${APP_EVENT_ID}` }, (payload) => {
+        setSupabaseInteractions((current) => applyRealtimeRowChange(current, payload));
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'interaction_votes' }, (payload) => {
+        setSupabaseVotes((current) => applyRealtimeRowChange(current, payload));
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'performance_reactions' }, (payload) => {
+        setSupabaseReactions((current) => applyRealtimeRowChange(current, payload));
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_people', filter: `event_id=eq.${APP_EVENT_ID}` }, (payload) => {
+        setSupabasePeople((current) => applyRealtimeRowChange(current, payload));
+      })
+      .subscribe((status) => {
+        console.log('🔥 Tofani Vayra realtime:', status);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   useEffect(() => {
     const handleHashChange = () => setCurrentRoute(window.location.hash || '#/');
@@ -941,32 +1024,75 @@ function AudienceHome({ session, language = 'en', nowPlaying, supabaseInteractio
   const lang = session?.language || language || 'en';
   const t = (key) => uiText(lang, key);
   const [showPeopleModal, setShowPeopleModal] = useState(false);
-  const [peopleTab, setPeopleTab] = useState('anchor');
+  const [selectedPerson, setSelectedPerson] = useState(null);
   const [voteMessage, setVoteMessage] = useState('');
   const [reactionMessage, setReactionMessage] = useState('');
 
-  const liveInteraction = useMemo(() => supabaseInteractions.find((interaction) => interaction.event_id === APP_EVENT_ID && interaction.status === 'live') || null, [supabaseInteractions]);
-  const currentPerformer = people.find((person) => person.category === 'performer' && person.name === nowPlaying?.performer) || null;
-  const musicianPeople = people.filter((person) => person.category === 'musician');
-  const anchorPeople = people.filter((person) => person.category === 'anchor');
+  const liveInteraction = useMemo(
+    () => supabaseInteractions.find(
+      (interaction) => interaction.event_id === APP_EVENT_ID && interaction.status === 'live'
+    ) || null,
+    [supabaseInteractions]
+  );
 
-  const hasVoted = Boolean(liveInteraction && session?.sessionId && supabaseVotes.some((vote) => vote.interaction_id === liveInteraction.id && vote.audience_id === session.sessionId));
-  const myReaction = nowPlaying && session?.sessionId ? supabaseReactions.find((reaction) => reaction.performance_id === nowPlaying.id && reaction.audience_id === session.sessionId)?.reaction : null;
-  const myVotes = session?.sessionId ? supabaseVotes.filter((vote) => vote.audience_id === session.sessionId) : [];
-  const myReactions = session?.sessionId ? supabaseReactions.filter((row) => row.audience_id === session.sessionId) : [];
+  const currentPerformer = useMemo(
+    () => people.find(
+      (person) => person.category === 'performer' && person.name === nowPlaying?.performer
+    ) || null,
+    [people, nowPlaying]
+  );
+
+  const otherPerformers = useMemo(
+    () => people.filter(
+      (person) => person.category === 'performer' && person.id !== currentPerformer?.id
+    ),
+    [people, currentPerformer]
+  );
+
+  const hasVoted = Boolean(
+    liveInteraction &&
+    session?.sessionId &&
+    supabaseVotes.some(
+      (vote) => vote.interaction_id === liveInteraction.id && vote.audience_id === session.sessionId
+    )
+  );
+
+  const myReaction = nowPlaying && session?.sessionId
+    ? supabaseReactions.find(
+        (reaction) => reaction.performance_id === nowPlaying.id && reaction.audience_id === session.sessionId
+      )?.reaction
+    : null;
+
+  const myVotes = session?.sessionId
+    ? supabaseVotes.filter((vote) => vote.audience_id === session.sessionId)
+    : [];
+  const myReactions = session?.sessionId
+    ? supabaseReactions.filter((row) => row.audience_id === session.sessionId)
+    : [];
   const engagement = getEngagementProfile(myVotes.length, myReactions.length, lang);
   const photoUrl = audienceProfile?.photo_url || session?.photoUrl || '';
 
   const handleVote = async (option) => {
     if (!supabase || !liveInteraction || !session?.sessionId || hasVoted) return;
+
     setVoteMessage(t('submitting'));
-    const { error } = await supabase.from('interaction_votes').insert({ interaction_id: liveInteraction.id, audience_id: session.sessionId, selected_option: option });
+    const { error } = await supabase.from('interaction_votes').insert({
+      interaction_id: liveInteraction.id,
+      audience_id: session.sessionId,
+      selected_option: option,
+    });
+
     if (error) {
       setVoteMessage(error.code === '23505' ? t('alreadyAnswered') : `Vote failed: ${error.message}`);
       return;
     }
+
     if (liveInteraction.type === 'guess_song') {
-      setVoteMessage(liveInteraction.correct_option === option ? `${t('correct')} 🎉` : `${t('notQuite')}: ${liveInteraction.correct_option}`);
+      setVoteMessage(
+        liveInteraction.correct_option === option
+          ? `${t('correct')} 🎉`
+          : `${t('notQuite')}: ${liveInteraction.correct_option}`
+      );
     } else {
       setVoteMessage(t('voteRecorded'));
     }
@@ -974,36 +1100,81 @@ function AudienceHome({ session, language = 'en', nowPlaying, supabaseInteractio
 
   const handleReaction = async (reaction) => {
     if (!supabase || !nowPlaying || !session?.sessionId || myReaction) return;
+
     setReactionMessage(t('sending'));
-    const { error } = await supabase.from('performance_reactions').insert({ performance_id: nowPlaying.id, audience_id: session.sessionId, reaction });
-    if (error) setReactionMessage(error.code === '23505' ? t('alreadyReacted') : `Reaction failed: ${error.message}`);
-    else setReactionMessage(t('reactionSent'));
+    const { error } = await supabase.from('performance_reactions').insert({
+      performance_id: nowPlaying.id,
+      audience_id: session.sessionId,
+      reaction,
+    });
+
+    if (error) {
+      setReactionMessage(
+        error.code === '23505' ? t('alreadyReacted') : `Reaction failed: ${error.message}`
+      );
+    } else {
+      setReactionMessage(t('reactionSent'));
+    }
   };
 
-  const interactionResults = liveInteraction ? (liveInteraction.options || []).map((option) => {
-    const votes = supabaseVotes.filter((vote) => vote.interaction_id === liveInteraction.id && vote.selected_option === option).length;
-    const total = supabaseVotes.filter((vote) => vote.interaction_id === liveInteraction.id).length;
-    return { option, votes, percentage: total ? Math.round((votes / total) * 100) : 0 };
-  }) : [];
+  const interactionResults = liveInteraction
+    ? (liveInteraction.options || []).map((option) => {
+        const votes = supabaseVotes.filter(
+          (vote) => vote.interaction_id === liveInteraction.id && vote.selected_option === option
+        ).length;
+        const total = supabaseVotes.filter(
+          (vote) => vote.interaction_id === liveInteraction.id
+        ).length;
+        return {
+          option,
+          votes,
+          percentage: total ? Math.round((votes / total) * 100) : 0,
+        };
+      })
+    : [];
 
-  const performanceReactionCounts = nowPlaying ? REACTION_OPTIONS.map((reaction) => ({ ...reaction, count: supabaseReactions.filter((row) => row.performance_id === nowPlaying.id && row.reaction === reaction.value).length })) : [];
+  const performanceReactionCounts = nowPlaying
+    ? REACTION_OPTIONS.map((reaction) => ({
+        reaction,
+        label: REACTION_LABELS[reaction],
+        count: supabaseReactions.filter(
+          (row) => row.performance_id === nowPlaying.id && row.reaction === reaction
+        ).length,
+      }))
+    : [];
 
-  const openPeople = (tab) => {
-    setPeopleTab(tab);
+  const openPerson = (person) => {
+    setSelectedPerson(person);
     setShowPeopleModal(true);
   };
 
   const handleDownloadCard = async () => {
-    const blob = await buildMemoryCardBlob({ name: nickname, photoUrl, score: engagement.score, tag: engagement.tag, language: lang });
+    const blob = await buildMemoryCardBlob({
+      name: nickname,
+      photoUrl,
+      score: engagement.score,
+      tag: engagement.tag,
+      language: lang,
+    });
     downloadBlob(blob, `${EVENT_DISPLAY_NAME.replace(/\s+/g, '-')}-${nickname.replace(/\s+/g, '-')}-memory.png`);
   };
 
   const handleShareCard = async () => {
-    const blob = await buildMemoryCardBlob({ name: nickname, photoUrl, score: engagement.score, tag: engagement.tag, language: lang });
+    const blob = await buildMemoryCardBlob({
+      name: nickname,
+      photoUrl,
+      score: engagement.score,
+      tag: engagement.tag,
+      language: lang,
+    });
     const file = new File([blob], `${EVENT_DISPLAY_NAME.replace(/\s+/g, '-')}-memory.png`, { type: 'image/png' });
     try {
       if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
-        await navigator.share({ title: `${EVENT_DISPLAY_NAME} Memory`, text: `${nickname} • ${engagement.tag}`, files: [file] });
+        await navigator.share({
+          title: `${EVENT_DISPLAY_NAME} Memory`,
+          text: `${nickname} • ${engagement.tag}`,
+          files: [file],
+        });
         return;
       }
     } catch (error) {
@@ -1016,41 +1187,220 @@ function AudienceHome({ session, language = 'en', nowPlaying, supabaseInteractio
     <>
       <div className="max-w-md mx-auto p-4 pb-20 space-y-5 relative z-10">
         <div className="bg-white/88 border border-sky-200 rounded-2xl p-4 backdrop-blur shadow-md flex items-center justify-between">
-          <div><span className="text-[11px] font-black text-slate-400 uppercase tracking-wider block">{t('audienceMember')}</span><h2 className="text-lg font-black text-slate-900">{uiTextWithName(lang, 'goodEvening', nickname)}</h2></div>
-          <button onClick={onChangeNickname} className="text-xs text-sky-700 hover:text-sky-900 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-200 font-bold transition">{t('change')}</button>
+          <div>
+            <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider block">{t('audienceMember')}</span>
+            <h2 className="text-lg font-black text-slate-900">{uiTextWithName(lang, 'goodEvening', nickname)}</h2>
+          </div>
+          <button
+            onClick={onChangeNickname}
+            className="text-xs text-sky-700 hover:text-sky-900 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-200 font-bold transition"
+          >
+            {t('change')}
+          </button>
         </div>
 
+        {/* 1. NOW PLAYING */}
         <div className="bg-white/88 border border-sky-200 rounded-3xl p-6 shadow-2xl relative overflow-hidden text-center">
           <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-sky-200/40 rounded-full blur-2xl pointer-events-none" />
-          <div className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-widest text-sky-700 bg-sky-100 px-3.5 py-1 rounded-full border border-sky-200 mb-4"><CloudRain className="w-4 h-4" /> {t('nowPlaying')}</div>
-          {nowPlaying ? <div className="space-y-4">
-            {currentPerformer?.photo && <img src={currentPerformer.photo} alt={currentPerformer.name} className="w-28 h-28 mx-auto rounded-full object-cover border-4 border-white shadow-xl" />}
-            {!currentPerformer?.photo && <div className="w-28 h-28 mx-auto rounded-full bg-sky-100 border-4 border-white shadow-xl flex items-center justify-center"><Music className="w-10 h-10 text-sky-500" /></div>}
-            <div><h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight">🎤 {nowPlaying.title}</h1><p className="text-xl text-sky-700 font-black mt-1">{nowPlaying.performer}</p>{nowPlaying.song_artist && <p className="text-xs text-slate-400 mt-1">Original: {nowPlaying.song_artist}</p>}</div>
-            {currentPerformer && <div className="grid grid-cols-2 gap-2 text-left"><div className="bg-sky-50 rounded-xl p-3"><span className="text-[9px] uppercase font-black text-slate-400">{t('age')}</span><p className="text-sm font-black text-slate-800">{currentPerformer.age || '—'}</p></div><div className="bg-sky-50 rounded-xl p-3"><span className="text-[9px] uppercase font-black text-slate-400">{t('work')}</span><p className="text-sm font-black text-slate-800">{currentPerformer.work || '—'}</p></div>{currentPerformer.workplace && <div className="col-span-2 bg-sky-50 rounded-xl p-3 text-left"><span className="text-[9px] uppercase font-black text-slate-400">{t('workplace')}</span><p className="text-sm font-black text-slate-800">{currentPerformer.workplace}</p></div>}
-              {currentPerformer.intro && <p className="col-span-2 text-xs text-slate-500 leading-relaxed">{currentPerformer.intro}</p>}
-            </div>}
-            <div className="pt-1 flex justify-center items-center gap-1"><span className="w-1.5 h-4 bg-sky-500 rounded-full animate-bounce" /><span className="w-1.5 h-6 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.2s]" /><span className="w-1.5 h-3 bg-cyan-500 rounded-full animate-bounce [animation-delay:0.4s]" /></div>
-          </div> : <div className="py-6"><Radio className="w-10 h-10 text-slate-300 mx-auto mb-2 animate-pulse" /><p className="text-slate-500 text-sm font-bold">{t('intermission')}</p></div>}
+          <div className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-widest text-sky-700 bg-sky-100 px-3.5 py-1 rounded-full border border-sky-200 mb-4">
+            <CloudRain className="w-4 h-4" /> {t('nowPlaying')}
+          </div>
+
+          {nowPlaying ? (
+            <div className="space-y-4">
+              {(currentPerformer?.photo_url || currentPerformer?.photo) ? (
+                <div className="w-32 h-32 mx-auto rounded-3xl overflow-hidden border-4 border-white shadow-lg bg-sky-100">
+                  <img src={currentPerformer.photo_url || currentPerformer.photo} alt={currentPerformer.name} className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-32 h-32 mx-auto rounded-3xl bg-sky-100 border-4 border-white shadow-lg flex items-center justify-center text-5xl">
+                  🎤
+                </div>
+              )}
+
+              <div>
+                <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">{nowPlaying.title}</h1>
+                <p className="text-xl text-sky-700 font-black mt-1">{nowPlaying.performer}</p>
+                {nowPlaying.song_artist && (
+                  <p className="text-[11px] text-slate-400 mt-1">Original: {nowPlaying.song_artist}</p>
+                )}
+              </div>
+
+              {currentPerformer ? (
+                <div className="text-left bg-sky-50 border border-sky-100 rounded-2xl p-4 space-y-2">
+                  <p className="text-xs text-slate-600 leading-relaxed">{currentPerformer.intro}</p>
+                  <div className="grid grid-cols-2 gap-2 pt-2">
+                    {currentPerformer.age && (
+                      <div className="bg-white rounded-xl p-2.5 border border-sky-100">
+                        <span className="block text-[9px] uppercase font-black text-slate-400">{t('age')}</span>
+                        <span className="text-xs font-black text-slate-800">{currentPerformer.age}</span>
+                      </div>
+                    )}
+                    {currentPerformer.work && (
+                      <div className="bg-white rounded-xl p-2.5 border border-sky-100">
+                        <span className="block text-[9px] uppercase font-black text-slate-400">{t('work')}</span>
+                        <span className="text-xs font-black text-slate-800">{currentPerformer.work}</span>
+                      </div>
+                    )}
+                    {currentPerformer.workplace && (
+                      <div className="bg-white rounded-xl p-2.5 border border-sky-100 col-span-2">
+                        <span className="block text-[9px] uppercase font-black text-slate-400">{t('workplace')}</span>
+                        <span className="text-xs font-black text-slate-800">{currentPerformer.workplace}</span>
+                      </div>
+                    )}
+                  </div>
+                  {currentPerformer.achievements && (
+                    <div className="pt-2">
+                      <span className="block text-[9px] uppercase font-black text-slate-400">{t('achievements')}</span>
+                      <p className="text-xs text-slate-600 leading-relaxed mt-1">{currentPerformer.achievements}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500">Performer details will appear here.</p>
+              )}
+
+              <div className="pt-1 flex justify-center items-center gap-1">
+                <span className="w-1.5 h-4 bg-sky-500 rounded-full animate-bounce" />
+                <span className="w-1.5 h-6 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.2s]" />
+                <span className="w-1.5 h-3 bg-cyan-500 rounded-full animate-bounce [animation-delay:0.4s]" />
+              </div>
+            </div>
+          ) : (
+            <div className="py-6">
+              <Radio className="w-10 h-10 text-slate-300 mx-auto mb-2 animate-pulse" />
+              <p className="text-slate-500 text-sm font-bold">{t('intermission')}</p>
+            </div>
+          )}
         </div>
 
-        {nowPlaying && people.filter((person) => person.category === 'performer' && person.name !== nowPlaying.performer).length > 0 && <div className="bg-white/86 border border-sky-200 rounded-3xl p-5 shadow-xl"><div className="flex items-center justify-between mb-4"><div><h3 className="text-sm font-black text-slate-900">{t('performers')}</h3><p className="text-[11px] text-slate-500 mt-1">Know the other performers</p></div><Users className="w-5 h-5 text-sky-700" /></div><div className="grid grid-cols-2 gap-3">{people.filter((person) => person.category === 'performer' && person.name !== nowPlaying.performer).map((person) => <button key={person.id} onClick={() => { setPeopleTab('performer'); setShowPeopleModal(true); }} className="bg-white border border-slate-200 rounded-2xl p-3 text-left hover:border-sky-300 transition"><div className="flex items-center gap-3">{person.photo ? <img src={person.photo} alt={person.name} className="w-12 h-12 rounded-xl object-cover" /> : <div className="w-12 h-12 rounded-xl bg-sky-50 flex items-center justify-center"><Music className="w-5 h-5 text-sky-500" /></div>}<div><p className="text-xs font-black text-slate-900">{person.name}</p><span className="text-[9px] font-black text-sky-700">{t('knowMore')}</span></div></div></button>)}</div></div>}
+        {/* 2. INTERACTIVE POLLS & GAMES */}
+        {liveInteraction && (
+          <div className="bg-white/86 border border-emerald-200 rounded-3xl p-5 shadow-xl">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-700">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Interactive Polls & Games
+                </div>
+                <h3 className="text-lg font-black text-slate-900 mt-2">{liveInteraction.question || liveInteraction.title}</h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  {liveInteraction.type === 'guess_song' ? '🎯 Guess the Song' : '📊 Live Poll'} • {t('tapOne')}
+                </p>
+              </div>
+              {hasVoted && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
+            </div>
 
-        {liveInteraction && <div className="bg-white/86 border border-emerald-200 rounded-3xl p-5 shadow-xl"><div className="flex items-center justify-between mb-2"><div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-700"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> {t('liveInteraction')}</div>{hasVoted && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}</div><h3 className="text-lg font-black text-slate-900">{liveInteraction.question || liveInteraction.title}</h3><p className="text-xs text-slate-500 mt-1">{liveInteraction.type === 'guess_song' ? t('guessSong') : t('tapOne')}</p><div className="space-y-2 mt-4">{interactionResults.map(({ option, votes, percentage }) => <button key={option} disabled={hasVoted} onClick={() => handleVote(option)} className={`w-full relative overflow-hidden border rounded-xl px-3 py-3 text-left transition ${hasVoted ? 'border-slate-200 bg-slate-50' : 'border-slate-200 hover:border-emerald-300 bg-white'}`}>{hasVoted && <div className="absolute inset-y-0 left-0 bg-emerald-100" style={{ width: `${percentage}%` }} />}<div className="relative flex items-center justify-between gap-3"><span className="text-sm text-slate-800 font-bold">{option}</span>{hasVoted && <span className="text-xs font-black text-emerald-700">{percentage}%</span>}</div>{hasVoted && <div className="relative mt-1 text-[10px] text-slate-500">{votes} {t('votes')}</div>}</button>)}</div>{voteMessage && <p className="text-xs text-emerald-700 mt-3 font-bold">{voteMessage}</p>}</div>}
+            <div className="space-y-2 mt-4">
+              {interactionResults.map(({ option, votes, percentage }) => (
+                <button
+                  key={option}
+                  disabled={hasVoted}
+                  onClick={() => handleVote(option)}
+                  className={`w-full relative overflow-hidden border rounded-xl px-3 py-3 text-left transition ${hasVoted ? 'border-slate-200 bg-slate-50' : 'border-slate-200 hover:border-emerald-300 bg-white'}`}
+                >
+                  {hasVoted && <div className="absolute inset-y-0 left-0 bg-emerald-100" style={{ width: `${percentage}%` }} />}
+                  <div className="relative flex items-center justify-between gap-3">
+                    <span className="text-sm text-slate-800 font-bold">{option}</span>
+                    {hasVoted && <span className="text-xs font-black text-emerald-700">{percentage}%</span>}
+                  </div>
+                  {hasVoted && <div className="relative mt-1 text-[10px] text-slate-500">{votes} {t('votes')}</div>}
+                </button>
+              ))}
+            </div>
+            {voteMessage && <p className="text-xs text-emerald-700 mt-3 font-bold">{voteMessage}</p>}
+          </div>
+        )}
 
-        {nowPlaying && <div className="bg-white/86 border border-sky-200 rounded-3xl p-5 shadow-xl"><div className="flex items-center justify-between"><div><h3 className="text-sm font-black text-slate-900">{t('reactPerformance')}</h3><p className="text-[11px] text-slate-500 mt-1">{t('oneReaction')}</p></div><Heart className="w-5 h-5 text-pink-500" /></div><div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">{performanceReactionCounts.map(({ value, emoji, label, count }) => <button key={value} disabled={Boolean(myReaction)} onClick={() => handleReaction(value)} className={`rounded-2xl py-3 px-2 border transition ${myReaction === value ? 'bg-pink-50 border-pink-300 ring-2 ring-pink-100' : 'bg-white border-slate-200 hover:border-sky-300'}`}><div className="text-lg">{emoji}</div><div className="text-[11px] text-slate-700 font-black mt-1">{label}</div><div className="text-[10px] text-slate-400 mt-0.5">{count}</div></button>)}</div>{reactionMessage && <p className="text-xs text-pink-600 mt-3 font-bold">{reactionMessage}</p>}</div>}
+        {/* 3. SONG REACTIONS */}
+        {nowPlaying && (
+          <div className="bg-white/86 border border-pink-200 rounded-3xl p-5 shadow-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-pink-600">
+                  <Heart className="w-4 h-4" /> Song Reactions
+                </div>
+                <h3 className="text-sm font-black text-slate-900 mt-2">React to {nowPlaying.performer}'s performance</h3>
+                <p className="text-[11px] text-slate-500 mt-1">Choose one reaction</p>
+              </div>
+            </div>
 
-        <div className="bg-white/86 border border-sky-200 rounded-3xl p-5"><div className="flex items-center justify-between mb-4"><div><h3 className="text-sm font-black text-slate-900">{t('knowMusicians')}</h3><p className="text-[11px] text-slate-500 mt-1">{t('peopleCreatingSound')}</p></div><Volume2 className="w-5 h-5 text-sky-700" /></div><div className="grid grid-cols-2 gap-3">{musicianPeople.map((person) => <PersonMiniPhotoCard key={person.id || person.name} person={person} />)}</div><button onClick={() => openPeople('musician')} className="w-full mt-4 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl py-2.5 text-xs font-black transition">{t('seeMusicianDetails')}</button></div>
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              {performanceReactionCounts.map(({ reaction, label, count }) => (
+                <button
+                  key={reaction}
+                  disabled={Boolean(myReaction)}
+                  onClick={() => handleReaction(reaction)}
+                  className={`rounded-2xl py-3 px-2 border transition ${myReaction === reaction ? 'bg-pink-50 border-pink-300' : 'bg-white border-slate-200 hover:border-pink-300'}`}
+                >
+                  <div className="text-xl">{reaction}</div>
+                  <div className="text-[11px] font-black text-slate-700 mt-1">{label}</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">{count}</div>
+                </button>
+              ))}
+            </div>
+            {reactionMessage && <p className="text-xs text-pink-600 mt-3 font-bold">{reactionMessage}</p>}
+          </div>
+        )}
 
-        <div className="bg-white/86 border border-sky-200 rounded-3xl p-5"><div className="flex items-center justify-between"><div><h3 className="text-sm font-black text-slate-900">{t('anchorsTeam')}</h3><p className="text-[11px] text-slate-500 mt-1">{t('meetPeople')}</p></div><Sparkles className="w-5 h-5 text-sky-700" /></div><div className="grid grid-cols-2 gap-3 mt-4">{anchorPeople.slice(0, 2).map((person) => <PersonMiniPhotoCard key={person.id || person.name} person={person} />)}</div><button onClick={() => openPeople('anchor')} className="w-full mt-4 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl py-2.5 text-xs font-black transition">{t('knowAnchorsTeam')}</button></div>
+        {/* 4. KNOW OTHER PERFORMERS */}
+        {otherPerformers.length > 0 && (
+          <div className="bg-white/86 border border-sky-200 rounded-3xl p-5 shadow-xl">
+            <div className="mb-4">
+              <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-sky-700">
+                <Users className="w-4 h-4" /> Know Other Performers
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">Meet the artists performing throughout the evening.</p>
+            </div>
 
-        <div className="bg-white/88 border border-sky-200 rounded-3xl p-5"><div className="flex items-center justify-between"><div><div className="text-xs font-black uppercase tracking-widest text-sky-700 flex items-center gap-2"><Zap className="w-4 h-4" /> {t('yourMemory')}</div><h3 className="text-xl font-black text-slate-900 mt-2">{engagement.tag}</h3><p className="text-xs text-slate-500 mt-1">{t('builtFromParticipation')}</p></div><div className="text-3xl font-black text-sky-700">{engagement.score}%</div></div><div className="h-3 rounded-full bg-slate-100 mt-4 overflow-hidden"><div className="h-full bg-sky-500 rounded-full" style={{ width: `${engagement.score}%` }} /></div><div className="mt-4 rounded-2xl border border-sky-100 bg-sky-50 p-3 flex items-center gap-3"><div className="w-14 h-14 rounded-xl overflow-hidden bg-white border border-sky-100 flex items-center justify-center text-xl text-sky-700">{photoUrl ? <img src={photoUrl} alt={nickname} className="w-full h-full object-cover" /> : nickname.charAt(0).toUpperCase()}</div><div className="flex-1"><p className="text-xs text-slate-400">{t('memoryPhoto')}</p><p className="text-sm font-black text-slate-900">{nickname}</p></div>{!photoUrl && <label className="cursor-pointer text-[10px] font-black text-sky-700 bg-white border border-sky-200 rounded-lg px-2 py-1.5"><Camera className="w-3 h-3 inline mr-1" />{t('addPhoto')}<input type="file" accept="image/*" className="hidden" onChange={(event) => onAudiencePhotoUpload(event.target.files?.[0])} /></label>}</div><div className="flex gap-2 mt-3"><button onClick={handleDownloadCard} className="flex-1 bg-sky-600 text-white font-black text-xs rounded-xl py-2.5 flex items-center justify-center gap-2"><Download className="w-4 h-4" /> {t('download')}</button><button onClick={handleShareCard} className="flex-1 bg-indigo-600 text-white font-black text-xs rounded-xl py-2.5 flex items-center justify-center gap-2"><Share2 className="w-4 h-4" /> {t('share')}</button></div></div>
+            <div className="space-y-3">
+              {otherPerformers.map((person) => (
+                <div key={person.id || person.name} className="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl p-3">
+                  <div className="w-16 h-16 rounded-xl overflow-hidden bg-sky-50 border border-sky-100 flex items-center justify-center text-2xl shrink-0">
+                    {(person.photo_url || person.photo) ? (
+                      <img src={person.photo_url || person.photo} alt={person.name} className="w-full h-full object-cover" />
+                    ) : '🎤'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-black text-slate-900 truncate">{person.name}</p>
+                    <p className="text-[11px] text-slate-500 truncate">{person.work || person.role || 'Performer'}</p>
+                    <button
+                      onClick={() => openPerson(person)}
+                      className="mt-2 text-[11px] font-black text-sky-700 bg-sky-50 border border-sky-200 rounded-lg px-2.5 py-1.5"
+                    >
+                      Know Your Performer →
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-        <div className="bg-white/86 border border-sky-200 rounded-3xl p-5"><div className="flex items-center gap-2 text-sky-700 text-xs font-black uppercase tracking-widest"><Zap className="w-4 h-4" /> {t('yourMusicNight')}</div><div className="grid grid-cols-2 gap-3 mt-4"><StatBox label={t('votes')} value={myVotes.length} /><StatBox label={t('reactions')} value={myReactions.length} /></div></div>
-        <div className="text-center text-[10px] uppercase font-black tracking-widest text-slate-400 pt-2">{t('watchLine')}</div>
+        <div className="bg-white/86 border border-sky-200 rounded-3xl p-5">
+          <div className="flex items-center gap-2 text-sky-700 text-xs font-black uppercase tracking-widest">
+            <Zap className="w-4 h-4" /> {t('yourMusicNight')}
+          </div>
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            <StatBox label={t('votes')} value={myVotes.length} />
+            <StatBox label={t('reactions')} value={myReactions.length} />
+          </div>
+        </div>
+
+        <div className="text-center text-[10px] uppercase font-black tracking-widest text-slate-400 pt-2">
+          {t('watchLine')}
+        </div>
       </div>
 
-      {showPeopleModal && <EventPeopleModal people={people} initialTab={peopleTab} currentPerformer={currentPerformer} language={lang} onClose={() => setShowPeopleModal(false)} />}
+      {showPeopleModal && (
+        <EventPeopleModal
+          people={people}
+          initialTab="performer"
+          currentPerformer={selectedPerson || currentPerformer}
+          language={lang}
+          onClose={() => setShowPeopleModal(false)}
+        />
+      )}
     </>
   );
 }
@@ -1129,139 +1479,48 @@ function AdminDashboard({ dbData, updateDatabase, activeTab, setActiveTab, onLog
     { id: 'analytics', label: 'Analytics', icon: Activity },
   ];
 
-  return <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6 relative z-10"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-xl flex flex-wrap items-center justify-between gap-4 backdrop-blur"><div className="flex items-center gap-3"><div className="p-3 bg-sky-100 border border-sky-200 rounded-2xl text-sky-700"><CloudRain className="w-6 h-6 animate-pulse" /></div><div><span className="text-[10px] font-black uppercase tracking-widest text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full border border-sky-200">Live Control Room</span><h1 className="text-2xl font-black text-slate-900 tracking-tight">{EVENT_DISPLAY_NAME}</h1></div></div><div className="flex items-center gap-3"><div className="bg-white/80 px-3 py-1.5 rounded-xl border border-sky-200 text-xs flex items-center gap-2"><Users className="w-4 h-4 text-sky-700" /><span className="text-slate-500">Audience:</span><strong className="text-slate-900 font-black text-sm">{audienceCount}</strong></div><button onClick={onLogout} className="p-2 bg-white hover:bg-sky-50 text-slate-600 rounded-xl border border-slate-200 transition text-xs flex items-center gap-1"><LogOut className="w-4 h-4" /> Logout</button></div></div><div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-sky-200">{tabs.map((tab) => { const Icon = tab.icon; const isActive = activeTab === tab.id; return <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition whitespace-nowrap ${isActive ? 'bg-sky-600 text-white shadow-lg' : 'bg-white/80 text-slate-500 hover:text-sky-700 border border-slate-200'}`}><Icon className="w-4 h-4" /><span>{tab.label}</span></button>; })}</div>{activeTab === 'overview' && <AdminOverviewTab nowPlaying={nowPlaying} people={people} audienceCount={audienceCount} />}{activeTab === 'performances' && <AdminPerformancesTab supabasePerformances={supabasePerformances} onRefresh={onRefresh} />}{activeTab === 'musicians' && <AdminMusiciansTab people={people} onRefresh={onRefresh} />}{activeTab === 'people' && <AdminPeopleTab people={people} onRefresh={onRefresh} />}{activeTab === 'audience' && <AdminAudienceTab audience={supabaseAudience} audienceCount={audienceCount} supabaseVotes={supabaseVotes} supabaseReactions={supabaseReactions} supabaseInteractions={supabaseInteractions} />}{activeTab === 'interactions' && <AdminInteractionsTab supabaseInteractions={supabaseInteractions} supabaseVotes={supabaseVotes} supabaseAudience={supabaseAudience} supabaseReactions={supabaseReactions} supabasePerformances={supabasePerformances} />}{activeTab === 'analytics' && <AdminAnalyticsTab audienceCount={audienceCount} supabasePerformances={supabasePerformances} supabaseInteractions={supabaseInteractions} supabaseVotes={supabaseVotes} supabaseReactions={supabaseReactions} supabaseAudience={supabaseAudience} people={people} analyticsSnapshots={analyticsSnapshots} supabaseMemoryCards={supabaseMemoryCards} onRefresh={onRefresh} />}</div>;
+  return <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6 relative z-10"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-xl flex flex-wrap items-center justify-between gap-4 backdrop-blur"><div className="flex items-center gap-3"><div className="p-3 bg-sky-100 border border-sky-200 rounded-2xl text-sky-700"><CloudRain className="w-6 h-6 animate-pulse" /></div><div><span className="text-[10px] font-black uppercase tracking-widest text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full border border-sky-200">Live Control Room</span><h1 className="text-2xl font-black text-slate-900 tracking-tight">{EVENT_DISPLAY_NAME}</h1></div></div><div className="flex items-center gap-3"><div className="bg-white/80 px-3 py-1.5 rounded-xl border border-sky-200 text-xs flex items-center gap-2"><Users className="w-4 h-4 text-sky-700" /><span className="text-slate-500">Audience:</span><strong className="text-slate-900 font-black text-sm">{audienceCount}</strong></div><button onClick={onLogout} className="p-2 bg-white hover:bg-sky-50 text-slate-600 rounded-xl border border-slate-200 transition text-xs flex items-center gap-1"><LogOut className="w-4 h-4" /> Logout</button></div></div><div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-sky-200">{tabs.map((tab) => { const Icon = tab.icon; const isActive = activeTab === tab.id; return <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition whitespace-nowrap ${isActive ? 'bg-sky-600 text-white shadow-lg' : 'bg-white/80 text-slate-500 hover:text-sky-700 border border-slate-200'}`}><Icon className="w-4 h-4" /><span>{tab.label}</span></button>; })}</div>{activeTab === 'overview' && <AdminOverviewTab nowPlaying={nowPlaying} people={people} audienceCount={audienceCount} supabaseInteractions={supabaseInteractions} supabaseVotes={supabaseVotes} supabaseReactions={supabaseReactions} />}{activeTab === 'performances' && <AdminPerformancesTab supabasePerformances={supabasePerformances} onRefresh={onRefresh} />}{activeTab === 'musicians' && <AdminMusiciansTab people={people} onRefresh={onRefresh} />}{activeTab === 'people' && <AdminPeopleTab people={people} onRefresh={onRefresh} />}{activeTab === 'audience' && <AdminAudienceTab audience={supabaseAudience} audienceCount={audienceCount} supabaseVotes={supabaseVotes} supabaseReactions={supabaseReactions} supabaseInteractions={supabaseInteractions} />}{activeTab === 'interactions' && <AdminInteractionsTab supabaseInteractions={supabaseInteractions} supabaseVotes={supabaseVotes} supabaseAudience={supabaseAudience} supabaseReactions={supabaseReactions} supabasePerformances={supabasePerformances} />}{activeTab === 'analytics' && <AdminAnalyticsTab audienceCount={audienceCount} supabasePerformances={supabasePerformances} supabaseInteractions={supabaseInteractions} supabaseVotes={supabaseVotes} supabaseReactions={supabaseReactions} supabaseAudience={supabaseAudience} people={people} analyticsSnapshots={analyticsSnapshots} supabaseMemoryCards={supabaseMemoryCards} onRefresh={onRefresh} />}</div>;
 }
 
-function AdminOverviewTab({ nowPlaying, people, audienceCount }) {
+function AdminOverviewTab({ nowPlaying, people, audienceCount, supabaseInteractions, supabaseVotes, supabaseReactions }) {
   const musicianCount = people.filter((person) => person.category === 'musician').length;
+  const liveInteractionCount = supabaseInteractions.filter((interaction) => interaction.status === 'live').length;
   const endCurrentPerformance = async () => {
     if (!supabase || !nowPlaying) return;
     const { error } = await supabase.from('performances').update({ status: 'completed' }).eq('id', nowPlaying.id);
     if (error) alert(`Could not end performance: ${error.message}`);
   };
 
-  return <div className="space-y-6"><div className="grid grid-cols-1 md:grid-cols-3 gap-4"><InfoCard title="Event Status"><div className="flex items-center justify-between"><h3 className="text-lg font-black text-slate-900">{EVENT_DISPLAY_NAME}</h3><span className="px-2.5 py-1 rounded-full text-xs font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">LIVE</span></div><p className="text-xs text-slate-500 mt-2">Date: 2026-10-15</p></InfoCard><InfoCard title="Live Audience"><div className="flex items-center justify-between"><h3 className="text-3xl font-black text-sky-700">{audienceCount}</h3><Users className="w-8 h-8 text-sky-300" /></div><p className="text-xs text-slate-500">Connected sessions</p></InfoCard><InfoCard title="Stage Musicians"><div className="flex items-center justify-between"><h3 className="text-3xl font-black text-indigo-700">{musicianCount}</h3><Music className="w-8 h-8 text-indigo-300" /></div><p className="text-xs text-slate-500">People in the music team</p></InfoCard></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-6 space-y-4 shadow-xl"><div className="flex items-center justify-between border-b border-sky-100 pb-3"><div className="flex items-center gap-2"><Music className="w-5 h-5 text-sky-700" /><h3 className="text-base font-black text-slate-900">Current Stage Performance</h3></div>{nowPlaying && <button onClick={endCurrentPerformance} className="text-xs font-black text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-xl border border-rose-200">End Performance</button>}</div>{nowPlaying ? <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center"><div><span className="text-[10px] font-black text-sky-700 uppercase tracking-wider">Now Playing</span><h2 className="text-2xl font-black text-slate-900 mt-1">🎤 {nowPlaying.title}</h2><p className="text-sm font-black text-sky-700 mt-1">Performer: {nowPlaying.performer}</p><p className="text-xs text-slate-500 mt-0.5">Original: {nowPlaying.song_artist || '—'}</p></div><div className="bg-sky-50 p-4 rounded-2xl border border-sky-100"><span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-2">Live Musicians</span><div className="flex flex-wrap gap-2">{people.filter((person) => person.category === 'musician').map((musician) => <span key={musician.id} className="text-xs font-black bg-white text-sky-800 border border-sky-100 px-2.5 py-1 rounded-lg">{musician.name} ({musician.instrument || musician.role})</span>)}</div></div></div> : <div className="text-center py-6 text-slate-400 text-sm font-bold">No active song set.</div>}</div></div>;
+  return <div className="space-y-6"><div className="grid grid-cols-1 md:grid-cols-3 gap-4"><InfoCard title="Event Status"><div className="flex items-center justify-between"><h3 className="text-lg font-black text-slate-900">{EVENT_DISPLAY_NAME}</h3><span className="px-2.5 py-1 rounded-full text-xs font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">LIVE</span></div><p className="text-xs text-slate-500 mt-2">Date: 2026-10-15</p></InfoCard><InfoCard title="Live Audience"><div className="flex items-center justify-between"><h3 className="text-3xl font-black text-sky-700">{audienceCount}</h3><Users className="w-8 h-8 text-sky-300" /></div><p className="text-xs text-slate-500">Connected sessions</p></InfoCard><InfoCard title="Stage Musicians"><div className="flex items-center justify-between"><h3 className="text-3xl font-black text-indigo-700">{musicianCount}</h3><Music className="w-8 h-8 text-indigo-300" /></div><p className="text-xs text-slate-500">People in the music team</p></InfoCard><InfoCard title="Live Interaction"><div className="flex items-center justify-between"><h3 className="text-3xl font-black text-emerald-700">{liveInteractionCount}</h3><MessageCircle className="w-8 h-8 text-emerald-300" /></div><p className="text-xs text-slate-500">Polls / games currently live</p></InfoCard><InfoCard title="Engagement"><div className="grid grid-cols-2 gap-2"><div><h3 className="text-2xl font-black text-sky-700">{supabaseVotes.length}</h3><p className="text-[10px] text-slate-500">Votes</p></div><div><h3 className="text-2xl font-black text-pink-600">{supabaseReactions.length}</h3><p className="text-[10px] text-slate-500">Reactions</p></div></div></InfoCard></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-6 space-y-4 shadow-xl"><div className="flex items-center justify-between border-b border-sky-100 pb-3"><div className="flex items-center gap-2"><Music className="w-5 h-5 text-sky-700" /><h3 className="text-base font-black text-slate-900">Current Stage Performance</h3></div>{nowPlaying && <button onClick={endCurrentPerformance} className="text-xs font-black text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-xl border border-rose-200">End Performance</button>}</div>{nowPlaying ? <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center"><div><span className="text-[10px] font-black text-sky-700 uppercase tracking-wider">Now Playing</span><h2 className="text-2xl font-black text-slate-900 mt-1">🎤 {nowPlaying.title}</h2><p className="text-sm font-black text-sky-700 mt-1">Performer: {nowPlaying.performer}</p><p className="text-xs text-slate-500 mt-0.5">Original: {nowPlaying.song_artist || '—'}</p></div><div className="bg-sky-50 p-4 rounded-2xl border border-sky-100"><span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-2">Live Musicians</span><div className="flex flex-wrap gap-2">{people.filter((person) => person.category === 'musician').map((musician) => <span key={musician.id} className="text-xs font-black bg-white text-sky-800 border border-sky-100 px-2.5 py-1 rounded-lg">{musician.name} ({musician.instrument || musician.role})</span>)}</div></div></div> : <div className="text-center py-6 text-slate-400 text-sm font-bold">No active song set.</div>}</div></div>;
 }
 
 function InfoCard({ title, children }) {
   return <div className="bg-white/84 border border-sky-200 rounded-2xl p-5 space-y-3 shadow-sm"><span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">{title}</span>{children}</div>;
 }
 
-async function ensureEventExists() {
-  if (!supabase) return { error: new Error('Supabase is not connected') };
-  const { data, error } = await supabase.from('events').select('id').eq('id', APP_EVENT_ID).maybeSingle();
-  if (error) return { error };
-  if (data) return { error: null };
-  const { error: insertError } = await supabase.from('events').insert({
-    id: APP_EVENT_ID,
-    name: EVENT_DISPLAY_NAME,
-    event_date: '2026-10-15',
-    status: 'live',
-  });
-  return { error: insertError || null };
-}
-
-function AdminPerformancesTab({ supabasePerformances, onRefresh }) {
+function AdminPerformancesTab({ supabasePerformances }) {
   const [songName, setSongName] = useState('');
   const [performerName, setPerformerName] = useState('');
   const [artistName, setArtistName] = useState('');
-  const [performerAge, setPerformerAge] = useState('');
-  const [performerWork, setPerformerWork] = useState('');
-  const [performerWorkplace, setPerformerWorkplace] = useState('');
-  const [performerIntro, setPerformerIntro] = useState('');
-  const [performerPhotoFile, setPerformerPhotoFile] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [busy, setBusy] = useState(false);
 
-
-  const resetForm = () => {
-    setSongName('');
-    setPerformerName('');
-    setArtistName('');
-    setPerformerAge('');
-    setPerformerWork('');
-    setPerformerWorkplace('');
-    setPerformerIntro('');
-    setPerformerPhotoFile(null);
-    setEditingId(null);
-  };
-
-  const fillPerformerProfile = async (name) => {
-    if (!supabase || !name.trim()) return;
-    const { data } = await supabase
-      .from('event_people')
-      .select('*')
-      .eq('event_id', APP_EVENT_ID)
-      .eq('category', 'performer')
-      .eq('name', name.trim())
-      .limit(1);
-    const person = data?.[0];
-    if (!person) return;
-    setPerformerAge(person.age || '');
-    setPerformerWork(person.work || '');
-    setPerformerWorkplace(person.workplace || '');
-    setPerformerIntro(person.intro || '');
-  };
+  const resetForm = () => { setSongName(''); setPerformerName(''); setArtistName(''); setEditingId(null); };
 
   const handleAddOrUpdate = async (event) => {
     event.preventDefault();
     if (!supabase || !songName.trim() || !performerName.trim() || busy) return;
     setBusy(true);
-
-    const eventResult = await ensureEventExists();
-    if (eventResult.error) {
-      alert(`Could not prepare event: ${eventResult.error.message}`);
-      setBusy(false);
-      return;
-    }
-
-    const cleanName = performerName.trim();
-    const performerId = `performer_${cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || Date.now()}`;
-    const profileResult = await saveEventPerson({
-      id: performerId,
-      category: 'performer',
-      name: cleanName,
-      role: 'Performer',
-      age: performerAge.trim(),
-      work: performerWork.trim(),
-      workplace: performerWorkplace.trim(),
-      intro: performerIntro.trim(),
-      display_order: 99,
-    }, performerPhotoFile);
-
-    if (profileResult.error) {
-      alert(`Could not save performer profile: ${profileResult.error.message}`);
-      setBusy(false);
-      return;
-    }
-
     if (editingId) {
-      const { error } = await supabase
-        .from('performances')
-        .update({
-          title: songName.trim(),
-          performer: cleanName,
-          song_artist: artistName.trim(),
-        })
-        .eq('id', editingId);
+      const { error } = await supabase.from('performances').update({ title: songName.trim(), performer: performerName.trim(), song_artist: artistName.trim() }).eq('id', editingId);
       if (error) alert(`Could not update performance: ${error.message}`);
     } else {
       const newId = `perf_${Date.now()}`;
-      const { error } = await supabase.from('performances').insert({
-        id: newId,
-        event_id: APP_EVENT_ID,
-        title: songName.trim(),
-        performer: cleanName,
-        song_artist: artistName.trim(),
-        display_order: supabasePerformances.length + 1,
-        status: 'queued',
-      });
+      const { error } = await supabase.from('performances').insert({ id: newId, event_id: APP_EVENT_ID, title: songName.trim(), performer: performerName.trim(), song_artist: artistName.trim(), display_order: supabasePerformances.length + 1, status: 'queued' });
       if (error) alert(`Could not add performance: ${error.message}`);
     }
-
     resetForm();
     setBusy(false);
-    await onRefresh?.();
   };
 
   const handleSetPlaying = async (id) => {
@@ -1270,14 +1529,12 @@ function AdminPerformancesTab({ supabasePerformances, onRefresh }) {
     if (stopError) return alert(`Could not stop current performance: ${stopError.message}`);
     const { error } = await supabase.from('performances').update({ status: 'playing' }).eq('id', id).eq('event_id', APP_EVENT_ID);
     if (error) alert(`Could not make live: ${error.message}`);
-    await onRefresh?.();
   };
 
   const handleEndPerformance = async (id) => {
     if (!supabase) return;
     const { error } = await supabase.from('performances').update({ status: 'completed' }).eq('id', id);
     if (error) alert(`Could not end performance: ${error.message}`);
-    await onRefresh?.();
   };
 
   const handleDelete = async (id) => {
@@ -1285,29 +1542,9 @@ function AdminPerformancesTab({ supabasePerformances, onRefresh }) {
     const { error } = await supabase.from('performances').delete().eq('id', id);
     if (error) alert(`Could not delete performance: ${error.message}`);
     if (editingId === id) resetForm();
-    await onRefresh?.();
   };
 
-  const handleEdit = async (performance) => {
-    setEditingId(performance.id);
-    setSongName(performance.title || '');
-    setPerformerName(performance.performer || '');
-    setArtistName(performance.song_artist || '');
-    await fillPerformerProfile(performance.performer || '');
-  };
-
-  return <div className="space-y-6">
-    <form onSubmit={handleAddOrUpdate} className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg space-y-5">
-      <div><h3 className="text-sm font-black text-slate-900 flex items-center gap-2"><Plus className="w-4 h-4 text-sky-700" />{editingId ? 'Edit Performance' : 'Add New Performance'}</h3><p className="text-[11px] text-slate-500 mt-1">Performance details and the Know Your Performer profile are saved together.</p></div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3"><FormInput label="Song Name" value={songName} setValue={setSongName} placeholder="e.g. Tum Hi Ho" /><FormInput label="Performer" value={performerName} setValue={setPerformerName} placeholder="e.g. Aarushi" /><FormInput label="Original Artist" value={artistName} setValue={setArtistName} placeholder="e.g. Mohit Chauhan" required={false} /></div>
-      <div className="border-t border-sky-100 pt-4"><h4 className="text-xs font-black text-slate-900 flex items-center gap-2"><Users className="w-4 h-4 text-sky-700" /> Know Your Performer</h4><p className="text-[10px] text-slate-500 mt-1">This information is shown automatically on the audience landing page when this performer is live.</p></div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3"><FormInput label="Age" value={performerAge} setValue={setPerformerAge} placeholder="e.g. 21" required={false} /><FormInput label="Work Type" value={performerWork} setValue={setPerformerWork} placeholder="e.g. Student" required={false} /><FormInput label="College / Workplace" value={performerWorkplace} setValue={setPerformerWorkplace} placeholder="e.g. Navrachana University" required={false} /></div>
-      <div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Performer Picture</label><input type="file" accept="image/*" onChange={(event) => setPerformerPhotoFile(event.target.files?.[0] || null)} className="w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-100 file:px-3 file:py-2 file:text-xs file:font-black file:text-sky-700" /></div>
-      <div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Short Introduction</label><textarea value={performerIntro} onChange={(event) => setPerformerIntro(event.target.value)} placeholder="A short introduction about the performer..." rows="3" className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-sky-500" /></div>
-      <div className="flex gap-2"><button type="submit" disabled={busy} className="bg-sky-600 hover:bg-sky-500 disabled:bg-slate-300 text-white font-black text-xs px-4 py-2 rounded-xl">{busy ? 'Saving…' : editingId ? 'Save Changes' : 'Add Performance'}</button>{editingId && <button type="button" onClick={resetForm} className="bg-white text-slate-600 font-black text-xs px-4 py-2 rounded-xl border border-slate-200">Cancel</button>}</div>
-    </form>
-    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 space-y-3"><div className="flex items-center justify-between"><div><h3 className="text-sm font-black text-slate-900">Event Performance List</h3><p className="text-[10px] text-slate-500 mt-1">Control what the audience sees live</p></div><span className="text-[10px] text-emerald-700 font-black uppercase flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />Live Control</span></div><div className="space-y-2">{supabasePerformances.map((performance, index) => { const isPlaying = performance.status === 'playing'; return <div key={performance.id} className={`p-4 rounded-2xl border flex flex-wrap items-center justify-between gap-3 ${isPlaying ? 'bg-sky-50 border-sky-300' : 'bg-white border-slate-200'}`}><div className="flex items-center gap-3"><span className="w-7 h-7 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center font-black text-xs">{index + 1}</span><div><h4 className="text-sm font-black text-slate-900 flex items-center gap-2">{performance.title}{isPlaying && <span className="text-[9px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">LIVE NOW</span>}</h4><p className="text-xs text-sky-700 font-bold">Singer: {performance.performer}</p>{performance.song_artist && <p className="text-[10px] text-slate-500 mt-0.5">Original: {performance.song_artist}</p>}</div></div><div className="flex items-center gap-2">{!isPlaying && <button onClick={() => handleSetPlaying(performance.id)} className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-black text-xs px-3 py-1.5 rounded-xl border border-emerald-200 flex items-center gap-1"><PlayCircle className="w-3.5 h-3.5" />Make Live</button>}{isPlaying && <button onClick={() => handleEndPerformance(performance.id)} className="bg-rose-50 hover:bg-rose-100 text-rose-700 font-black text-xs px-3 py-1.5 rounded-xl border border-rose-200">End Performance</button>}<button onClick={() => handleEdit(performance)} className="p-1.5 bg-white hover:bg-sky-50 text-slate-600 rounded-lg border border-slate-200"><Edit3 className="w-3.5 h-3.5" /></button><button onClick={() => handleDelete(performance.id)} className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg border border-rose-100"><Trash2 className="w-3.5 h-3.5" /></button></div></div>; })}</div></div>
-  </div>;
+  return <div className="space-y-6"><form onSubmit={handleAddOrUpdate} className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg space-y-4"><h3 className="text-sm font-black text-slate-900 flex items-center gap-2"><Plus className="w-4 h-4 text-sky-700" />{editingId ? 'Edit Performance' : 'Add New Performance'}</h3><div className="grid grid-cols-1 sm:grid-cols-3 gap-3"><FormInput label="Song Name" value={songName} setValue={setSongName} placeholder="e.g. Tum Hi Ho" /><FormInput label="Performer" value={performerName} setValue={setPerformerName} placeholder="e.g. Aarushi" /><FormInput label="Original Artist" value={artistName} setValue={setArtistName} placeholder="e.g. Mohit Chauhan" required={false} /></div><div className="flex gap-2"><button type="submit" className="bg-sky-600 hover:bg-sky-500 text-white font-black text-xs px-4 py-2 rounded-xl">{busy ? 'Saving…' : editingId ? 'Save Changes' : 'Add Performance'}</button>{editingId && <button type="button" onClick={resetForm} className="bg-white text-slate-600 font-black text-xs px-4 py-2 rounded-xl border border-slate-200">Cancel</button>}</div></form><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 space-y-3"><div className="flex items-center justify-between"><div><h3 className="text-sm font-black text-slate-900">Event Performance List</h3><p className="text-[10px] text-slate-500 mt-1">Control what the audience sees live</p></div><span className="text-[10px] text-emerald-700 font-black uppercase flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />Live Control</span></div><div className="space-y-2">{supabasePerformances.map((performance, index) => { const isPlaying = performance.status === 'playing'; return <div key={performance.id} className={`p-4 rounded-2xl border flex flex-wrap items-center justify-between gap-3 ${isPlaying ? 'bg-sky-50 border-sky-300' : 'bg-white border-slate-200'}`}><div className="flex items-center gap-3"><span className="w-7 h-7 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center font-black text-xs">{index + 1}</span><div><h4 className="text-sm font-black text-slate-900 flex items-center gap-2">{performance.title}{isPlaying && <span className="text-[9px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">LIVE NOW</span>}</h4><p className="text-xs text-sky-700 font-bold">Singer: {performance.performer}</p>{performance.song_artist && <p className="text-[10px] text-slate-500 mt-0.5">Original: {performance.song_artist}</p>}</div></div><div className="flex items-center gap-2">{!isPlaying && <button onClick={() => handleSetPlaying(performance.id)} className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-black text-xs px-3 py-1.5 rounded-xl border border-emerald-200 flex items-center gap-1"><PlayCircle className="w-3.5 h-3.5" />Make Live</button>}{isPlaying && <button onClick={() => handleEndPerformance(performance.id)} className="bg-rose-50 hover:bg-rose-100 text-rose-700 font-black text-xs px-3 py-1.5 rounded-xl border border-rose-200">End Performance</button>}<button onClick={() => { setEditingId(performance.id); setSongName(performance.title || ''); setPerformerName(performance.performer || ''); setArtistName(performance.song_artist || ''); }} className="p-1.5 bg-white hover:bg-sky-50 text-slate-600 rounded-lg border border-slate-200"><Edit3 className="w-3.5 h-3.5" /></button><button onClick={() => handleDelete(performance.id)} className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg border border-rose-100"><Trash2 className="w-3.5 h-3.5" /></button></div></div>; })}</div></div></div>;
 }
 
 function FormInput({ label, value, setValue, placeholder, required = true }) {
@@ -1836,8 +2073,43 @@ function AdminAnalyticsTab({ audienceCount, supabasePerformances, supabaseIntera
       </div>
 
       <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg">
-        <div className="flex items-center justify-between gap-3 mb-4"><div><h3 className="text-sm font-black text-slate-900">Complete Audience List</h3><p className="text-xs text-slate-500 mt-1">Every audience member who joined this event, including people who did not vote or react.</p></div><span className="text-[10px] font-black text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-1 rounded-full">{supabaseAudience.length} names</span></div>
-        <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">#</th><th className="pb-2">Audience Name</th><th className="pb-2">Language</th><th className="pb-2">Joined</th><th className="pb-2">Votes</th><th className="pb-2">Reactions</th></tr></thead><tbody className="divide-y divide-slate-100">{supabaseAudience.length ? supabaseAudience.map((member, index) => { const memberVotes = eventVotes.filter((vote) => vote.audience_id === member.session_id).length; const memberReactions = eventReactions.filter((reaction) => reaction.audience_id === member.session_id).length; return <tr key={member.id || member.session_id}><td className="py-2 text-slate-400">{index + 1}</td><td className="py-2 font-black text-slate-800">{member.nickname || 'Unnamed audience'}</td><td className="py-2 text-slate-500">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || 'English'}</td><td className="py-2 text-slate-400">{member.joined_at ? new Date(member.joined_at).toLocaleTimeString() : '—'}</td><td className="py-2 text-sky-700 font-black">{memberVotes}</td><td className="py-2 text-pink-600 font-black">{memberReactions}</td></tr>; }) : <tr><td colSpan="6" className="py-8 text-center text-slate-400">No audience members have joined yet.</td></tr>}</tbody></table></div>
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 className="text-sm font-black text-slate-900">All Audience Members</h3>
+            <p className="text-xs text-slate-500 mt-1">Every person who joined the event, including people who did not participate in a poll or reaction.</p>
+          </div>
+          <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">{supabaseAudience.length} joined</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]">
+                <th className="pb-2 pl-2">Audience Name</th>
+                <th className="pb-2">Language</th>
+                <th className="pb-2">Joined</th>
+                <th className="pb-2">Votes</th>
+                <th className="pb-2 pr-2">Reactions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {supabaseAudience.length ? supabaseAudience.map((member) => {
+                const votes = eventVotes.filter((vote) => vote.audience_id === member.session_id).length;
+                const reactions = eventReactions.filter((reaction) => reaction.audience_id === member.session_id).length;
+                return (
+                  <tr key={member.id || member.session_id}>
+                    <td className="py-2 pl-2 font-black text-slate-800">{member.nickname || 'Audience Guest'}</td>
+                    <td className="py-2 text-slate-500">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || '—'}</td>
+                    <td className="py-2 text-slate-500">{formatJoined(member.joined_at || member.created_at)}</td>
+                    <td className="py-2 font-bold text-sky-700">{votes}</td>
+                    <td className="py-2 pr-2 font-bold text-pink-600">{reactions}</td>
+                  </tr>
+                );
+              }) : (
+                <tr><td colSpan="5" className="py-8 text-center text-slate-400">No audience members yet.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg">
