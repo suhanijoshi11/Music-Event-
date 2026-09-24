@@ -160,41 +160,19 @@ const INITIAL_SEED_DATA = {
   event: {
     id: APP_EVENT_ID,
     name: EVENT_DISPLAY_NAME,
-    event_date: '2026-10-15',
+    event_date: '2026-10-24',
     status: 'live',
     created_at: new Date().toISOString(),
   },
-  performances: [
-    { id: 'perf_1', event_id: APP_EVENT_ID, title: 'Tum Se Hi', performer: 'Aarushi', song_artist: 'Mohit Chauhan', display_order: 1, status: 'playing' },
-    { id: 'perf_2', event_id: APP_EVENT_ID, title: 'Agar Tum Saath Ho', performer: 'Riya', song_artist: 'Alka Yagnik & Arijit Singh', display_order: 2, status: 'queued' },
-    { id: 'perf_3', event_id: APP_EVENT_ID, title: 'Pehla Nasha', performer: 'Dev', song_artist: 'Udit Narayan & Sadhana Sargam', display_order: 3, status: 'queued' },
-    { id: 'perf_4', event_id: APP_EVENT_ID, title: 'Gallan Goodiyaan', performer: 'Group Performance', song_artist: 'Various Artists', display_order: 4, status: 'queued' },
-  ],
-  musicians: [
-    { id: 'mus_1', event_id: APP_EVENT_ID, name: 'Rahul', instrument: 'Guitar' },
-    { id: 'mus_2', event_id: APP_EVENT_ID, name: 'Meera', instrument: 'Keyboard' },
-    { id: 'mus_3', event_id: APP_EVENT_ID, name: 'Aarav', instrument: 'Drums' },
-    { id: 'mus_4', event_id: APP_EVENT_ID, name: 'Karan', instrument: 'Bass' },
-  ],
+  performances: [],
+  musicians: [],
   audience: [],
 };
 
 const EVENT_INTRO_DATA = {
-  performers: [
-    { id: 'performer_1', name: 'Aarushi', role: 'Performer', photo: '', age: '21', work: 'Student', workplace: 'Navrachana University', intro: 'A soulful voice bringing Bollywood melodies to life on the Tofani Vayra 9 stage.', achievements: 'Trained vocalist with a passion for Bollywood and contemporary music.' },
-    { id: 'performer_2', name: 'Riya', role: 'Performer', photo: '', age: '20', work: 'Student', workplace: 'Navrachana University', intro: 'A versatile singer known for expressive vocals and emotional performances.', achievements: 'Regular stage performer and music enthusiast.' },
-    { id: 'performer_3', name: 'Dev', role: 'Performer', photo: '', age: '21', work: 'Student', workplace: 'Navrachana University', intro: 'Bringing a fresh energy and expressive style to the live stage.', achievements: 'Passionate performer with an interest in live music.' },
-  ],
-  anchors: [
-    { id: 'anchor_1', name: 'Your Anchor', role: 'Anchor / MoC', photo: '', age: '22', work: 'Student', workplace: 'Navrachana University', intro: 'Keeping the evening lively, engaging and connected from one performance to the next.', achievements: 'Experienced in stage hosting and audience interaction.' },
-    { id: 'anchor_2', name: 'Co-Anchor', role: 'Anchor / MoC', photo: '', age: '21', work: 'Student', workplace: 'Navrachana University', intro: 'Adding energy, humour and warmth to the Music Night experience.', achievements: 'Active stage host and event presenter.' },
-  ],
-  musicians: [
-    { id: 'mus_1', name: 'Rahul', instrument: 'Guitar', photo: '', age: '22', work: 'Musician', workplace: 'Independent', intro: 'Adding melodic depth and live guitar energy to every performance.', achievements: 'Live guitarist with experience accompanying vocal performances.' },
-    { id: 'mus_2', name: 'Meera', instrument: 'Keyboard', photo: '', age: '22', work: 'Musician', workplace: 'Independent', intro: 'Creating the harmonic foundation behind the evening’s performances.', achievements: 'Keyboardist experienced in live stage accompaniment.' },
-    { id: 'mus_3', name: 'Aarav', instrument: 'Drums', photo: '', age: '23', work: 'Musician', workplace: 'Independent', intro: 'Bringing rhythm, energy and groove to the live stage.', achievements: 'Live drummer with experience in group performances.' },
-    { id: 'mus_4', name: 'Karan', instrument: 'Bass', photo: '', age: '22', work: 'Musician', workplace: 'Independent', intro: 'Holding the rhythm section together with a strong live bass presence.', achievements: 'Bass player experienced in live ensemble performances.' },
-  ],
+  performers: [],
+  anchors: [],
+  musicians: [],
   organizers: [],
 };
 
