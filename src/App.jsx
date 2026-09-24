@@ -1192,198 +1192,623 @@ function AudienceHome({ session, language = 'en', nowPlaying, supabaseInteractio
 
   return (
     <>
-      <div className="max-w-md mx-auto p-4 pb-20 space-y-5 relative z-10">
-        <div className="bg-white/88 border border-sky-200 rounded-2xl p-4 backdrop-blur shadow-md flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider block">{t('audienceMember')}</span>
-            <h2 className="text-lg font-black text-slate-900">{uiTextWithName(lang, 'goodEvening', nickname)}</h2>
-          </div>
-          <button
-            onClick={onChangeNickname}
-            className="text-xs text-sky-700 hover:text-sky-900 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-200 font-bold transition"
-          >
-            {t('change')}
-          </button>
-        </div>
+      <>
+  <div className="max-w-md mx-auto p-4 pb-20 space-y-5 relative z-10">
 
-        {/* 1. NOW PLAYING */}
-        <div className="bg-white/88 border border-sky-200 rounded-3xl p-6 shadow-2xl relative overflow-hidden text-center">
-          <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-sky-200/40 rounded-full blur-2xl pointer-events-none" />
-          <div className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-widest text-sky-700 bg-sky-100 px-3.5 py-1 rounded-full border border-sky-200 mb-4">
-            <CloudRain className="w-4 h-4" /> {t('nowPlaying')}
-          </div>
+    {/* AUDIENCE MEMBER */}
+    <div className="bg-white/88 border border-sky-200 rounded-2xl p-4 backdrop-blur shadow-md flex items-center justify-between">
+      <div>
+        <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider block">
+          {t('audienceMember')}
+        </span>
 
-          {nowPlaying ? (
-            <div className="space-y-4">
-              {(currentPerformer?.photo_url || currentPerformer?.photo) ? (
-                <div className="w-32 h-32 mx-auto rounded-3xl overflow-hidden border-4 border-white shadow-lg bg-sky-100">
-                  <img src={currentPerformer.photo_url || currentPerformer.photo} alt={currentPerformer.name} className="w-full h-full object-cover" />
-                </div>
-              ) : (
-                <div className="w-32 h-32 mx-auto rounded-3xl bg-sky-100 border-4 border-white shadow-lg flex items-center justify-center text-5xl">
-                  🎤
-                </div>
-              )}
+        <h2 className="text-lg font-black text-slate-900">
+          {uiTextWithName(lang, 'goodEvening', nickname)}
+        </h2>
+      </div>
 
-              <div>
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">{nowPlaying.title}</h1>
-                <p className="text-xl text-sky-700 font-black mt-1">{nowPlaying.performer}</p>
-                {nowPlaying.song_artist && (
-                  <p className="text-[11px] text-slate-400 mt-1">Original: {nowPlaying.song_artist}</p>
-                )}
-              </div>
+      <button
+        onClick={onChangeNickname}
+        className="text-xs text-sky-700 hover:text-sky-900 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-200 font-bold transition"
+      >
+        {t('change')}
+      </button>
+    </div>
 
-              {currentPerformer ? (
-                <div className="text-left bg-sky-50 border border-sky-100 rounded-2xl p-4 space-y-2">
-                  <p className="text-xs text-slate-600 leading-relaxed">{currentPerformer.intro}</p>
-                  <div className="grid grid-cols-2 gap-2 pt-2">
-                    {currentPerformer.age && (
-                      <div className="bg-white rounded-xl p-2.5 border border-sky-100">
-                        <span className="block text-[9px] uppercase font-black text-slate-400">{t('age')}</span>
-                        <span className="text-xs font-black text-slate-800">{currentPerformer.age}</span>
-                      </div>
-                    )}
-                    {currentPerformer.work && (
-                      <div className="bg-white rounded-xl p-2.5 border border-sky-100">
-                        <span className="block text-[9px] uppercase font-black text-slate-400">{t('work')}</span>
-                        <span className="text-xs font-black text-slate-800">{currentPerformer.work}</span>
-                      </div>
-                    )}
-                    {currentPerformer.workplace && (
-                      <div className="bg-white rounded-xl p-2.5 border border-sky-100 col-span-2">
-                        <span className="block text-[9px] uppercase font-black text-slate-400">{t('workplace')}</span>
-                        <span className="text-xs font-black text-slate-800">{currentPerformer.workplace}</span>
-                      </div>
-                    )}
-                  </div>
-                  {currentPerformer.achievements && (
-                    <div className="pt-2">
-                      <span className="block text-[9px] uppercase font-black text-slate-400">{t('achievements')}</span>
-                      <p className="text-xs text-slate-600 leading-relaxed mt-1">{currentPerformer.achievements}</p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-xs text-slate-500">Performer details will appear here.</p>
-              )}
 
-              <div className="pt-1 flex justify-center items-center gap-1">
-                <span className="w-1.5 h-4 bg-sky-500 rounded-full animate-bounce" />
-                <span className="w-1.5 h-6 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.2s]" />
-                <span className="w-1.5 h-3 bg-cyan-500 rounded-full animate-bounce [animation-delay:0.4s]" />
-              </div>
+    {/* 1. NOW PLAYING */}
+    <div className="bg-white/88 border border-sky-200 rounded-3xl p-6 shadow-2xl relative overflow-hidden text-center">
+
+      <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-sky-200/40 rounded-full blur-2xl pointer-events-none" />
+
+      <div className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-widest text-sky-700 bg-sky-100 px-3.5 py-1 rounded-full border border-sky-200 mb-4">
+        <CloudRain className="w-4 h-4" />
+        {t('nowPlaying')}
+      </div>
+
+      {nowPlaying ? (
+        <div className="space-y-4">
+
+          {(currentPerformer?.photo_url || currentPerformer?.photo) ? (
+            <div className="w-32 h-32 mx-auto rounded-3xl overflow-hidden border-4 border-white shadow-lg bg-sky-100">
+              <img
+                src={currentPerformer.photo_url || currentPerformer.photo}
+                alt={currentPerformer.name}
+                className="w-full h-full object-cover"
+              />
             </div>
           ) : (
-            <div className="py-6">
-              <Radio className="w-10 h-10 text-slate-300 mx-auto mb-2 animate-pulse" />
-              <p className="text-slate-500 text-sm font-bold">{t('intermission')}</p>
+            <div className="w-32 h-32 mx-auto rounded-3xl bg-sky-100 border-4 border-white shadow-lg flex items-center justify-center text-5xl">
+              🎤
             </div>
+          )}
+
+          <div>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">
+              {nowPlaying.title}
+            </h1>
+
+            <p className="text-xl text-sky-700 font-black mt-1">
+              {nowPlaying.performer}
+            </p>
+
+            {nowPlaying.song_artist && (
+              <p className="text-[11px] text-slate-400 mt-1">
+                Original: {nowPlaying.song_artist}
+              </p>
+            )}
+          </div>
+
+          {currentPerformer ? (
+            <div className="text-left bg-sky-50 border border-sky-100 rounded-2xl p-4 space-y-2">
+
+              <p className="text-xs text-slate-600 leading-relaxed">
+                {currentPerformer.intro}
+              </p>
+
+              <div className="grid grid-cols-2 gap-2 pt-2">
+
+                {currentPerformer.age && (
+                  <div className="bg-white rounded-xl p-2.5 border border-sky-100">
+                    <span className="block text-[9px] uppercase font-black text-slate-400">
+                      {t('age')}
+                    </span>
+
+                    <span className="text-xs font-black text-slate-800">
+                      {currentPerformer.age}
+                    </span>
+                  </div>
+                )}
+
+                {currentPerformer.work && (
+                  <div className="bg-white rounded-xl p-2.5 border border-sky-100">
+                    <span className="block text-[9px] uppercase font-black text-slate-400">
+                      {t('work')}
+                    </span>
+
+                    <span className="text-xs font-black text-slate-800">
+                      {currentPerformer.work}
+                    </span>
+                  </div>
+                )}
+
+                {currentPerformer.workplace && (
+                  <div className="bg-white rounded-xl p-2.5 border border-sky-100 col-span-2">
+                    <span className="block text-[9px] uppercase font-black text-slate-400">
+                      {t('workplace')}
+                    </span>
+
+                    <span className="text-xs font-black text-slate-800">
+                      {currentPerformer.workplace}
+                    </span>
+                  </div>
+                )}
+
+              </div>
+
+              {currentPerformer.achievements && (
+                <div className="pt-2">
+                  <span className="block text-[9px] uppercase font-black text-slate-400">
+                    {t('achievements')}
+                  </span>
+
+                  <p className="text-xs text-slate-600 leading-relaxed mt-1">
+                    {currentPerformer.achievements}
+                  </p>
+                </div>
+              )}
+
+            </div>
+          ) : (
+            <p className="text-xs text-slate-500">
+              Performer details will appear here.
+            </p>
+          )}
+
+          <div className="pt-1 flex justify-center items-center gap-1">
+            <span className="w-1.5 h-4 bg-sky-500 rounded-full animate-bounce" />
+            <span className="w-1.5 h-6 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.2s]" />
+            <span className="w-1.5 h-3 bg-cyan-500 rounded-full animate-bounce [animation-delay:0.4s]" />
+          </div>
+
+        </div>
+      ) : (
+        <div className="py-6">
+          <Radio className="w-10 h-10 text-slate-300 mx-auto mb-2 animate-pulse" />
+
+          <p className="text-slate-500 text-sm font-bold">
+            {t('intermission')}
+          </p>
+        </div>
+      )}
+
+    </div>
+
+
+    {/* 2. INTERACTIVE POLLS & GAMES */}
+    {liveInteraction && (
+      <div className="bg-white/86 border border-emerald-200 rounded-3xl p-5 shadow-xl">
+
+        <div className="flex items-center justify-between mb-3">
+          <div>
+
+            <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-700">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Interactive Polls & Games
+            </div>
+
+            <h3 className="text-lg font-black text-slate-900 mt-2">
+              {liveInteraction.question || liveInteraction.title}
+            </h3>
+
+            <p className="text-xs text-slate-500 mt-1">
+              {liveInteraction.type === 'guess_song'
+                ? '🎯 Guess the Song'
+                : '📊 Live Poll'} • {t('tapOne')}
+            </p>
+
+          </div>
+
+          {hasVoted && (
+            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
           )}
         </div>
 
-        {/* 2. INTERACTIVE POLLS & GAMES */}
-        {liveInteraction && (
-          <div className="bg-white/86 border border-emerald-200 rounded-3xl p-5 shadow-xl">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-700">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Interactive Polls & Games
+        <div className="space-y-2 mt-4">
+
+          {interactionResults.map(({ option, votes, percentage }) => (
+            <button
+              key={option}
+              disabled={hasVoted}
+              onClick={() => handleVote(option)}
+              className={`w-full relative overflow-hidden border rounded-xl px-3 py-3 text-left transition ${
+                hasVoted
+                  ? 'border-slate-200 bg-slate-50'
+                  : 'border-slate-200 hover:border-emerald-300 bg-white'
+              }`}
+            >
+
+              {hasVoted && (
+                <div
+                  className="absolute inset-y-0 left-0 bg-emerald-100"
+                  style={{ width: `${percentage}%` }}
+                />
+              )}
+
+              <div className="relative flex items-center justify-between gap-3">
+
+                <span className="text-sm text-slate-800 font-bold">
+                  {option}
+                </span>
+
+                {hasVoted && (
+                  <span className="text-xs font-black text-emerald-700">
+                    {percentage}%
+                  </span>
+                )}
+
+              </div>
+
+              {hasVoted && (
+                <div className="relative mt-1 text-[10px] text-slate-500">
+                  {votes} {t('votes')}
                 </div>
-                <h3 className="text-lg font-black text-slate-900 mt-2">{liveInteraction.question || liveInteraction.title}</h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  {liveInteraction.type === 'guess_song' ? '🎯 Guess the Song' : '📊 Live Poll'} • {t('tapOne')}
+              )}
+
+            </button>
+          ))}
+
+        </div>
+
+        {voteMessage && (
+          <p className="text-xs text-emerald-700 mt-3 font-bold">
+            {voteMessage}
+          </p>
+        )}
+
+      </div>
+    )}
+
+
+    {/* 3. SONG REACTIONS */}
+    {nowPlaying && (
+      <div className="bg-white/86 border border-pink-200 rounded-3xl p-5 shadow-xl">
+
+        <div className="flex items-center justify-between">
+
+          <div>
+            <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-pink-600">
+              <Heart className="w-4 h-4" />
+              Song Reactions
+            </div>
+
+            <h3 className="text-sm font-black text-slate-900 mt-2">
+              React to {nowPlaying.performer}'s performance
+            </h3>
+
+            <p className="text-[11px] text-slate-500 mt-1">
+              Choose one reaction
+            </p>
+          </div>
+
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 mt-4">
+
+          {performanceReactionCounts.map(({ reaction, label, count }) => (
+            <button
+              key={reaction}
+              disabled={Boolean(myReaction)}
+              onClick={() => handleReaction(reaction)}
+              className={`rounded-2xl py-3 px-2 border transition ${
+                myReaction === reaction
+                  ? 'bg-pink-50 border-pink-300'
+                  : 'bg-white border-slate-200 hover:border-pink-300'
+              }`}
+            >
+
+              <div className="text-xl">
+                {reaction}
+              </div>
+
+              <div className="text-[11px] font-black text-slate-700 mt-1">
+                {label}
+              </div>
+
+              <div className="text-[10px] text-slate-400 mt-0.5">
+                {count}
+              </div>
+
+            </button>
+          ))}
+
+        </div>
+
+        {reactionMessage && (
+          <p className="text-xs text-pink-600 mt-3 font-bold">
+            {reactionMessage}
+          </p>
+        )}
+
+      </div>
+    )}
+
+
+    {/* 4. KNOW OTHER PERFORMERS */}
+    {otherPerformers.length > 0 && (
+      <div className="bg-white/86 border border-sky-200 rounded-3xl p-5 shadow-xl">
+
+        <div className="mb-4">
+
+          <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-sky-700">
+            <Users className="w-4 h-4" />
+            Know Other Performers
+          </div>
+
+          <p className="text-[11px] text-slate-500 mt-1">
+            Meet the artists performing throughout the evening.
+          </p>
+
+        </div>
+
+        <div className="space-y-3">
+
+          {otherPerformers.map((person) => (
+            <div
+              key={person.id || person.name}
+              className="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl p-3"
+            >
+
+              <div className="w-16 h-16 rounded-xl overflow-hidden bg-sky-50 border border-sky-100 flex items-center justify-center text-2xl shrink-0">
+
+                {(person.photo_url || person.photo) ? (
+                  <img
+                    src={person.photo_url || person.photo}
+                    alt={person.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  '🎤'
+                )}
+
+              </div>
+
+              <div className="flex-1 min-w-0">
+
+                <p className="text-sm font-black text-slate-900 truncate">
+                  {person.name}
                 </p>
-              </div>
-              {hasVoted && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
-            </div>
 
-            <div className="space-y-2 mt-4">
-              {interactionResults.map(({ option, votes, percentage }) => (
+                <p className="text-[11px] text-slate-500 truncate">
+                  {person.work || person.role || 'Performer'}
+                </p>
+
                 <button
-                  key={option}
-                  disabled={hasVoted}
-                  onClick={() => handleVote(option)}
-                  className={`w-full relative overflow-hidden border rounded-xl px-3 py-3 text-left transition ${hasVoted ? 'border-slate-200 bg-slate-50' : 'border-slate-200 hover:border-emerald-300 bg-white'}`}
+                  onClick={() => openPerson(person)}
+                  className="mt-2 text-[11px] font-black text-sky-700 bg-sky-50 border border-sky-200 rounded-lg px-2.5 py-1.5"
                 >
-                  {hasVoted && <div className="absolute inset-y-0 left-0 bg-emerald-100" style={{ width: `${percentage}%` }} />}
-                  <div className="relative flex items-center justify-between gap-3">
-                    <span className="text-sm text-slate-800 font-bold">{option}</span>
-                    {hasVoted && <span className="text-xs font-black text-emerald-700">{percentage}%</span>}
-                  </div>
-                  {hasVoted && <div className="relative mt-1 text-[10px] text-slate-500">{votes} {t('votes')}</div>}
+                  Know Your Performer →
                 </button>
-              ))}
-            </div>
-            {voteMessage && <p className="text-xs text-emerald-700 mt-3 font-bold">{voteMessage}</p>}
-          </div>
-        )}
 
-        {/* 3. SONG REACTIONS */}
-        {nowPlaying && (
-          <div className="bg-white/86 border border-pink-200 rounded-3xl p-5 shadow-xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-pink-600">
-                  <Heart className="w-4 h-4" /> Song Reactions
-                </div>
-                <h3 className="text-sm font-black text-slate-900 mt-2">React to {nowPlaying.performer}'s performance</h3>
-                <p className="text-[11px] text-slate-500 mt-1">Choose one reaction</p>
               </div>
+
+            </div>
+          ))}
+
+        </div>
+
+      </div>
+    )}
+
+
+    {/* 5. KNOW YOUR MUSICIANS */}
+    {musicianPeople && musicianPeople.length > 0 && (
+      <div className="bg-white/86 border border-sky-200 rounded-3xl p-5 shadow-xl">
+
+        <div className="flex items-center justify-between mb-4">
+
+          <div>
+            <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-sky-700">
+              <Volume2 className="w-4 h-4" />
+              {t('knowMusicians')}
             </div>
 
-            <div className="grid grid-cols-2 gap-2 mt-4">
-              {performanceReactionCounts.map(({ reaction, label, count }) => (
-                <button
-                  key={reaction}
-                  disabled={Boolean(myReaction)}
-                  onClick={() => handleReaction(reaction)}
-                  className={`rounded-2xl py-3 px-2 border transition ${myReaction === reaction ? 'bg-pink-50 border-pink-300' : 'bg-white border-slate-200 hover:border-pink-300'}`}
-                >
-                  <div className="text-xl">{reaction}</div>
-                  <div className="text-[11px] font-black text-slate-700 mt-1">{label}</div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">{count}</div>
-                </button>
-              ))}
-            </div>
-            {reactionMessage && <p className="text-xs text-pink-600 mt-3 font-bold">{reactionMessage}</p>}
+            <p className="text-[11px] text-slate-500 mt-1">
+              {t('peopleCreatingSound')}
+            </p>
           </div>
+
+          <Volume2 className="w-5 h-5 text-sky-700" />
+
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+
+          {musicianPeople.map((person) => (
+            <PersonMiniPhotoCard
+              key={person.id || person.name}
+              person={person}
+            />
+          ))}
+
+        </div>
+
+        <button
+          onClick={() => openPeople('musician')}
+          className="w-full mt-4 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl py-2.5 text-xs font-black transition"
+        >
+          {t('seeMusicianDetails')}
+        </button>
+
+      </div>
+    )}
+
+
+    {/* 6. ANCHORS / TEAM MEMBERS */}
+    {anchorPeople && anchorPeople.length > 0 && (
+      <div className="bg-white/86 border border-sky-200 rounded-3xl p-5 shadow-xl">
+
+        <div className="flex items-center justify-between">
+
+          <div>
+
+            <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-sky-700">
+              <Sparkles className="w-4 h-4" />
+              {t('anchorsTeam')}
+            </div>
+
+            <p className="text-[11px] text-slate-500 mt-1">
+              {t('meetPeople')}
+            </p>
+
+          </div>
+
+          <Sparkles className="w-5 h-5 text-sky-700" />
+
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mt-4">
+
+          {anchorPeople.slice(0, 2).map((person) => (
+            <PersonMiniPhotoCard
+              key={person.id || person.name}
+              person={person}
+            />
+          ))}
+
+        </div>
+
+        <button
+          onClick={() => openPeople('anchor')}
+          className="w-full mt-4 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl py-2.5 text-xs font-black transition"
+        >
+          {t('knowAnchorsTeam')}
+        </button>
+
+      </div>
+    )}
+
+
+    {/* 7. YOUR MUSIC NIGHT MEMORY CARD */}
+    <div className="bg-white/88 border border-sky-200 rounded-3xl p-5 shadow-xl">
+
+      <div className="flex items-center justify-between">
+
+        <div>
+
+          <div className="text-xs font-black uppercase tracking-widest text-sky-700 flex items-center gap-2">
+            <Zap className="w-4 h-4" />
+            {t('yourMemory')}
+          </div>
+
+          <h3 className="text-xl font-black text-slate-900 mt-2">
+            {engagement.tag}
+          </h3>
+
+          <p className="text-xs text-slate-500 mt-1">
+            {t('builtFromParticipation')}
+          </p>
+
+        </div>
+
+        <div className="text-3xl font-black text-sky-700">
+          {engagement.score}%
+        </div>
+
+      </div>
+
+
+      {/* ENGAGEMENT BAR */}
+      <div className="h-3 rounded-full bg-slate-100 mt-4 overflow-hidden">
+
+        <div
+          className="h-full bg-sky-500 rounded-full"
+          style={{ width: `${engagement.score}%` }}
+        />
+
+      </div>
+
+
+      {/* MEMORY PHOTO */}
+      <div className="mt-4 rounded-2xl border border-sky-100 bg-sky-50 p-3 flex items-center gap-3">
+
+        <div className="w-14 h-14 rounded-xl overflow-hidden bg-white border border-sky-100 flex items-center justify-center text-xl text-sky-700">
+
+          {photoUrl ? (
+            <img
+              src={photoUrl}
+              alt={nickname}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            nickname.charAt(0).toUpperCase()
+          )}
+
+        </div>
+
+        <div className="flex-1">
+
+          <p className="text-xs text-slate-400">
+            {t('memoryPhoto')}
+          </p>
+
+          <p className="text-sm font-black text-slate-900">
+            {nickname}
+          </p>
+
+        </div>
+
+        {!photoUrl && (
+          <label className="cursor-pointer text-[10px] font-black text-sky-700 bg-white border border-sky-200 rounded-lg px-2 py-1.5">
+
+            <Camera className="w-3 h-3 inline mr-1" />
+
+            {t('addPhoto')}
+
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(event) =>
+                onAudiencePhotoUpload(event.target.files?.[0])
+              }
+            />
+
+          </label>
         )}
 
-        {/* 4. KNOW OTHER PERFORMERS */}
-        {otherPerformers.length > 0 && (
-          <div className="bg-white/86 border border-sky-200 rounded-3xl p-5 shadow-xl">
-            <div className="mb-4">
-              <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-sky-700">
-                <Users className="w-4 h-4" /> Know Other Performers
-              </div>
-              <p className="text-[11px] text-slate-500 mt-1">Meet the artists performing throughout the evening.</p>
-            </div>
+      </div>
 
-            <div className="space-y-3">
-              {otherPerformers.map((person) => (
-                <div key={person.id || person.name} className="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl p-3">
-                  <div className="w-16 h-16 rounded-xl overflow-hidden bg-sky-50 border border-sky-100 flex items-center justify-center text-2xl shrink-0">
-                    {(person.photo_url || person.photo) ? (
-                      <img src={person.photo_url || person.photo} alt={person.name} className="w-full h-full object-cover" />
-                    ) : '🎤'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-black text-slate-900 truncate">{person.name}</p>
-                    <p className="text-[11px] text-slate-500 truncate">{person.work || person.role || 'Performer'}</p>
-                    <button
-                      onClick={() => openPerson(person)}
-                      className="mt-2 text-[11px] font-black text-sky-700 bg-sky-50 border border-sky-200 rounded-lg px-2.5 py-1.5"
-                    >
-                      Know Your Performer →
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
+      {/* DOWNLOAD / SHARE */}
+      <div className="flex gap-2 mt-3">
+
+        <button
+          onClick={handleDownloadCard}
+          className="flex-1 bg-sky-600 text-white font-black text-xs rounded-xl py-2.5 flex items-center justify-center gap-2"
+        >
+          <Download className="w-4 h-4" />
+          {t('download')}
+        </button>
+
+        <button
+          onClick={handleShareCard}
+          className="flex-1 bg-indigo-600 text-white font-black text-xs rounded-xl py-2.5 flex items-center justify-center gap-2"
+        >
+          <Share2 className="w-4 h-4" />
+          {t('share')}
+        </button>
+
+      </div>
+
+    </div>
+
+
+    {/* 8. YOUR MUSIC NIGHT STATS */}
+    <div className="bg-white/86 border border-sky-200 rounded-3xl p-5">
+
+      <div className="flex items-center gap-2 text-sky-700 text-xs font-black uppercase tracking-widest">
+        <Zap className="w-4 h-4" />
+        {t('yourMusicNight')}
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mt-4">
+
+        <StatBox
+          label={t('votes')}
+          value={myVotes.length}
+        />
+
+        <StatBox
+          label={t('reactions')}
+          value={myReactions.length}
+        />
+
+      </div>
+
+    </div>
+
+
+    {/* 9. END LINE */}
+    <div className="text-center text-[10px] uppercase font-black tracking-widest text-slate-400 pt-2">
+      {t('watchLine')}
+    </div>
+
+  </div>
+
+
+  {/* PEOPLE DETAILS MODAL */}
+  {showPeopleModal && (
+    <EventPeopleModal
+      people={people}
+      initialTab={peopleTab}
+      currentPerformer={currentPerformer}
+      language={lang}
+      onClose={() => setShowPeopleModal(false)}
+    />
+  )}
+
+</>
         <div className="bg-white/86 border border-sky-200 rounded-3xl p-5">
           <div className="flex items-center gap-2 text-sky-700 text-xs font-black uppercase tracking-widest">
             <Zap className="w-4 h-4" /> {t('yourMusicNight')}
