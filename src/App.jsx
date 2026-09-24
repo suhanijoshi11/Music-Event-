@@ -123,13 +123,20 @@ function uiTextWithName(language, key, name) {
   return uiText(language, key).replace('{name}', name);
 }
 
-const REACTION_OPTIONS = ['❤️', '🔥', '👏', '✨'];
-const REACTION_LABELS = {
-  '❤️': 'Beautiful',
-  '🔥': 'Energetic',
-  '👏': 'Great Work',
-  '✨': 'Soulful',
-};
+const REACTION_OPTIONS = [
+  { value: '❤️ Beautiful', emoji: '❤️', label: 'Beautiful' },
+  { value: '🎶 Soulful', emoji: '🎶', label: 'Soulful' },
+  { value: '👏 Great Work', emoji: '👏', label: 'Great Work' },
+  { value: '✨ Mesmerizing', emoji: '✨', label: 'Mesmerizing' },
+  { value: '🔥 Energetic', emoji: '🔥', label: 'Energetic' },
+  { value: '💫 Amazing', emoji: '💫', label: 'Amazing' },
+  { value: '🎤 Powerful', emoji: '🎤', label: 'Powerful' },
+  { value: '🌟 Brilliant', emoji: '🌟', label: 'Brilliant' },
+  { value: '🥹 Touching', emoji: '🥹', label: 'Touching' },
+  { value: '💖 Heartfelt', emoji: '💖', label: 'Heartfelt' },
+  { value: '🎵 Musical', emoji: '🎵', label: 'Musical' },
+  { value: '👌 Well Performed', emoji: '👌', label: 'Well Performed' },
+];
 
 const DEFAULT_INTERACTIONS = [
   {
