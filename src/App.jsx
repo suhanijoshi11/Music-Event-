@@ -975,6 +975,7 @@ function AudienceHome({ session, language = 'en', nowPlaying, supabaseInteractio
   const handleReaction = async (reaction) => {
     if (!supabase || !nowPlaying || !session?.sessionId || myReaction) return;
     setReactionMessage(t('sending'));
+    console.log('REACTION BEING SENT:', JSON.stringify(reaction));
     const { error } = await supabase.from('performance_reactions').insert({ performance_id: nowPlaying.id, audience_id: session.sessionId, reaction });
     if (error) setReactionMessage(error.code === '23505' ? t('alreadyReacted') : `Reaction failed: ${error.message}`);
     else setReactionMessage(t('reactionSent'));
