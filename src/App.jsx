@@ -45,7 +45,10 @@ const LANGUAGE_OPTIONS = [
 const UI_TEXT = {
   en: {
     welcome: 'Welcome to', experience: 'Choose your language, enter your name and join the live experience.',
-    chooseLanguage: 'Choose language', yourName: 'Your Name', enterName: 'Enter your name',
+    chooseLanguage: 'Choose language', firstName: 'First Name',
+surname: 'Surname',
+enterFirstName: 'Enter your first name',
+enterSurname: 'Enter your surname',
     memoryPhoto: 'Photo for your memory card', optional: '(optional)', join: 'Join',
     continueAs: 'Continue as', liveEvent: 'Live Event', audienceExperience: 'Audience Experience',
     goodEvening: 'Good evening, {name} 👋', audienceMember: 'Audience Member', change: 'Change',
@@ -68,7 +71,10 @@ const UI_TEXT = {
   },
   hi: {
     welcome: 'स्वागत है', experience: 'अपनी भाषा चुनें, अपना नाम दर्ज करें और लाइव अनुभव में शामिल हों।',
-    chooseLanguage: 'भाषा चुनें', yourName: 'आपका नाम', enterName: 'अपना नाम दर्ज करें',
+    chooseLanguage: 'भाषा चुनें', firstName: 'पहला नाम',
+surname: 'उपनाम',
+enterFirstName: 'अपना पहला नाम दर्ज करें',
+enterSurname: 'अपना उपनाम दर्ज करें',
     memoryPhoto: 'मेमोरी कार्ड के लिए फोटो', optional: '(वैकल्पिक)', join: 'शामिल हों',
     continueAs: 'के रूप में जारी रखें', liveEvent: 'लाइव कार्यक्रम', audienceExperience: 'दर्शक अनुभव',
     goodEvening: 'शुभ संध्या, {name} 👋', audienceMember: 'दर्शक सदस्य', change: 'बदलें',
@@ -91,7 +97,10 @@ const UI_TEXT = {
   },
   gu: {
     welcome: 'આપનું સ્વાગત છે', experience: 'તમારી ભાષા પસંદ કરો, તમારું નામ લખો અને લાઇવ અનુભવમાં જોડાઓ.',
-    chooseLanguage: 'ભાષા પસંદ કરો', yourName: 'તમારું નામ', enterName: 'તમારું નામ લખો',
+    chooseLanguage: 'ભાષા પસંદ કરો', firstName: 'નામ',
+surname: 'અટક',
+enterFirstName: 'તમારું નામ લખો',
+enterSurname: 'તમારી અટક લખો',
     memoryPhoto: 'મેમરી કાર્ડ માટે ફોટો', optional: '(વૈકલ્પિક)', join: 'જોડાઓ',
     continueAs: 'તરીકે ચાલુ રાખો', liveEvent: 'લાઇવ કાર્યક્રમ', audienceExperience: 'પ્રેક્ષક અનુભવ',
     goodEvening: 'શુભ સાંજ, {name} 👋', audienceMember: 'પ્રેક્ષક સભ્ય', change: 'બદલો',
@@ -751,121 +760,203 @@ export default function App() {
     });
   };
 
-  const handleAudienceJoin = async (nickname, language = 'en', photoFile = null) => {
-    let existingSession = null;
-    try {
-      const raw = localStorage.getItem(SESSION_KEY);
-      if (raw) existingSession = JSON.parse(raw);
-    } catch (error) {
-      console.warn('Session read error', error);
-    }
+  const handleAudienceJoin = async (
+  firstName,
+  surname,
+  language = 'en',
+  photoFile = null
+) => {
+  let existingSession = null;
 
-    const cleanNickname = (nickname || '').trim() || 'Audience Guest';
-    const cleanLanguage = ['en', 'hi', 'gu'].includes(language) ? language : 'en';
-const getAudienceSessionId = () => {
-  const STORAGE_KEY = 'music_night_audience_session_v1';
-
-  let sessionId = localStorage.getItem(STORAGE_KEY);
-
-  if (!sessionId) {
-    sessionId = crypto.randomUUID();
-    localStorage.setItem(STORAGE_KEY, sessionId);
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (raw) existingSession = JSON.parse(raw);
+  } catch (error) {
+    console.warn('Session read error', error);
   }
 
-  return sessionId;
-};    let photoUrl = existingSession?.photoUrl || '';
+  const cleanFirstName = (firstName || '').trim();
+  const cleanSurname = (surname || '').trim();
 
-    if (photoFile && supabase) {
-      const upload = await uploadEventMedia(photoFile, `audience/${APP_EVENT_ID}`, sessionId);
-      if (upload.error) {
-        alert(`Photo upload failed: ${upload.error.message}`);
-      } else {
-        photoUrl = upload.url;
-      }
-    }
+  const cleanNickname =
+    `${cleanFirstName} ${cleanSurname}`.trim() || 'Audience Guest';
 
-    const newSession = {
-      nickname: cleanNickname,
-      language: cleanLanguage,
-      sessionId,
-      eventId: APP_EVENT_ID,
-      photoUrl,
-      joinedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
+  const cleanLanguage = ['en', 'hi', 'gu'].includes(language)
+    ? language
+    : 'en';
 
-    localStorage.setItem(SESSION_KEY, JSON.stringify(newSession));
-    setAudienceSession(newSession);
-const sessionId = getAudienceSessionId();
+  /*
+   * One browser/phone = one audience session.
+   * The same phone keeps the same session after refresh.
+   */
+  const sessionId =
+    existingSession?.sessionId ||
+    `sess_${Math.random().toString(36).slice(2, 10)}_${Date.now()}`;
 
-if (supabase) {
-  const { data: existingAudience, error: lookupError } = await supabase
-    .from('audience')
-    .select('id')
-    .eq('event_id', APP_EVENT_ID)
-    .eq('id', sessionId)
-    .limit(1);
+  let photoUrl = existingSession?.photoUrl || '';
 
-  if (lookupError) {
-    console.error('Audience lookup error:', lookupError);
-  } 
-  else if (existingAudience?.length) {
+  if (photoFile && supabase) {
+    const upload = await uploadEventMedia(
+      photoFile,
+      `audience/${APP_EVENT_ID}`,
+      sessionId
+    );
 
-    const { error: updateError } = await supabase
-      .from('audience')
-      .update({
-        name: cleanNickname,
-        photo_url: photoUrl || null,
-        language: cleanLanguage
-      })
-      .eq('id', sessionId);
-
-    if (updateError) {
-      console.error('Audience update error:', updateError);
-    }
-
-  } 
-  else {
-
-    const { error: insertError } = await supabase
-      .from('audience')
-      .insert({
-        id: sessionId,
-        event_id: APP_EVENT_ID,
-        name: cleanNickname,
-        photo_url: photoUrl || null,
-        language: cleanLanguage
-      });
-
-    if (insertError) {
-      console.error('Audience registration error:', insertError);
-    } else {
-      console.log('New audience session created:', sessionId);
-    }
-  }
-
-          if (fallbackError) console.error('Audience registration error:', fallbackError);
-        }
-      }
-    
-
-    await refreshLiveData();
-    navigate('#/event');
-  };
-
-  const handleAudiencePhotoUpload = async (file) => {
-    if (!file || !audienceSession || !supabase) return;
-    const upload = await uploadEventMedia(file, `audience/${APP_EVENT_ID}`, audienceSession.sessionId);
     if (upload.error) {
       alert(`Photo upload failed: ${upload.error.message}`);
-      return;
+    } else {
+      photoUrl = upload.url;
     }
-    await supabase.from('audience').update({ photo_url: upload.url }).eq('event_id', APP_EVENT_ID).eq('session_id', audienceSession.sessionId);
-    const nextSession = { ...audienceSession, photoUrl: upload.url };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(nextSession));
-    setAudienceSession(nextSession);
-    refreshLiveData();
+  }
+
+  const newSession = {
+    firstName: cleanFirstName,
+    surname: cleanSurname,
+    nickname: cleanNickname,
+    language: cleanLanguage,
+    sessionId,
+    eventId: APP_EVENT_ID,
+    photoUrl,
+    joinedAt: new Date().toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
   };
 
+  /*
+   * Save the phone/browser session immediately.
+   */
+  localStorage.setItem(
+    SESSION_KEY,
+    JSON.stringify(newSession)
+  );
+
+  setAudienceSession(newSession);
+
+  /*
+   * IMPORTANT:
+   * Your actual audience table uses:
+   * id, event_id, name, joined_at, photo_url, language
+   *
+   * Therefore:
+   * audience.id = sessionId
+   * audience.name = combined firstName + surname
+   */
+  if (supabase) {
+    const { data: existingAudience, error: lookupError } =
+      await supabase
+        .from('audience')
+        .select('id')
+        .eq('event_id', APP_EVENT_ID)
+        .eq('id', sessionId)
+        .limit(1);
+
+    if (lookupError) {
+      console.error(
+        'Audience lookup error:',
+        lookupError
+      );
+    } else if (existingAudience?.length) {
+
+      const { error: updateError } = await supabase
+        .from('audience')
+        .update({
+          name: cleanNickname,
+          photo_url: photoUrl || null,
+          language: cleanLanguage,
+        })
+        .eq('id', sessionId)
+        .eq('event_id', APP_EVENT_ID);
+
+      if (updateError) {
+        console.error(
+          'Audience update error:',
+          updateError
+        );
+      }
+
+    } else {
+
+      const { error: insertError } = await supabase
+        .from('audience')
+        .insert({
+          id: sessionId,
+          event_id: APP_EVENT_ID,
+          name: cleanNickname,
+          photo_url: photoUrl || null,
+          language: cleanLanguage,
+        });
+
+      if (insertError) {
+        console.error(
+          'Audience registration error:',
+          insertError
+        );
+
+        alert(
+          `Could not register audience member: ${insertError.message}`
+        );
+
+        return;
+      }
+
+      /*
+       * Update the Admin count immediately.
+       * refreshLiveData() will also confirm the real DB count.
+       */
+      setLiveAudienceCount((current) => current + 1);
+    }
+  }
+
+  await refreshLiveData();
+
+  /*
+   * Only move to the event after the audience record
+   * has been written to Supabase.
+   */
+  navigate('#/event');
+};
+  const handleAudiencePhotoUpload = async (file) => {
+  if (!file || !audienceSession || !supabase) return;
+
+  const upload = await uploadEventMedia(
+    file,
+    `audience/${APP_EVENT_ID}`,
+    audienceSession.sessionId
+  );
+
+  if (upload.error) {
+    alert(`Photo upload failed: ${upload.error.message}`);
+    return;
+  }
+
+  const { error } = await supabase
+    .from('audience')
+    .update({
+      photo_url: upload.url,
+    })
+    .eq('event_id', APP_EVENT_ID)
+    .eq('id', audienceSession.sessionId);
+
+  if (error) {
+    console.error('Audience photo update error:', error);
+    return;
+  }
+
+  const nextSession = {
+    ...audienceSession,
+    photoUrl: upload.url,
+  };
+
+  localStorage.setItem(
+    SESSION_KEY,
+    JSON.stringify(nextSession)
+  );
+
+  setAudienceSession(nextSession);
+
+  await refreshLiveData();
+};
   const nowPlayingPerformance = supabasePerformances.find((performance) => performance.status === 'playing') || null;
   const audienceVoteCount = useMemo(() => supabaseVotes.filter((vote) => vote.audience_id === audienceSession?.sessionId).length, [supabaseVotes, audienceSession]);
   const audienceReactionCount = useMemo(() => supabaseReactions.filter((reaction) => reaction.audience_id === audienceSession?.sessionId).length, [supabaseReactions, audienceSession]);
@@ -920,7 +1011,12 @@ if (supabase) {
           supabaseVotes={supabaseVotes}
           supabaseReactions={supabaseReactions}
           people={people}
-          audienceProfile={supabaseAudience.find((row) => row.session_id === audienceSession?.sessionId) || null}
+          audienceProfile={
+  supabaseAudience.find(
+    (row) =>
+      row.id === audienceSession?.sessionId
+  ) || null
+}
           onAudiencePhotoUpload={handleAudiencePhotoUpload}
           onChangeNickname={() => navigate('#/join')}
         />
@@ -953,77 +1049,197 @@ if (supabase) {
 }
 
 function AudienceLanding({ session, onJoin, onContinue }) {
-  const [nickname, setNickname] = useState(session?.nickname || '');
-  const [language, setLanguage] = useState(session?.language || 'en');
+  const [firstName, setFirstName] = useState(
+    session?.firstName || ''
+  );
+
+  const [surname, setSurname] = useState(
+    session?.surname || ''
+  );
+
+  const [language, setLanguage] = useState(
+    session?.language || 'en'
+  );
+
   const [photoFile, setPhotoFile] = useState(null);
+
   const t = (key) => uiText(language, key);
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (nickname.trim()) onJoin(nickname.trim(), language, photoFile);
+
+    if (!firstName.trim() || !surname.trim()) return;
+
+    onJoin(
+      firstName.trim(),
+      surname.trim(),
+      language,
+      photoFile
+    );
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-5 relative z-10">
       <div className="w-full max-w-md">
-        <div className="bg-white/88 border border-sky-200 rounded-3xl p-7 shadow-2xl text-center backdrop-blur-xl">
-          <div className="w-20 h-20 mx-auto rounded-3xl bg-sky-100 border border-sky-200 flex items-center justify-center mb-5">
-            <CloudRain className="w-10 h-10 text-sky-600" />
-          </div>
-          <p className="text-xs uppercase tracking-[0.25em] text-sky-700 font-black mb-2">{t('welcome')}</p>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">{EVENT_DISPLAY_NAME}</h1>
-          <p className="text-sm text-slate-500 mt-3 leading-relaxed">{t('experience')}</p>
-          <div className="h-px bg-sky-100 my-6" />
 
-          <form onSubmit={handleSubmit} className="space-y-4 text-left">
-            <div>
-              <label className="text-xs font-black text-slate-600 uppercase tracking-wider">{t('chooseLanguage')}</label>
-              <div className="grid grid-cols-3 gap-2 mt-2">
-                {LANGUAGE_OPTIONS.map((item) => (
-                  <button
-                    key={item.code}
-                    type="button"
-                    onClick={() => setLanguage(item.code)}
-                    className={`rounded-xl border px-2 py-3 text-sm font-black transition ${language === item.code ? 'bg-sky-600 text-white border-sky-600 shadow-md' : 'bg-white text-slate-600 border-sky-200 hover:bg-sky-50'}`}
-                  >
-                    {item.native}
-                  </button>
-                ))}
+        <div className="bg-slate-950/75 border border-cyan-300/20 rounded-3xl p-7 shadow-2xl text-center backdrop-blur-2xl relative overflow-hidden">
+
+          <div className="absolute -top-20 -right-20 w-48 h-48 bg-cyan-400/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl" />
+
+          <div className="relative z-10">
+
+            <div className="w-20 h-20 mx-auto rounded-3xl bg-cyan-400/10 border border-cyan-300/20 flex items-center justify-center mb-5 shadow-lg shadow-cyan-900/30">
+              <CloudRain className="w-10 h-10 text-cyan-300" />
+            </div>
+
+            <p className="text-xs uppercase tracking-[0.25em] text-cyan-300 font-black mb-2">
+              {t('welcome')}
+            </p>
+
+            <h1 className="text-3xl font-black text-white tracking-tight">
+              {EVENT_DISPLAY_NAME}
+            </h1>
+
+            <p className="text-sm text-slate-300 mt-3 leading-relaxed">
+              {t('experience')}
+            </p>
+
+            <div className="h-px bg-cyan-300/10 my-6" />
+
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-4 text-left"
+            >
+
+              <div>
+                <label className="text-xs font-black text-slate-300 uppercase tracking-wider">
+                  {t('chooseLanguage')}
+                </label>
+
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  {LANGUAGE_OPTIONS.map((item) => (
+                    <button
+                      key={item.code}
+                      type="button"
+                      onClick={() => setLanguage(item.code)}
+                      className={`rounded-xl border px-2 py-3 text-sm font-black transition ${
+                        language === item.code
+                          ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-lg shadow-cyan-900/30'
+                          : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      {item.native}
+                    </button>
+                  ))}
+                </div>
+
+                <p className="text-[10px] text-slate-500 mt-2">
+                  {t('languageSaved')}
+                </p>
               </div>
-              <p className="text-[10px] text-slate-400 mt-2">{t('languageSaved')}</p>
+
+              <div className="grid grid-cols-2 gap-3">
+
+                <div>
+                  <label className="text-xs font-black text-slate-300 uppercase tracking-wider">
+                    {t('firstName')}
+                  </label>
+
+                  <input
+                    type="text"
+                    value={firstName}
+                    onChange={(event) =>
+                      setFirstName(event.target.value)
+                    }
+                    placeholder={t('enterFirstName')}
+                    className="w-full mt-2 bg-white/10 border border-cyan-200/20 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-300/30 transition"
+                    maxLength={25}
+                    autoComplete="given-name"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-black text-slate-300 uppercase tracking-wider">
+                    {t('surname')}
+                  </label>
+
+                  <input
+                    type="text"
+                    value={surname}
+                    onChange={(event) =>
+                      setSurname(event.target.value)
+                    }
+                    placeholder={t('enterSurname')}
+                    className="w-full mt-2 bg-white/10 border border-cyan-200/20 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-300/30 transition"
+                    maxLength={25}
+                    autoComplete="family-name"
+                  />
+                </div>
+
+              </div>
+
+              <div>
+                <label className="text-xs font-black text-slate-300 uppercase tracking-wider">
+                  {t('memoryPhoto')}{' '}
+                  <span className="normal-case text-slate-500">
+                    {t('optional')}
+                  </span>
+                </label>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) =>
+                    setPhotoFile(
+                      event.target.files?.[0] || null
+                    )
+                  }
+                  className="w-full mt-2 text-xs text-slate-400 file:mr-3 file:rounded-lg file:border-0 file:bg-cyan-400/10 file:px-3 file:py-2 file:text-xs file:font-black file:text-cyan-300"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={
+                  !firstName.trim() ||
+                  !surname.trim()
+                }
+                className="w-full bg-cyan-500 hover:bg-cyan-400 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 rounded-xl py-3.5 font-black text-sm transition flex items-center justify-center gap-2"
+              >
+                {t('join')} {EVENT_DISPLAY_NAME}
+                <ArrowRight className="w-4 h-4" />
+              </button>
+
+            </form>
+
+            {session?.nickname && (
+              <button
+                onClick={onContinue}
+                className="w-full mt-3 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl py-3 text-sm font-bold transition border border-white/10"
+              >
+                {t('continueAs')} {session.nickname}
+              </button>
+            )}
+
+            <div className="mt-7 flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest text-slate-500">
+              <Radio className="w-3 h-3" />
+              {t('liveEvent')}
+              <span>•</span>
+              {t('audienceExperience')}
             </div>
 
-            <div>
-              <label className="text-xs font-black text-slate-600 uppercase tracking-wider">{t('yourName')}</label>
-              <input type="text" value={nickname} onChange={(event) => setNickname(event.target.value)} placeholder={t('enterName')} className="w-full mt-2 bg-white border border-sky-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-300 transition" maxLength={30} autoComplete="off" />
-            </div>
-
-            <div>
-              <label className="text-xs font-black text-slate-600 uppercase tracking-wider">{t('memoryPhoto')} <span className="normal-case text-slate-400">{t('optional')}</span></label>
-              <input type="file" accept="image/*" onChange={(event) => setPhotoFile(event.target.files?.[0] || null)} className="w-full mt-2 text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-100 file:px-3 file:py-2 file:text-xs file:font-black file:text-sky-700" />
-            </div>
-
-            <button type="submit" disabled={!nickname.trim()} className="w-full bg-sky-600 hover:bg-sky-500 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl py-3.5 font-black text-sm transition flex items-center justify-center gap-2">
-              {t('join')} {EVENT_DISPLAY_NAME} <ArrowRight className="w-4 h-4" />
-            </button>
-          </form>
-
-          {session?.nickname && (
-            <button onClick={onContinue} className="w-full mt-3 bg-white hover:bg-sky-50 text-slate-600 rounded-xl py-3 text-sm font-bold transition border border-sky-200">
-              {t('continueAs')} {session.nickname}
-            </button>
-          )}
-
-          <div className="mt-7 flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest text-slate-400">
-            <Radio className="w-3 h-3" /> {t('liveEvent')} <span>•</span> {t('audienceExperience')}
           </div>
         </div>
-        <p className="text-center text-[10px] text-slate-400 mt-5">{t('watchLine')}</p>
+
+        <p className="text-center text-[10px] text-slate-500 mt-5">
+          {t('watchLine')}
+        </p>
+
       </div>
     </div>
   );
 }
-
 function AudienceHome({ session, language = 'en', nowPlaying, supabaseInteractions, supabaseVotes, supabaseReactions, people, audienceProfile, onAudiencePhotoUpload, onChangeNickname }) {
   const nickname = session?.nickname || 'Guest';
   const lang = session?.language || language || 'en';
@@ -1514,9 +1730,9 @@ function TextAreaInput({ label, value, setValue, placeholder }) {
 }
 
 function AdminAudienceTab({ audience, audienceCount, supabaseVotes, supabaseReactions, supabaseInteractions }) {
-  const audienceMap = useMemo(() => new Map(audience.map((member) => [member.session_id, member])), [audience]);
+  const audienceMap = useMemo(() => new Map(audience.map((member) => [member.id, member])), [audience]);
 
-  return <div className="space-y-6"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="flex items-center justify-between"><h3 className="text-sm font-black text-slate-900 flex items-center gap-2"><Users className="w-4 h-4 text-sky-700" /> Live Audience Directory ({audienceCount})</h3><span className="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">Live sync</span></div><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase font-black text-[10px]"><th className="pb-3 pl-2">Audience</th><th className="pb-3">Language</th><th className="pb-3">Joined</th><th className="pb-3">Votes</th><th className="pb-3">Reactions</th><th className="pb-3 pr-2 text-right">Status</th></tr></thead><tbody className="divide-y divide-slate-200">{audience.length ? audience.map((member) => { const votes = supabaseVotes.filter((vote) => vote.audience_id === member.session_id).length; const reactions = supabaseReactions.filter((reaction) => reaction.audience_id === member.session_id).length; return <tr key={member.id || member.session_id}><td className="py-3 pl-2 font-black text-slate-900"><div className="flex items-center gap-2"><div className="w-9 h-9 rounded-full overflow-hidden bg-sky-100 text-sky-700 border border-sky-200 flex items-center justify-center font-black text-xs">{member.photo_url ? <img src={member.photo_url} alt={member.nickname} className="w-full h-full object-cover" /> : (member.nickname?.[0]?.toUpperCase() || 'A')}</div><div><div>{member.nickname}</div><div className="text-[9px] font-mono text-slate-400">{member.session_id?.slice(0, 12)}...</div></div></div></td><td className="py-3 text-slate-600">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || '—'}</td><td className="py-3 text-slate-500">{formatJoined(member.joined_at || member.created_at)}</td><td className="py-3 font-black text-sky-700">{votes}</td><td className="py-3 font-black text-pink-600">{reactions}</td><td className="py-3 pr-2 text-right"><span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />Active</span></td></tr>; }) : <tr><td colSpan="6" className="py-8 text-center text-slate-500">No audience members yet.</td></tr>}</tbody></table></div></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><h3 className="text-sm font-black text-slate-900">Audience Response Summary</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase text-[9px]"><th className="pb-3">Question</th><th className="pb-3">Audience</th><th className="pb-3">Answer</th><th className="pb-3">Time</th></tr></thead><tbody className="divide-y divide-slate-200">{supabaseInteractions.flatMap((interaction) => supabaseVotes.filter((vote) => vote.interaction_id === interaction.id).map((vote) => <tr key={vote.id}><td className="py-2 font-bold text-slate-800">{interaction.question}</td><td className="py-2 text-slate-600">{audienceMap.get(vote.audience_id)?.nickname || 'Unknown'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>))}</tbody></table></div></div></div>;
+  return <div className="space-y-6"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="flex items-center justify-between"><h3 className="text-sm font-black text-slate-900 flex items-center gap-2"><Users className="w-4 h-4 text-sky-700" /> Live Audience Directory ({audienceCount})</h3><span className="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">Live sync</span></div><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase font-black text-[10px]"><th className="pb-3 pl-2">Audience</th><th className="pb-3">Language</th><th className="pb-3">Joined</th><th className="pb-3">Votes</th><th className="pb-3">Reactions</th><th className="pb-3 pr-2 text-right">Status</th></tr></thead><tbody className="divide-y divide-slate-200">{audience.length ? audience.map((member) => { const votes = supabaseVotes.filter((vote) => vote.audience_id === member.id).length; const reactions = supabaseReactions.filter((reaction) => reaction.audience_id === member.id).length; return <tr key={member.id || member.id}><td className="py-3 pl-2 font-black text-slate-900"><div className="flex items-center gap-2"><div className="w-9 h-9 rounded-full overflow-hidden bg-sky-100 text-sky-700 border border-sky-200 flex items-center justify-center font-black text-xs">{member.photo_url ? <img src={member.photo_url} alt={member.name} className="w-full h-full object-cover" /> : (member.name?.[0]?.toUpperCase() || 'A')}</div><div><div>{member.name}</div><div className="text-[9px] font-mono text-slate-400">{member.id?.slice(0, 12)}...</div></div></div></td><td className="py-3 text-slate-600">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || '—'}</td><td className="py-3 text-slate-500">{formatJoined(member.joined_at || member.created_at)}</td><td className="py-3 font-black text-sky-700">{votes}</td><td className="py-3 font-black text-pink-600">{reactions}</td><td className="py-3 pr-2 text-right"><span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />Active</span></td></tr>; }) : <tr><td colSpan="6" className="py-8 text-center text-slate-500">No audience members yet.</td></tr>}</tbody></table></div></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><h3 className="text-sm font-black text-slate-900">Audience Response Summary</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase text-[9px]"><th className="pb-3">Question</th><th className="pb-3">Audience</th><th className="pb-3">Answer</th><th className="pb-3">Time</th></tr></thead><tbody className="divide-y divide-slate-200">{supabaseInteractions.flatMap((interaction) => supabaseVotes.filter((vote) => vote.interaction_id === interaction.id).map((vote) => <tr key={vote.id}><td className="py-2 font-bold text-slate-800">{interaction.question}</td><td className="py-2 text-slate-600">{audienceMap.get(vote.audience_id)?.name || 'Unknown'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>))}</tbody></table></div></div></div>;
 }
 
 function formatJoined(value) {
@@ -1535,7 +1751,7 @@ function AdminInteractionsTab({ supabaseInteractions, supabaseVotes, supabaseAud
   const [selectedInteraction, setSelectedInteraction] = useState(null);
 
   const interactions = supabaseInteractions.filter((interaction) => ['poll', 'guess_song'].includes(interaction.type));
-  const audienceMap = useMemo(() => new Map(supabaseAudience.map((member) => [member.session_id, member])), [supabaseAudience]);
+  const audienceMap = useMemo(() => new Map(supabaseAudience.map((member) => [member.id, member])), [supabaseAudience]);
   const performanceMap = useMemo(() => new Map(supabasePerformances.map((performance) => [performance.id, performance])), [supabasePerformances]);
   const livePerformance = supabasePerformances.find((performance) => performance.status === 'playing') || null;
 
@@ -1612,7 +1828,7 @@ function AdminInteractionsTab({ supabaseInteractions, supabaseVotes, supabaseAud
       </div>
     </div>
 
-    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="mb-5"><h3 className="text-sm font-black text-slate-900">Created Interactions + Answer Analysis</h3><p className="text-xs text-slate-500 mt-1">Option counts and audience names update automatically from Supabase.</p></div><div className="space-y-3">{interactions.length === 0 ? <p className="text-xs text-slate-500 text-center py-8">No interactions created yet.</p> : interactions.map((interaction) => { const isLive = interaction.status === 'live'; const total = countVotes(interaction.id); const attachedPerformance = performanceMap.get(interaction.performance_id); return <div key={interaction.id} className={`p-4 rounded-2xl border ${isLive ? 'bg-sky-50 border-sky-300' : 'bg-white border-slate-200'}`}><div className="flex items-start justify-between gap-4"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{interaction.type === 'guess_song' ? 'Guess' : 'Poll'}</span>{isLive && <span className="text-[9px] uppercase font-black text-emerald-700">LIVE</span>}{attachedPerformance && <span className="text-[9px] uppercase font-black text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">{attachedPerformance.title} • {attachedPerformance.performer}</span>}</div><h4 className="text-sm font-black text-slate-900 mt-2">{interaction.question}</h4><div className="space-y-2 mt-3">{(interaction.options || []).map((option) => { const votes = supabaseVotes.filter((vote) => vote.interaction_id === interaction.id && vote.selected_option === option).length; const percentage = total ? Math.round((votes / total) * 100) : 0; return <div key={option} className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs"><div><div className="flex justify-between"><span className="text-slate-600 font-bold">{option}</span><span className="text-sky-700 font-black">{percentage}%</span></div><div className="h-2 bg-slate-100 rounded-full mt-1 overflow-hidden"><div className="h-full bg-sky-500 rounded-full" style={{ width: `${percentage}%` }} /></div></div><span className="text-slate-400 font-bold">{votes}</span></div>; })}</div><p className="text-[10px] text-slate-400 mt-3">{total} total response{total === 1 ? '' : 's'}</p></div><div className="flex flex-col gap-2">{isLive ? <button onClick={() => handleStop(interaction.id)} className="bg-rose-50 text-rose-700 font-black text-xs px-3 py-1.5 rounded-xl border border-rose-200">Stop</button> : <button onClick={() => handleMakeLive(interaction.id)} className="bg-emerald-50 text-emerald-700 font-black text-xs px-3 py-1.5 rounded-xl border border-emerald-200">Make Live</button>}<button onClick={() => setSelectedInteraction(selectedInteraction?.id === interaction.id ? null : interaction)} className="bg-sky-50 text-sky-700 font-black text-xs px-3 py-1.5 rounded-xl border border-sky-200">{selectedInteraction?.id === interaction.id ? 'Hide Responses' : 'See Responses'}</button></div></div>{selectedInteraction?.id === interaction.id && <div className="mt-4 bg-white border border-sky-100 rounded-2xl p-3"><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">Audience Name</th><th className="pb-2">Language</th><th className="pb-2">Answer</th><th className="pb-2">Time</th></tr></thead><tbody className="divide-y divide-slate-100">{responseRows.length ? responseRows.map((vote) => <tr key={vote.id}><td className="py-2 font-black text-slate-800">{audienceMap.get(vote.audience_id)?.nickname || 'Unknown audience'}</td><td className="py-2 text-slate-500">{LANGUAGE_OPTIONS.find((item) => item.code === audienceMap.get(vote.audience_id)?.language)?.native || '—'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>) : <tr><td colSpan="4" className="py-5 text-center text-slate-400">No responses yet.</td></tr>}</tbody></table></div></div>}</div>; })}</div></div>
+    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="mb-5"><h3 className="text-sm font-black text-slate-900">Created Interactions + Answer Analysis</h3><p className="text-xs text-slate-500 mt-1">Option counts and audience names update automatically from Supabase.</p></div><div className="space-y-3">{interactions.length === 0 ? <p className="text-xs text-slate-500 text-center py-8">No interactions created yet.</p> : interactions.map((interaction) => { const isLive = interaction.status === 'live'; const total = countVotes(interaction.id); const attachedPerformance = performanceMap.get(interaction.performance_id); return <div key={interaction.id} className={`p-4 rounded-2xl border ${isLive ? 'bg-sky-50 border-sky-300' : 'bg-white border-slate-200'}`}><div className="flex items-start justify-between gap-4"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{interaction.type === 'guess_song' ? 'Guess' : 'Poll'}</span>{isLive && <span className="text-[9px] uppercase font-black text-emerald-700">LIVE</span>}{attachedPerformance && <span className="text-[9px] uppercase font-black text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">{attachedPerformance.title} • {attachedPerformance.performer}</span>}</div><h4 className="text-sm font-black text-slate-900 mt-2">{interaction.question}</h4><div className="space-y-2 mt-3">{(interaction.options || []).map((option) => { const votes = supabaseVotes.filter((vote) => vote.interaction_id === interaction.id && vote.selected_option === option).length; const percentage = total ? Math.round((votes / total) * 100) : 0; return <div key={option} className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs"><div><div className="flex justify-between"><span className="text-slate-600 font-bold">{option}</span><span className="text-sky-700 font-black">{percentage}%</span></div><div className="h-2 bg-slate-100 rounded-full mt-1 overflow-hidden"><div className="h-full bg-sky-500 rounded-full" style={{ width: `${percentage}%` }} /></div></div><span className="text-slate-400 font-bold">{votes}</span></div>; })}</div><p className="text-[10px] text-slate-400 mt-3">{total} total response{total === 1 ? '' : 's'}</p></div><div className="flex flex-col gap-2">{isLive ? <button onClick={() => handleStop(interaction.id)} className="bg-rose-50 text-rose-700 font-black text-xs px-3 py-1.5 rounded-xl border border-rose-200">Stop</button> : <button onClick={() => handleMakeLive(interaction.id)} className="bg-emerald-50 text-emerald-700 font-black text-xs px-3 py-1.5 rounded-xl border border-emerald-200">Make Live</button>}<button onClick={() => setSelectedInteraction(selectedInteraction?.id === interaction.id ? null : interaction)} className="bg-sky-50 text-sky-700 font-black text-xs px-3 py-1.5 rounded-xl border border-sky-200">{selectedInteraction?.id === interaction.id ? 'Hide Responses' : 'See Responses'}</button></div></div>{selectedInteraction?.id === interaction.id && <div className="mt-4 bg-white border border-sky-100 rounded-2xl p-3"><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">Audience Name</th><th className="pb-2">Language</th><th className="pb-2">Answer</th><th className="pb-2">Time</th></tr></thead><tbody className="divide-y divide-slate-100">{responseRows.length ? responseRows.map((vote) => <tr key={vote.id}><td className="py-2 font-black text-slate-800">{audienceMap.get(vote.audience_id)?.name || 'Unknown audience'}</td><td className="py-2 text-slate-500">{LANGUAGE_OPTIONS.find((item) => item.code === audienceMap.get(vote.audience_id)?.language)?.native || '—'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>) : <tr><td colSpan="4" className="py-5 text-center text-slate-400">No responses yet.</td></tr>}</tbody></table></div></div>}</div>; })}</div></div>
 
     <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><h3 className="text-sm font-black text-slate-900">Reaction Data</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">Audience</th><th className="pb-2">Song / Performer</th><th className="pb-2">Reaction</th><th className="pb-2">Time</th></tr></thead><tbody className="divide-y divide-slate-100">{supabaseReactions.length ? supabaseReactions.map((reaction) => { const audience = audienceMap.get(reaction.audience_id); const performance = performanceMap.get(reaction.performance_id); return <tr key={reaction.id}><td className="py-2 font-black text-slate-800">{audience?.nickname || 'Unknown audience'}</td><td className="py-2 text-slate-600">{performance ? `${performance.title} • ${performance.performer}` : reaction.performance_id}</td><td className="py-2 text-lg">{reaction.reaction}</td><td className="py-2 text-slate-400">{new Date(reaction.created_at).toLocaleTimeString()}</td></tr>; }) : <tr><td colSpan="4" className="py-5 text-center text-slate-400">No reactions yet.</td></tr>}</tbody></table></div></div>
   </div>;
@@ -1728,14 +1944,14 @@ function AdminAnalyticsTab({ audienceCount, supabasePerformances, supabaseIntera
     }
 
     const rows = supabaseAudience.map((member) => {
-      const votes = eventVotes.filter((vote) => vote.audience_id === member.session_id).length;
-      const reactions = eventReactions.filter((reaction) => reaction.audience_id === member.session_id).length;
+      const votes = eventVotes.filter((vote) => vote.audience_id === member.id).length;
+      const reactions = eventReactions.filter((reaction) => reaction.audience_id === member.id).length;
       const profile = getEngagementProfile(votes, reactions, member.language || 'en');
 
       return {
         event_id: APP_EVENT_ID,
-        audience_id: member.session_id,
-        audience_name: member.nickname || 'Audience Guest',
+        audience_id: member.id,
+        audience_name: member.name || 'Audience Guest',
         photo_url: member.photo_url || null,
         engagement_score: profile.score,
         engagement_tag: profile.tag,
@@ -1927,7 +2143,7 @@ function AdminAnalyticsTab({ audienceCount, supabasePerformances, supabaseIntera
 
       <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg">
         <div className="flex items-center justify-between gap-3 mb-4"><div><h3 className="text-sm font-black text-slate-900">Complete Audience List</h3><p className="text-xs text-slate-500 mt-1">Every audience member who joined this event, including people who did not vote or react.</p></div><span className="text-[10px] font-black text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-1 rounded-full">{supabaseAudience.length} names</span></div>
-        <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">#</th><th className="pb-2">Audience Name</th><th className="pb-2">Language</th><th className="pb-2">Joined</th><th className="pb-2">Votes</th><th className="pb-2">Reactions</th></tr></thead><tbody className="divide-y divide-slate-100">{supabaseAudience.length ? supabaseAudience.map((member, index) => { const memberVotes = eventVotes.filter((vote) => vote.audience_id === member.session_id).length; const memberReactions = eventReactions.filter((reaction) => reaction.audience_id === member.session_id).length; return <tr key={member.id || member.session_id}><td className="py-2 text-slate-400">{index + 1}</td><td className="py-2 font-black text-slate-800">{member.nickname || 'Unnamed audience'}</td><td className="py-2 text-slate-500">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || 'English'}</td><td className="py-2 text-slate-400">{member.joined_at ? new Date(member.joined_at).toLocaleTimeString() : '—'}</td><td className="py-2 text-sky-700 font-black">{memberVotes}</td><td className="py-2 text-pink-600 font-black">{memberReactions}</td></tr>; }) : <tr><td colSpan="6" className="py-8 text-center text-slate-400">No audience members have joined yet.</td></tr>}</tbody></table></div>
+        <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">#</th><th className="pb-2">Audience Name</th><th className="pb-2">Language</th><th className="pb-2">Joined</th><th className="pb-2">Votes</th><th className="pb-2">Reactions</th></tr></thead><tbody className="divide-y divide-slate-100">{supabaseAudience.length ? supabaseAudience.map((member, index) => { const memberVotes = eventVotes.filter((vote) => vote.audience_id === member.id).length; const memberReactions = eventReactions.filter((reaction) => reaction.audience_id === member.id).length; return <tr key={member.id || member.id}><td className="py-2 text-slate-400">{index + 1}</td><td className="py-2 font-black text-slate-800">{member.name || 'Unnamed audience'}</td><td className="py-2 text-slate-500">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || 'English'}</td><td className="py-2 text-slate-400">{member.joined_at ? new Date(member.joined_at).toLocaleTimeString() : '—'}</td><td className="py-2 text-sky-700 font-black">{memberVotes}</td><td className="py-2 text-pink-600 font-black">{memberReactions}</td></tr>; }) : <tr><td colSpan="6" className="py-8 text-center text-slate-400">No audience members have joined yet.</td></tr>}</tbody></table></div>
       </div>
 
       <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg">
@@ -2350,58 +2566,250 @@ async function buildMemoryCardBlob({ name, photoUrl, score, tag, language = 'en'
   });
 }
 
+// function RainThemeStyles() {
+//   return (
+//     <style>{`
+//       @keyframes rainFall {
+//         0% { transform: translate3d(0, -15vh, 0); opacity: 0; }
+//         10% { opacity: .55; }
+//         90% { opacity: .4; }
+//         100% { transform: translate3d(-18px, 115vh, 0); opacity: 0; }
+//       }
+//       .rain-drop {
+//         position: absolute;
+//         top: -20vh;
+//         width: 2px;
+//         height: 72px;
+//         border-radius: 999px;
+//         background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(14,116,144,.45));
+//         animation: rainFall linear infinite;
+//       }
+//       .rain-theme [class*="bg-slate-950"] { background: rgba(248,252,255,.88) !important; }
+//       .rain-theme [class*="bg-slate-900"] { background: rgba(255,255,255,.82) !important; }
+//       .rain-theme [class*="bg-slate-800"] { background: rgba(224,242,254,.86) !important; }
+//       .rain-theme [class*="border-slate-8"] { border-color: rgba(100,116,139,.22) !important; }
+//       .rain-theme [class*="border-slate-7"] { border-color: rgba(100,116,139,.25) !important; }
+//       .rain-theme [class*="bg-purple-950"] { background: rgba(224,231,255,.72) !important; }
+//       .rain-theme [class*="bg-sky-950"] { background: rgba(240,249,255,.84) !important; }
+//       .rain-theme [class*="text-slate-1"] { color: #0f172a !important; }
+//       .rain-theme [class*="text-slate-2"] { color: #334155 !important; }
+//       .rain-theme [class*="text-slate-3"] { color: #475569 !important; }
+//       .rain-theme [class*="text-slate-4"] { color: #64748b !important; }
+//       .rain-theme [class*="text-slate-5"] { color: #64748b !important; }
+//       .rain-theme [class*="text-slate-6"] { color: #475569 !important; }
+//       .rain-theme [class*="bg-slate-950"] .text-white,
+//       .rain-theme [class*="bg-slate-900"] .text-white { color: #0f172a !important; }
+//     `}</style>
+//   );
+// }
+
+// function RainOverlay() {
+//   const drops = Array.from({ length: 34 }, (_, index) => index);
+//   return (
+//     <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-70">
+//       {drops.map((drop) => (
+//         <span
+//           key={drop}
+//           className="rain-drop"
+//           style={{
+//             left: `${(drop * 19) % 100}%`,
+//             animationDuration: `${1.8 + (drop % 5) * 0.35}s`,
+//             animationDelay: `${-(drop * 0.19)}s`,
+//           }}
+//         />
+//       ))}
+//     </div>
+//   );
+// }
+
 function RainThemeStyles() {
   return (
     <style>{`
       @keyframes rainFall {
-        0% { transform: translate3d(0, -15vh, 0); opacity: 0; }
-        10% { opacity: .55; }
-        90% { opacity: .4; }
-        100% { transform: translate3d(-18px, 115vh, 0); opacity: 0; }
+        0% {
+          transform: translate3d(0, -15vh, 0) rotate(10deg);
+          opacity: 0;
+        }
+
+        10% {
+          opacity: .75;
+        }
+
+        85% {
+          opacity: .55;
+        }
+
+        100% {
+          transform: translate3d(-35px, 115vh, 0) rotate(10deg);
+          opacity: 0;
+        }
       }
+
+      @keyframes mistFloat {
+        0%, 100% {
+          transform: translate3d(0, 0, 0) scale(1);
+          opacity: .25;
+        }
+
+        50% {
+          transform: translate3d(20px, -15px, 0) scale(1.08);
+          opacity: .4;
+        }
+      }
+
+      @keyframes waterPulse {
+        0%, 100% {
+          transform: scale(.8);
+          opacity: .1;
+        }
+
+        50% {
+          transform: scale(1.25);
+          opacity: .35;
+        }
+      }
+
       .rain-drop {
         position: absolute;
         top: -20vh;
-        width: 2px;
-        height: 72px;
+        width: 1.5px;
+        height: 80px;
         border-radius: 999px;
-        background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(14,116,144,.45));
+        background: linear-gradient(
+          to bottom,
+          rgba(125,211,252,0),
+          rgba(103,232,249,.65)
+        );
         animation: rainFall linear infinite;
+        filter: blur(.2px);
       }
-      .rain-theme [class*="bg-slate-950"] { background: rgba(248,252,255,.88) !important; }
-      .rain-theme [class*="bg-slate-900"] { background: rgba(255,255,255,.82) !important; }
-      .rain-theme [class*="bg-slate-800"] { background: rgba(224,242,254,.86) !important; }
-      .rain-theme [class*="border-slate-8"] { border-color: rgba(100,116,139,.22) !important; }
-      .rain-theme [class*="border-slate-7"] { border-color: rgba(100,116,139,.25) !important; }
-      .rain-theme [class*="bg-purple-950"] { background: rgba(224,231,255,.72) !important; }
-      .rain-theme [class*="bg-sky-950"] { background: rgba(240,249,255,.84) !important; }
-      .rain-theme [class*="text-slate-1"] { color: #0f172a !important; }
-      .rain-theme [class*="text-slate-2"] { color: #334155 !important; }
-      .rain-theme [class*="text-slate-3"] { color: #475569 !important; }
-      .rain-theme [class*="text-slate-4"] { color: #64748b !important; }
-      .rain-theme [class*="text-slate-5"] { color: #64748b !important; }
-      .rain-theme [class*="text-slate-6"] { color: #475569 !important; }
-      .rain-theme [class*="bg-slate-950"] .text-white,
-      .rain-theme [class*="bg-slate-900"] .text-white { color: #0f172a !important; }
+
+      .rain-theme {
+        background:
+          radial-gradient(
+            circle at 15% 10%,
+            rgba(34,211,238,.13),
+            transparent 30%
+          ),
+          radial-gradient(
+            circle at 85% 25%,
+            rgba(59,130,246,.15),
+            transparent 32%
+          ),
+          linear-gradient(
+            135deg,
+            #020617 0%,
+            #082f49 42%,
+            #042f3b 72%,
+            #020617 100%
+          ) !important;
+
+        color: #e0f2fe;
+      }
+
+      .rain-glow {
+        animation: mistFloat 8s ease-in-out infinite;
+      }
+
+      .water-pulse {
+        animation: waterPulse 3s ease-in-out infinite;
+      }
+
+      .rain-theme .bg-white\\/88,
+      .rain-theme .bg-white\\/86,
+      .rain-theme .bg-white\\/84 {
+        background: rgba(7, 30, 45, .72) !important;
+        border-color: rgba(103,232,249,.14) !important;
+        backdrop-filter: blur(18px);
+      }
+
+      .rain-theme .bg-white {
+        background: rgba(8, 35, 50, .82) !important;
+      }
+
+      .rain-theme .border-sky-200,
+      .rain-theme .border-sky-100 {
+        border-color: rgba(103,232,249,.16) !important;
+      }
+
+      .rain-theme .text-slate-900 {
+        color: #ecfeff !important;
+      }
+
+      .rain-theme .text-slate-800 {
+        color: #cffafe !important;
+      }
+
+      .rain-theme .text-slate-700 {
+        color: #a5f3fc !important;
+      }
+
+      .rain-theme .text-slate-600 {
+        color: #bae6fd !important;
+      }
+
+      .rain-theme .text-slate-500 {
+        color: #94a3b8 !important;
+      }
+
+      .rain-theme .text-slate-400 {
+        color: #64748b !important;
+      }
+
+      .rain-theme .bg-sky-50 {
+        background: rgba(14,116,144,.15) !important;
+      }
+
+      .rain-theme .bg-sky-100 {
+        background: rgba(14,116,144,.22) !important;
+      }
+
+      .rain-theme .bg-slate-50 {
+        background: rgba(15,23,42,.45) !important;
+      }
+
+      .rain-theme .border-slate-200 {
+        border-color: rgba(148,163,184,.16) !important;
+      }
+
+      .rain-theme .shadow-xl,
+      .rain-theme .shadow-2xl {
+        box-shadow:
+          0 20px 60px rgba(0,0,0,.35),
+          0 0 40px rgba(8,145,178,.08);
+      }
     `}</style>
   );
 }
 
 function RainOverlay() {
-  const drops = Array.from({ length: 34 }, (_, index) => index);
+  const drops = Array.from({ length: 85 }, (_, index) => index);
+
   return (
-    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-70">
+    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(34,211,238,.08),transparent_35%)]" />
+
+      <div className="rain-glow absolute -top-20 left-[-10%] w-[50vw] h-[40vh] rounded-full bg-cyan-400/10 blur-[100px]" />
+
+      <div className="rain-glow absolute top-[35%] right-[-15%] w-[55vw] h-[45vh] rounded-full bg-blue-500/10 blur-[120px]" />
+
       {drops.map((drop) => (
         <span
           key={drop}
           className="rain-drop"
           style={{
-            left: `${(drop * 19) % 100}%`,
-            animationDuration: `${1.8 + (drop % 5) * 0.35}s`,
-            animationDelay: `${-(drop * 0.19)}s`,
+            left: `${(drop * 17.37) % 100}%`,
+            animationDuration: `${1.4 + (drop % 7) * 0.28}s`,
+            animationDelay: `${-(drop * 0.13)}s`,
+            opacity: 0.35 + ((drop % 5) * 0.08),
           }}
         />
       ))}
+
+      <div className="water-pulse absolute bottom-[8%] left-[18%] w-2 h-2 rounded-full bg-cyan-300/40 blur-[1px]" />
+      <div className="water-pulse absolute bottom-[22%] right-[20%] w-3 h-3 rounded-full bg-blue-300/30 blur-[1px]" />
+
     </div>
   );
 }
@@ -2815,8 +3223,7 @@ if (insertError) {
   const people = useMemo(() => mergePeople(supabasePeople), [supabasePeople]);
 
   return (
-    <div className="rain-theme min-h-screen bg-gradient-to-br from-sky-100 via-slate-50 to-indigo-100 text-slate-800 font-sans selection:bg-sky-300/40 antialiased relative overflow-x-hidden">
-      <RainThemeStyles />
+<div className="rain-theme min-h-screen text-slate-200 font-sans selection:bg-cyan-300/30 antialiased relative overflow-x-hidden">      <RainThemeStyles />
       <RainOverlay />
 
       <div className="bg-white/85 border-b border-sky-200/60 text-xs py-2 px-4 backdrop-blur sticky top-0 z-50 flex items-center justify-between flex-wrap gap-2 shadow-sm">
@@ -2843,7 +3250,12 @@ if (insertError) {
           supabaseVotes={supabaseVotes}
           supabaseReactions={supabaseReactions}
           people={people}
-          audienceProfile={supabaseAudience.find((row) => row.session_id === audienceSession?.sessionId) || null}
+          audienceProfile={
+  supabaseAudience.find(
+    (row) =>
+      row.id === audienceSession?.sessionId
+  ) || null
+}
           onAudiencePhotoUpload={handleAudiencePhotoUpload}
           onChangeNickname={() => navigate('#/join')}
         />
@@ -2992,11 +3404,31 @@ function AudienceHome({ session, language = 'en', nowPlaying, supabaseInteractio
     else setReactionMessage(t('reactionSent'));
   };
 
-  const interactionResults = liveInteraction ? (liveInteraction.options || []).map((option) => {
-    const votes = supabaseVotes.filter((vote) => vote.interaction_id === liveInteraction.id && vote.selected_option === option).length;
-    const total = supabaseVotes.filter((vote) => vote.interaction_id === liveInteraction.id).length;
-    return { option, votes, percentage: total ? Math.round((votes / total) * 100) : 0 };
-  }) : [];
+  const interactionResults = liveInteraction
+  ? (liveInteraction.options || []).map((option) => {
+      const votes = supabaseVotes.filter(
+        (vote) =>
+          vote.interaction_id === liveInteraction.id &&
+          vote.selected_option === option
+      ).length;
+
+      const total = supabaseVotes.filter(
+        (vote) =>
+          vote.interaction_id === liveInteraction.id
+      ).length;
+
+      return {
+        option,
+        votes,
+        percentage: total
+          ? Math.round((votes / total) * 100)
+          : 0,
+      };
+    })
+  : [];
+
+const isAudiencePoll =
+  liveInteraction?.type === 'audience_poll';
 
   const performanceReactionCounts = nowPlaying ? REACTION_OPTIONS.map((reaction) => ({ ...reaction, count: supabaseReactions.filter((row) => row.performance_id === nowPlaying.id && row.reaction === reaction.value).length })) : [];
 
@@ -3048,14 +3480,191 @@ function AudienceHome({ session, language = 'en', nowPlaying, supabaseInteractio
 
         {nowPlaying && people.filter((person) => person.category === 'performer' && person.name !== nowPlaying.performer).length > 0 && <div className="bg-white/86 border border-sky-200 rounded-3xl p-5 shadow-xl"><div className="flex items-center justify-between mb-4"><div><h3 className="text-sm font-black text-slate-900">{t('performers')}</h3><p className="text-[11px] text-slate-500 mt-1">Know the other performers</p></div><Users className="w-5 h-5 text-sky-700" /></div><div className="grid grid-cols-2 gap-3">{people.filter((person) => person.category === 'performer' && person.name !== nowPlaying.performer).map((person) => <button key={person.id} onClick={() => { setPeopleTab('performer'); setShowPeopleModal(true); }} className="bg-white border border-slate-200 rounded-2xl p-3 text-left hover:border-sky-300 transition"><div className="flex items-center gap-3">{person.photo ? <img src={person.photo} alt={person.name} className="w-12 h-12 rounded-xl object-cover" /> : <div className="w-12 h-12 rounded-xl bg-sky-50 flex items-center justify-center"><Music className="w-5 h-5 text-sky-500" /></div>}<div><p className="text-xs font-black text-slate-900">{person.name}</p><span className="text-[9px] font-black text-sky-700">{t('knowMore')}</span></div></div></button>)}</div></div>}
 
-        {liveInteraction && <div className="bg-white/86 border border-emerald-200 rounded-3xl p-5 shadow-xl"><div className="flex items-center justify-between mb-2"><div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-700"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> {t('liveInteraction')}</div>{hasVoted && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}</div><h3 className="text-lg font-black text-slate-900">{liveInteraction.question || liveInteraction.title}</h3><p className="text-xs text-slate-500 mt-1">{liveInteraction.type === 'guess_song' ? t('guessSong') : t('tapOne')}</p><div className="space-y-2 mt-4">{interactionResults.map(({ option, votes, percentage }) => <button key={option} disabled={hasVoted} onClick={() => handleVote(option)} className={`w-full relative overflow-hidden border rounded-xl px-3 py-3 text-left transition ${hasVoted ? 'border-slate-200 bg-slate-50' : 'border-slate-200 hover:border-emerald-300 bg-white'}`}>{hasVoted && <div className="absolute inset-y-0 left-0 bg-emerald-100" style={{ width: `${percentage}%` }} />}<div className="relative flex items-center justify-between gap-3"><span className="text-sm text-slate-800 font-bold">{option}</span>{hasVoted && <span className="text-xs font-black text-emerald-700">{percentage}%</span>}</div>{hasVoted && <div className="relative mt-1 text-[10px] text-slate-500">{votes} {t('votes')}</div>}</button>)}</div>{voteMessage && <p className="text-xs text-emerald-700 mt-3 font-bold">{voteMessage}</p>}</div>}
+{liveInteraction && (
+  <div className="bg-white/86 border border-emerald-200 rounded-3xl p-5 shadow-xl">
 
+    <div className="flex items-center justify-between mb-2">
+
+      <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-700">
+        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+        {t('liveInteraction')}
+      </div>
+
+      {hasVoted && (
+        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+      )}
+
+    </div>
+
+    <h3 className="text-lg font-black text-slate-900">
+      {liveInteraction.question || liveInteraction.title}
+    </h3>
+
+    <p className="text-xs text-slate-500 mt-1">
+      {liveInteraction.type === 'guess_song'
+        ? t('guessSong')
+        : 'Tap one option'}
+    </p>
+
+    <div className="space-y-2 mt-4">
+
+      {interactionResults.map(
+        ({ option, votes, percentage }) => (
+
+          <button
+            key={option}
+            disabled={hasVoted}
+            onClick={() => handleVote(option)}
+            className={`w-full relative overflow-hidden border rounded-xl px-3 py-3 text-left transition ${
+              hasVoted
+                ? 'border-slate-200 bg-slate-50'
+                : 'border-slate-200 hover:border-emerald-300 bg-white'
+            }`}
+          >
+
+            {/*
+             * IMPORTANT:
+             * audience_poll never shows percentages,
+             * vote counts or result bars to the audience.
+             */}
+            {!isAudiencePoll && hasVoted && (
+              <div
+                className="absolute inset-y-0 left-0 bg-emerald-100"
+                style={{
+                  width: `${percentage}%`,
+                }}
+              />
+            )}
+
+            <div className="relative flex items-center justify-between gap-3">
+
+              <span className="text-sm text-slate-800 font-bold">
+                {option}
+              </span>
+
+              {!isAudiencePoll &&
+                hasVoted && (
+                  <span className="text-xs font-black text-emerald-700">
+                    {percentage}%
+                  </span>
+                )}
+
+            </div>
+
+            {!isAudiencePoll && hasVoted && (
+              <div className="relative mt-1 text-[10px] text-slate-500">
+                {votes} {t('votes')}
+              </div>
+            )}
+
+          </button>
+
+        )
+      )}
+
+    </div>
+
+    {isAudiencePoll && hasVoted && (
+      <p className="text-xs text-emerald-700 mt-3 font-bold">
+        Your response has been recorded ✓
+      </p>
+    )}
+
+    {voteMessage && (
+      <p className="text-xs text-emerald-700 mt-3 font-bold">
+        {voteMessage}
+      </p>
+    )}
+
+  </div>
+)}
         {nowPlaying && <div className="bg-white/86 border border-sky-200 rounded-3xl p-5 shadow-xl"><div className="flex items-center justify-between"><div><h3 className="text-sm font-black text-slate-900">{t('reactPerformance')}</h3><p className="text-[11px] text-slate-500 mt-1">{t('oneReaction')}</p></div><Heart className="w-5 h-5 text-pink-500" /></div><div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">{performanceReactionCounts.map(({ value, emoji, label, count }) => <button key={value} disabled={Boolean(myReaction)} onClick={() => handleReaction(value)} className={`rounded-2xl py-3 px-2 border transition ${myReaction === value ? 'bg-pink-50 border-pink-300 ring-2 ring-pink-100' : 'bg-white border-slate-200 hover:border-sky-300'}`}><div className="text-lg">{emoji}</div><div className="text-[11px] text-slate-700 font-black mt-1">{label}</div><div className="text-[10px] text-slate-400 mt-0.5">{count}</div></button>)}</div>{reactionMessage && <p className="text-xs text-pink-600 mt-3 font-bold">{reactionMessage}</p>}</div>}
 
         <div className="bg-white/86 border border-sky-200 rounded-3xl p-5"><div className="flex items-center justify-between mb-4"><div><h3 className="text-sm font-black text-slate-900">{t('knowMusicians')}</h3><p className="text-[11px] text-slate-500 mt-1">{t('peopleCreatingSound')}</p></div><Volume2 className="w-5 h-5 text-sky-700" /></div><div className="grid grid-cols-2 gap-3">{musicianPeople.map((person) => <PersonMiniPhotoCard key={person.id || person.name} person={person} />)}</div><button onClick={() => openPeople('musician')} className="w-full mt-4 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl py-2.5 text-xs font-black transition">{t('seeMusicianDetails')}</button></div>
 
-        <div className="bg-white/86 border border-sky-200 rounded-3xl p-5"><div className="flex items-center justify-between"><div><h3 className="text-sm font-black text-slate-900">{t('anchorsTeam')}</h3><p className="text-[11px] text-slate-500 mt-1">{t('meetPeople')}</p></div><Sparkles className="w-5 h-5 text-sky-700" /></div><div className="grid grid-cols-2 gap-3 mt-4">{anchorPeople.slice(0, 2).map((person) => <PersonMiniPhotoCard key={person.id || person.name} person={person} />)}</div><button onClick={() => openPeople('anchor')} className="w-full mt-4 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl py-2.5 text-xs font-black transition">{t('knowAnchorsTeam')}</button></div>
+<div className="bg-white/86 border border-cyan-200 rounded-3xl p-5 shadow-xl">
 
+  <div className="flex items-center justify-between">
+
+    <div>
+      <h3 className="text-sm font-black text-slate-900">
+        {t('organisingTeam')}
+      </h3>
+
+      <p className="text-[11px] text-slate-500 mt-1">
+        The people behind Tofani Vayra 9
+      </p>
+    </div>
+
+    <Sparkles className="w-5 h-5 text-cyan-500" />
+
+  </div>
+
+  {people.filter(
+    (person) => person.category === 'organizer'
+  ).length > 0 ? (
+
+    <div className="grid grid-cols-2 gap-3 mt-4">
+
+      {people
+        .filter(
+          (person) =>
+            person.category === 'organizer'
+        )
+        .map((person) => (
+          <PersonMiniPhotoCard
+            key={person.id || person.name}
+            person={person}
+          />
+        ))}
+
+    </div>
+
+  ) : (
+
+    <div className="mt-4 rounded-2xl bg-sky-50 border border-sky-100 p-4 text-center">
+      <p className="text-xs text-slate-500">
+        No organising team members added yet.
+      </p>
+    </div>
+
+  )}
+
+  <button
+    onClick={() => openPeople('organizer')}
+    className="w-full mt-4 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200 rounded-xl py-2.5 text-xs font-black transition"
+  >
+    Know the Organising Team
+  </button>
+
+</div>
+
+<div className="bg-white/86 border border-sky-200 rounded-3xl p-5">
+
+  <div className="flex items-center justify-between">
+
+    <div>
+      <h3 className="text-sm font-black text-slate-900">
+        {t('anchors')}
+      </h3>
+
+      <p className="text-[11px] text-slate-500 mt-1">
+        Meet the voices guiding tonight's evening
+      </p>
+    </div>
+
+    <Radio className="w-5 h-5 text-sky-700" />
+
+  </div>
+
+  <button
+    onClick={() => openPeople('anchor')}
+    className="w-full mt-4 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl py-3 text-xs font-black transition"
+  >
+    Know More about Anchors →
+  </button>
+
+</div>
         <div className="bg-white/88 border border-sky-200 rounded-3xl p-5"><div className="flex items-center justify-between"><div><div className="text-xs font-black uppercase tracking-widest text-sky-700 flex items-center gap-2"><Zap className="w-4 h-4" /> {t('yourMemory')}</div><h3 className="text-xl font-black text-slate-900 mt-2">{engagement.tag}</h3><p className="text-xs text-slate-500 mt-1">{t('builtFromParticipation')}</p></div><div className="text-3xl font-black text-sky-700">{engagement.score}%</div></div><div className="h-3 rounded-full bg-slate-100 mt-4 overflow-hidden"><div className="h-full bg-sky-500 rounded-full" style={{ width: `${engagement.score}%` }} /></div><div className="mt-4 rounded-2xl border border-sky-100 bg-sky-50 p-3 flex items-center gap-3"><div className="w-14 h-14 rounded-xl overflow-hidden bg-white border border-sky-100 flex items-center justify-center text-xl text-sky-700">{photoUrl ? <img src={photoUrl} alt={nickname} className="w-full h-full object-cover" /> : nickname.charAt(0).toUpperCase()}</div><div className="flex-1"><p className="text-xs text-slate-400">{t('memoryPhoto')}</p><p className="text-sm font-black text-slate-900">{nickname}</p></div>{!photoUrl && <label className="cursor-pointer text-[10px] font-black text-sky-700 bg-white border border-sky-200 rounded-lg px-2 py-1.5"><Camera className="w-3 h-3 inline mr-1" />{t('addPhoto')}<input type="file" accept="image/*" className="hidden" onChange={(event) => onAudiencePhotoUpload(event.target.files?.[0])} /></label>}</div><div className="flex gap-2 mt-3"><button onClick={handleDownloadCard} className="flex-1 bg-sky-600 text-white font-black text-xs rounded-xl py-2.5 flex items-center justify-center gap-2"><Download className="w-4 h-4" /> {t('download')}</button><button onClick={handleShareCard} className="flex-1 bg-indigo-600 text-white font-black text-xs rounded-xl py-2.5 flex items-center justify-center gap-2"><Share2 className="w-4 h-4" /> {t('share')}</button></div></div>
 
         <div className="bg-white/86 border border-sky-200 rounded-3xl p-5"><div className="flex items-center gap-2 text-sky-700 text-xs font-black uppercase tracking-widest"><Zap className="w-4 h-4" /> {t('yourMusicNight')}</div><div className="grid grid-cols-2 gap-3 mt-4"><StatBox label={t('votes')} value={myVotes.length} /><StatBox label={t('reactions')} value={myReactions.length} /></div></div>
@@ -3436,9 +4045,9 @@ function TextAreaInput({ label, value, setValue, placeholder }) {
 }
 
 function AdminAudienceTab({ audience, audienceCount, supabaseVotes, supabaseReactions, supabaseInteractions }) {
-  const audienceMap = useMemo(() => new Map(audience.map((member) => [member.session_id, member])), [audience]);
+  const audienceMap = useMemo(() => new Map(audience.map((member) => [member.id, member])), [audience]);
 
-  return <div className="space-y-6"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="flex items-center justify-between"><h3 className="text-sm font-black text-slate-900 flex items-center gap-2"><Users className="w-4 h-4 text-sky-700" /> Live Audience Directory ({audienceCount})</h3><span className="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">Live sync</span></div><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase font-black text-[10px]"><th className="pb-3 pl-2">Audience</th><th className="pb-3">Language</th><th className="pb-3">Joined</th><th className="pb-3">Votes</th><th className="pb-3">Reactions</th><th className="pb-3 pr-2 text-right">Status</th></tr></thead><tbody className="divide-y divide-slate-200">{audience.length ? audience.map((member) => { const votes = supabaseVotes.filter((vote) => vote.audience_id === member.session_id).length; const reactions = supabaseReactions.filter((reaction) => reaction.audience_id === member.session_id).length; return <tr key={member.id || member.session_id}><td className="py-3 pl-2 font-black text-slate-900"><div className="flex items-center gap-2"><div className="w-9 h-9 rounded-full overflow-hidden bg-sky-100 text-sky-700 border border-sky-200 flex items-center justify-center font-black text-xs">{member.photo_url ? <img src={member.photo_url} alt={member.nickname} className="w-full h-full object-cover" /> : (member.nickname?.[0]?.toUpperCase() || 'A')}</div><div><div>{member.nickname}</div><div className="text-[9px] font-mono text-slate-400">{member.session_id?.slice(0, 12)}...</div></div></div></td><td className="py-3 text-slate-600">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || '—'}</td><td className="py-3 text-slate-500">{formatJoined(member.joined_at || member.created_at)}</td><td className="py-3 font-black text-sky-700">{votes}</td><td className="py-3 font-black text-pink-600">{reactions}</td><td className="py-3 pr-2 text-right"><span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />Active</span></td></tr>; }) : <tr><td colSpan="6" className="py-8 text-center text-slate-500">No audience members yet.</td></tr>}</tbody></table></div></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><h3 className="text-sm font-black text-slate-900">Audience Response Summary</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase text-[9px]"><th className="pb-3">Question</th><th className="pb-3">Audience</th><th className="pb-3">Answer</th><th className="pb-3">Time</th></tr></thead><tbody className="divide-y divide-slate-200">{supabaseInteractions.flatMap((interaction) => supabaseVotes.filter((vote) => vote.interaction_id === interaction.id).map((vote) => <tr key={vote.id}><td className="py-2 font-bold text-slate-800">{interaction.question}</td><td className="py-2 text-slate-600">{audienceMap.get(vote.audience_id)?.nickname || 'Unknown'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>))}</tbody></table></div></div></div>;
+  return <div className="space-y-6"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="flex items-center justify-between"><h3 className="text-sm font-black text-slate-900 flex items-center gap-2"><Users className="w-4 h-4 text-sky-700" /> Live Audience Directory ({audienceCount})</h3><span className="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">Live sync</span></div><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase font-black text-[10px]"><th className="pb-3 pl-2">Audience</th><th className="pb-3">Language</th><th className="pb-3">Joined</th><th className="pb-3">Votes</th><th className="pb-3">Reactions</th><th className="pb-3 pr-2 text-right">Status</th></tr></thead><tbody className="divide-y divide-slate-200">{audience.length ? audience.map((member) => { const votes = supabaseVotes.filter((vote) => vote.audience_id === member.id).length; const reactions = supabaseReactions.filter((reaction) => reaction.audience_id === member.id).length; return <tr key={member.id || member.id}><td className="py-3 pl-2 font-black text-slate-900"><div className="flex items-center gap-2"><div className="w-9 h-9 rounded-full overflow-hidden bg-sky-100 text-sky-700 border border-sky-200 flex items-center justify-center font-black text-xs">{member.photo_url ? <img src={member.photo_url} alt={member.name} className="w-full h-full object-cover" /> : (member.name?.[0]?.toUpperCase() || 'A')}</div><div><div>{member.name}</div><div className="text-[9px] font-mono text-slate-400">{member.id?.slice(0, 12)}...</div></div></div></td><td className="py-3 text-slate-600">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || '—'}</td><td className="py-3 text-slate-500">{formatJoined(member.joined_at || member.created_at)}</td><td className="py-3 font-black text-sky-700">{votes}</td><td className="py-3 font-black text-pink-600">{reactions}</td><td className="py-3 pr-2 text-right"><span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />Active</span></td></tr>; }) : <tr><td colSpan="6" className="py-8 text-center text-slate-500">No audience members yet.</td></tr>}</tbody></table></div></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><h3 className="text-sm font-black text-slate-900">Audience Response Summary</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase text-[9px]"><th className="pb-3">Question</th><th className="pb-3">Audience</th><th className="pb-3">Answer</th><th className="pb-3">Time</th></tr></thead><tbody className="divide-y divide-slate-200">{supabaseInteractions.flatMap((interaction) => supabaseVotes.filter((vote) => vote.interaction_id === interaction.id).map((vote) => <tr key={vote.id}><td className="py-2 font-bold text-slate-800">{interaction.question}</td><td className="py-2 text-slate-600">{audienceMap.get(vote.audience_id)?.name || 'Unknown'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>))}</tbody></table></div></div></div>;
 }
 
 function formatJoined(value) {
@@ -3447,311 +4056,1275 @@ function formatJoined(value) {
   return new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-function AdminInteractionsTab({ supabaseInteractions, supabaseVotes, supabaseAudience, supabaseReactions, supabasePerformances }) {
-  const [interactionType, setInteractionType] = useState('poll');
-  const [question, setQuestion] = useState('');
-  const [options, setOptions] = useState(['', '']);
-  const [correctOption, setCorrectOption] = useState('');
-  const [performanceId, setPerformanceId] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [selectedInteraction, setSelectedInteraction] = useState(null);
+ function AdminInteractionsTab({
+  supabaseInteractions,
+  supabaseVotes,
+  supabaseAudience,
+  supabaseReactions,
+  supabasePerformances,
+}) {
+  const [interactionType, setInteractionType] =
+    useState('poll');
 
-  const interactions = supabaseInteractions.filter((interaction) => ['poll', 'guess_song'].includes(interaction.type));
-  const audienceMap = useMemo(() => new Map(supabaseAudience.map((member) => [member.session_id, member])), [supabaseAudience]);
-  const performanceMap = useMemo(() => new Map(supabasePerformances.map((performance) => [performance.id, performance])), [supabasePerformances]);
-  const livePerformance = supabasePerformances.find((performance) => performance.status === 'playing') || null;
+  const [question, setQuestion] =
+    useState('');
+
+  const [options, setOptions] =
+    useState(['', '']);
+
+  const [correctOption, setCorrectOption] =
+    useState('');
+
+  const [performanceId, setPerformanceId] =
+    useState('');
+
+  const [saving, setSaving] =
+    useState(false);
+
+  const [selectedInteraction, setSelectedInteraction] =
+    useState(null);
+
+  const interactions =
+    supabaseInteractions.filter(
+      (interaction) =>
+        ['poll', 'audience_poll', 'guess_song']
+          .includes(interaction.type)
+    );
+
+  const audienceMap = useMemo(
+  () =>
+    new Map(
+      audience.map((member) => [
+        member.id,
+        member,
+      ])
+    ),
+  [audience]
+);
+
+  const performanceMap = useMemo(
+    () =>
+      new Map(
+        supabasePerformances.map(
+          (performance) => [
+            performance.id,
+            performance,
+          ]
+        )
+      ),
+    [supabasePerformances]
+  );
+
+  const livePerformance =
+    supabasePerformances.find(
+      (performance) =>
+        performance.status === 'playing'
+    ) || null;
 
   useEffect(() => {
-    if (!performanceId && livePerformance) setPerformanceId(livePerformance.id);
+    if (!performanceId && livePerformance) {
+      setPerformanceId(livePerformance.id);
+    }
   }, [performanceId, livePerformance]);
 
-  const addOption = () => setOptions((current) => current.length < 4 ? [...current, ''] : current);
-  const updateOption = (index, value) => setOptions((current) => current.map((option, optionIndex) => optionIndex === index ? value : option));
-  const reset = () => { setQuestion(''); setOptions(['', '']); setCorrectOption(''); setInteractionType('poll'); setPerformanceId(livePerformance?.id || ''); };
+  const addOption = () => {
+    setOptions((current) =>
+      current.length < 4
+        ? [...current, '']
+        : current
+    );
+  };
+
+  const updateOption = (index, value) => {
+    setOptions((current) =>
+      current.map(
+        (option, optionIndex) =>
+          optionIndex === index
+            ? value
+            : option
+      )
+    );
+  };
+
+  const reset = () => {
+    setQuestion('');
+    setOptions(['', '']);
+    setCorrectOption('');
+    setInteractionType('poll');
+    setPerformanceId(
+      livePerformance?.id || ''
+    );
+  };
 
   const handleCreate = async () => {
     if (!supabase || saving) return;
-    const cleanQuestion = question.trim();
-    const cleanOptions = options.map((option) => option.trim()).filter(Boolean);
-    if (!cleanQuestion) return alert('Please enter a question.');
-    if (cleanOptions.length < 2) return alert('Please add at least 2 options.');
-    if (interactionType === 'guess_song' && !correctOption) return alert('Please select the correct answer.');
+
+    const cleanQuestion =
+      question.trim();
+
+    const cleanOptions =
+      options
+        .map((option) => option.trim())
+        .filter(Boolean);
+
+    if (!cleanQuestion) {
+      return alert(
+        'Please enter a question.'
+      );
+    }
+
+    if (cleanOptions.length < 2) {
+      return alert(
+        'Please add at least 2 options.'
+      );
+    }
+
+    if (
+      interactionType === 'guess_song' &&
+      !correctOption
+    ) {
+      return alert(
+        'Please select the correct answer.'
+      );
+    }
 
     setSaving(true);
-    const { error } = await supabase.from('interactions').insert({
-      event_id: APP_EVENT_ID,
-      performance_id: performanceId || null,
-      type: interactionType,
-      title: cleanQuestion,
-      question: cleanQuestion,
-      options: cleanOptions,
-      correct_option: interactionType === 'guess_song' ? correctOption : null,
-      status: 'draft',
-    });
+
+    const { error } =
+      await supabase
+        .from('interactions')
+        .insert({
+          event_id: APP_EVENT_ID,
+          performance_id:
+            performanceId || null,
+          type: interactionType,
+          title: cleanQuestion,
+          question: cleanQuestion,
+          options: cleanOptions,
+          correct_option:
+            interactionType ===
+            'guess_song'
+              ? correctOption
+              : null,
+          status: 'draft',
+        });
+
     setSaving(false);
+
     if (error) {
-      alert(`Could not create interaction: ${error.message}`);
+      alert(
+        `Could not create interaction: ${error.message}`
+      );
       return;
     }
-    reset();
-  };
 
-  const addDefault = (preset) => {
-    setInteractionType(preset.type);
-    setQuestion(preset.question);
-    setOptions(preset.options);
-    setCorrectOption('');
+    reset();
   };
 
   const handleMakeLive = async (id) => {
     if (!supabase) return;
-    const { error: stopError } = await supabase.from('interactions').update({ status: 'stopped' }).eq('event_id', APP_EVENT_ID).eq('status', 'live');
-    if (stopError) return alert(`Could not stop current interaction: ${stopError.message}`);
-    const { error } = await supabase.from('interactions').update({ status: 'live' }).eq('id', id);
-    if (error) alert(`Could not make live: ${error.message}`);
+
+    const { error: stopError } =
+      await supabase
+        .from('interactions')
+        .update({
+          status: 'stopped',
+        })
+        .eq('event_id', APP_EVENT_ID)
+        .eq('status', 'live');
+
+    if (stopError) {
+      return alert(
+        `Could not stop current interaction: ${stopError.message}`
+      );
+    }
+
+    const { error } =
+      await supabase
+        .from('interactions')
+        .update({
+          status: 'live',
+        })
+        .eq('id', id);
+
+    if (error) {
+      alert(
+        `Could not make live: ${error.message}`
+      );
+    }
   };
 
   const handleStop = async (id) => {
     if (!supabase) return;
-    const { error } = await supabase.from('interactions').update({ status: 'stopped' }).eq('id', id);
-    if (error) alert(`Could not stop interaction: ${error.message}`);
+
+    const { error } =
+      await supabase
+        .from('interactions')
+        .update({
+          status: 'stopped',
+        })
+        .eq('id', id);
+
+    if (error) {
+      alert(
+        `Could not stop interaction: ${error.message}`
+      );
+    }
   };
 
-  const countVotes = (interactionId) => supabaseVotes.filter((vote) => vote.interaction_id === interactionId).length;
-  const responseRows = selectedInteraction ? supabaseVotes.filter((vote) => vote.interaction_id === selectedInteraction.id) : [];
+  const countVotes = (interactionId) =>
+    supabaseVotes.filter(
+      (vote) =>
+        vote.interaction_id ===
+        interactionId
+    ).length;
 
-  return <div className="space-y-6">
-    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg">
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-5"><div><h3 className="text-sm font-black text-slate-900">Create Live Interaction</h3><p className="text-xs text-slate-500 mt-1">Attach every question to a song/performance so future analytics stay useful.</p></div><span className="text-[10px] uppercase font-black text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-1 rounded-full">Live sync active</span></div>
-      <div className="flex gap-2 mb-4"><button onClick={() => { setInteractionType('poll'); setCorrectOption(''); }} className={`px-3 py-2 rounded-xl text-xs font-black border ${interactionType === 'poll' ? 'bg-sky-600 text-white border-sky-500' : 'bg-white text-slate-500 border-slate-200'}`}>Poll</button><button onClick={() => setInteractionType('guess_song')} className={`px-3 py-2 rounded-xl text-xs font-black border ${interactionType === 'guess_song' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-white text-slate-500 border-slate-200'}`}>Guess the Song</button></div>
-      <div className="flex flex-wrap gap-2 mb-5">{DEFAULT_INTERACTIONS.map((preset, index) => <button key={index} onClick={() => addDefault(preset)} className="bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-700 px-3 py-1.5 rounded-lg text-[10px] font-black">Use default {index + 1}</button>)}</div>
-      <div className="space-y-4">
-        <div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Related song / performer</label><select value={performanceId} onChange={(event) => setPerformanceId(event.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800"><option value="">General event interaction</option>{supabasePerformances.map((performance) => <option key={performance.id} value={performance.id}>{performance.title} • {performance.performer}</option>)}</select></div>
-        <FormInput label="Question" value={question} setValue={setQuestion} placeholder="Ask the audience..." required />
-        <div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Options</label><div className="space-y-2">{options.map((option, index) => <input key={index} value={option} onChange={(event) => updateOption(index, event.target.value)} placeholder={`Option ${index + 1}`} className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-sky-500" />)}</div>{options.length < 4 && <button onClick={addOption} className="mt-3 text-xs font-black text-sky-700">+ Add Option</button>}</div>
-        {interactionType === 'guess_song' && <div><label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Correct Answer</label><select value={correctOption} onChange={(event) => setCorrectOption(event.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800"><option value="">Select correct answer</option>{options.filter(Boolean).map((option) => <option key={option} value={option}>{option}</option>)}</select></div>}
-        <button onClick={handleCreate} disabled={saving} className="bg-sky-600 hover:bg-sky-500 disabled:bg-slate-300 text-white font-black text-xs px-4 py-2.5 rounded-xl">{saving ? 'Creating…' : 'Create Interaction'}</button>
+  const responseRows =
+    selectedInteraction
+      ? supabaseVotes.filter(
+          (vote) =>
+            vote.interaction_id ===
+            selectedInteraction.id
+        )
+      : [];
+
+  return (
+    <div className="space-y-6">
+
+      <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg">
+
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
+
+          <div>
+            <h3 className="text-sm font-black text-slate-900">
+              Create Live Interaction
+            </h3>
+
+            <p className="text-xs text-slate-500 mt-1">
+              Create polls, audience-only polls or
+              Guess the Song interactions.
+            </p>
+          </div>
+
+          <span className="text-[10px] uppercase font-black text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-1 rounded-full">
+            Live sync active
+          </span>
+
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-5">
+
+          <button
+            onClick={() => {
+              setInteractionType('poll');
+              setCorrectOption('');
+            }}
+            className={`px-3 py-2 rounded-xl text-xs font-black border ${
+              interactionType === 'poll'
+                ? 'bg-sky-600 text-white border-sky-500'
+                : 'bg-white text-slate-500 border-slate-200'
+            }`}
+          >
+            Poll
+          </button>
+
+          <button
+            onClick={() => {
+              setInteractionType('audience_poll');
+              setCorrectOption('');
+            }}
+            className={`px-3 py-2 rounded-xl text-xs font-black border ${
+              interactionType === 'audience_poll'
+                ? 'bg-cyan-600 text-white border-cyan-500'
+                : 'bg-white text-slate-500 border-slate-200'
+            }`}
+          >
+            Audience Poll
+          </button>
+
+          <button
+            onClick={() => {
+              setInteractionType('guess_song');
+            }}
+            className={`px-3 py-2 rounded-xl text-xs font-black border ${
+              interactionType === 'guess_song'
+                ? 'bg-indigo-600 text-white border-indigo-500'
+                : 'bg-white text-slate-500 border-slate-200'
+            }`}
+          >
+            Guess the Song
+          </button>
+
+        </div>
+
+        <div className="space-y-4">
+
+          <div>
+            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">
+              Related song / performer
+            </label>
+
+            <select
+              value={performanceId}
+              onChange={(event) =>
+                setPerformanceId(
+                  event.target.value
+                )
+              }
+              className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800"
+            >
+              <option value="">
+                General event interaction
+              </option>
+
+              {supabasePerformances.map(
+                (performance) => (
+                  <option
+                    key={performance.id}
+                    value={performance.id}
+                  >
+                    {performance.title} •{' '}
+                    {performance.performer}
+                  </option>
+                )
+              )}
+            </select>
+          </div>
+
+          <FormInput
+            label="Question"
+            value={question}
+            setValue={setQuestion}
+            placeholder="Ask the audience..."
+            required
+          />
+
+          <div>
+            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">
+              Options
+            </label>
+
+            <div className="space-y-2">
+
+              {options.map(
+                (option, index) => (
+                  <input
+                    key={index}
+                    value={option}
+                    onChange={(event) =>
+                      updateOption(
+                        index,
+                        event.target.value
+                      )
+                    }
+                    placeholder={`Option ${index + 1}`}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-sky-500"
+                  />
+                )
+              )}
+
+            </div>
+
+            {options.length < 4 && (
+              <button
+                onClick={addOption}
+                className="mt-3 text-xs font-black text-sky-700"
+              >
+                + Add Option
+              </button>
+            )}
+          </div>
+
+          {interactionType === 'guess_song' && (
+            <div>
+
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">
+                Correct Answer
+              </label>
+
+              <select
+                value={correctOption}
+                onChange={(event) =>
+                  setCorrectOption(
+                    event.target.value
+                  )
+                }
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800"
+              >
+                <option value="">
+                  Select correct answer
+                </option>
+
+                {options
+                  .filter(Boolean)
+                  .map((option) => (
+                    <option
+                      key={option}
+                      value={option}
+                    >
+                      {option}
+                    </option>
+                  ))}
+              </select>
+
+            </div>
+          )}
+
+          {interactionType === 'audience_poll' && (
+            <div className="rounded-xl bg-cyan-50 border border-cyan-200 p-3">
+              <p className="text-[11px] text-cyan-800 font-bold">
+                Audience Poll mode: audience members
+                can vote, but they will never see vote
+                counts or percentages. Results are
+                visible only in the Admin dashboard.
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={handleCreate}
+            disabled={saving}
+            className="bg-sky-600 hover:bg-sky-500 disabled:bg-slate-300 text-white font-black text-xs px-4 py-2.5 rounded-xl"
+          >
+            {saving
+              ? 'Creating…'
+              : 'Create Interaction'}
+          </button>
+
+        </div>
       </div>
+
+      <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg">
+
+        <div className="mb-5">
+          <h3 className="text-sm font-black text-slate-900">
+            Created Interactions + Results
+          </h3>
+
+          <p className="text-xs text-slate-500 mt-1">
+            All response data remains stored and visible
+            here for Admin.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+
+          {interactions.length === 0 ? (
+
+            <p className="text-xs text-slate-500 text-center py-8">
+              No interactions created yet.
+            </p>
+
+          ) : (
+
+            interactions.map((interaction) => {
+
+              const isLive =
+                interaction.status === 'live';
+
+              const total =
+                countVotes(interaction.id);
+
+              const attachedPerformance =
+                performanceMap.get(
+                  interaction.performance_id
+                );
+
+              return (
+                <div
+                  key={interaction.id}
+                  className={`p-4 rounded-2xl border ${
+                    isLive
+                      ? 'bg-sky-50 border-sky-300'
+                      : 'bg-white border-slate-200'
+                  }`}
+                >
+
+                  <div className="flex items-start justify-between gap-4">
+
+                    <div className="flex-1">
+
+                      <div className="flex flex-wrap items-center gap-2">
+
+                        <span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+                          {interaction.type ===
+                          'guess_song'
+                            ? 'Guess'
+                            : interaction.type ===
+                              'audience_poll'
+                            ? 'Audience Poll'
+                            : 'Poll'}
+                        </span>
+
+                        {isLive && (
+                          <span className="text-[9px] uppercase font-black text-emerald-700">
+                            LIVE
+                          </span>
+                        )}
+
+                        {attachedPerformance && (
+                          <span className="text-[9px] font-black text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">
+                            {attachedPerformance.title} •{' '}
+                            {attachedPerformance.performer}
+                          </span>
+                        )}
+
+                      </div>
+
+                      <h4 className="text-sm font-black text-slate-900 mt-2">
+                        {interaction.question}
+                      </h4>
+
+                      <div className="space-y-2 mt-3">
+
+                        {(interaction.options || []).map(
+                          (option) => {
+
+                            const votes =
+                              supabaseVotes.filter(
+                                (vote) =>
+                                  vote.interaction_id ===
+                                    interaction.id &&
+                                  vote.selected_option ===
+                                    option
+                              ).length;
+
+                            const percentage =
+                              total
+                                ? Math.round(
+                                    (votes / total) *
+                                      100
+                                  )
+                                : 0;
+
+                            return (
+                              <div
+                                key={option}
+                                className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs"
+                              >
+
+                                <div>
+
+                                  <div className="flex justify-between">
+
+                                    <span className="text-slate-600 font-bold">
+                                      {option}
+                                    </span>
+
+                                    <span className="text-sky-700 font-black">
+                                      {votes} votes •{' '}
+                                      {percentage}%
+                                    </span>
+
+                                  </div>
+
+                                  <div className="h-2 bg-slate-100 rounded-full mt-1 overflow-hidden">
+                                    <div
+                                      className="h-full bg-sky-500 rounded-full"
+                                      style={{
+                                        width: `${percentage}%`,
+                                      }}
+                                    />
+                                  </div>
+
+                                </div>
+
+                              </div>
+                            );
+                          }
+                        )}
+
+                      </div>
+
+                      <p className="text-[10px] text-slate-400 mt-3">
+                        {total} total response
+                        {total === 1 ? '' : 's'}
+                      </p>
+
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+
+                      {isLive ? (
+                        <button
+                          onClick={() =>
+                            handleStop(
+                              interaction.id
+                            )
+                          }
+                          className="bg-rose-50 text-rose-700 font-black text-xs px-3 py-1.5 rounded-xl border border-rose-200"
+                        >
+                          Stop
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() =>
+                            handleMakeLive(
+                              interaction.id
+                            )
+                          }
+                          className="bg-emerald-50 text-emerald-700 font-black text-xs px-3 py-1.5 rounded-xl border border-emerald-200"
+                        >
+                          Make Live
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() =>
+                          setSelectedInteraction(
+                            selectedInteraction?.id ===
+                              interaction.id
+                              ? null
+                              : interaction
+                          )
+                        }
+                        className="bg-sky-50 text-sky-700 font-black text-xs px-3 py-1.5 rounded-xl border border-sky-200"
+                      >
+                        {selectedInteraction?.id ===
+                        interaction.id
+                          ? 'Hide Responses'
+                          : 'See Responses'}
+                      </button>
+
+                    </div>
+
+                  </div>
+
+                  {selectedInteraction?.id ===
+                    interaction.id && (
+
+                    <div className="mt-4 bg-white border border-sky-100 rounded-2xl p-3">
+
+                      <div className="overflow-x-auto">
+
+                        <table className="w-full text-left text-xs">
+
+                          <thead>
+                            <tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]">
+                              <th className="pb-2">
+                                Audience Name
+                              </th>
+                              <th className="pb-2">
+                                Language
+                              </th>
+                              <th className="pb-2">
+                                Answer
+                              </th>
+                              <th className="pb-2">
+                                Time
+                              </th>
+                            </tr>
+                          </thead>
+
+                          <tbody className="divide-y divide-slate-100">
+
+                            {responseRows.length ? (
+                              responseRows.map(
+                                (vote) => {
+
+                                  const member =
+                                    audienceMap.get(
+                                      vote.audience_id
+                                    );
+
+                                  return (
+                                    <tr key={vote.id}>
+                                      <td className="py-2 font-black text-slate-800">
+                                        {member?.name ||
+                                          'Unknown audience'}
+                                      </td>
+
+                                      <td className="py-2 text-slate-500">
+                                        {LANGUAGE_OPTIONS.find(
+                                          (item) =>
+                                            item.code ===
+                                            member?.language
+                                        )?.native || '—'}
+                                      </td>
+
+                                      <td className="py-2 text-sky-700 font-bold">
+                                        {vote.selected_option}
+                                      </td>
+
+                                      <td className="py-2 text-slate-400">
+                                        {new Date(
+                                          vote.created_at
+                                        ).toLocaleTimeString()}
+                                      </td>
+                                    </tr>
+                                  );
+                                }
+                              )
+                            ) : (
+                              <tr>
+                                <td
+                                  colSpan="4"
+                                  className="py-5 text-center text-slate-400"
+                                >
+                                  No responses yet.
+                                </td>
+                              </tr>
+                            )}
+
+                          </tbody>
+
+                        </table>
+
+                      </div>
+
+                    </div>
+                  )}
+
+                </div>
+              );
+            })
+          )}
+
+        </div>
+      </div>
+
     </div>
-
-    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="mb-5"><h3 className="text-sm font-black text-slate-900">Created Interactions + Answer Analysis</h3><p className="text-xs text-slate-500 mt-1">Option counts and audience names update automatically from Supabase.</p></div><div className="space-y-3">{interactions.length === 0 ? <p className="text-xs text-slate-500 text-center py-8">No interactions created yet.</p> : interactions.map((interaction) => { const isLive = interaction.status === 'live'; const total = countVotes(interaction.id); const attachedPerformance = performanceMap.get(interaction.performance_id); return <div key={interaction.id} className={`p-4 rounded-2xl border ${isLive ? 'bg-sky-50 border-sky-300' : 'bg-white border-slate-200'}`}><div className="flex items-start justify-between gap-4"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{interaction.type === 'guess_song' ? 'Guess' : 'Poll'}</span>{isLive && <span className="text-[9px] uppercase font-black text-emerald-700">LIVE</span>}{attachedPerformance && <span className="text-[9px] uppercase font-black text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">{attachedPerformance.title} • {attachedPerformance.performer}</span>}</div><h4 className="text-sm font-black text-slate-900 mt-2">{interaction.question}</h4><div className="space-y-2 mt-3">{(interaction.options || []).map((option) => { const votes = supabaseVotes.filter((vote) => vote.interaction_id === interaction.id && vote.selected_option === option).length; const percentage = total ? Math.round((votes / total) * 100) : 0; return <div key={option} className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs"><div><div className="flex justify-between"><span className="text-slate-600 font-bold">{option}</span><span className="text-sky-700 font-black">{percentage}%</span></div><div className="h-2 bg-slate-100 rounded-full mt-1 overflow-hidden"><div className="h-full bg-sky-500 rounded-full" style={{ width: `${percentage}%` }} /></div></div><span className="text-slate-400 font-bold">{votes}</span></div>; })}</div><p className="text-[10px] text-slate-400 mt-3">{total} total response{total === 1 ? '' : 's'}</p></div><div className="flex flex-col gap-2">{isLive ? <button onClick={() => handleStop(interaction.id)} className="bg-rose-50 text-rose-700 font-black text-xs px-3 py-1.5 rounded-xl border border-rose-200">Stop</button> : <button onClick={() => handleMakeLive(interaction.id)} className="bg-emerald-50 text-emerald-700 font-black text-xs px-3 py-1.5 rounded-xl border border-emerald-200">Make Live</button>}<button onClick={() => setSelectedInteraction(selectedInteraction?.id === interaction.id ? null : interaction)} className="bg-sky-50 text-sky-700 font-black text-xs px-3 py-1.5 rounded-xl border border-sky-200">{selectedInteraction?.id === interaction.id ? 'Hide Responses' : 'See Responses'}</button></div></div>{selectedInteraction?.id === interaction.id && <div className="mt-4 bg-white border border-sky-100 rounded-2xl p-3"><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">Audience Name</th><th className="pb-2">Language</th><th className="pb-2">Answer</th><th className="pb-2">Time</th></tr></thead><tbody className="divide-y divide-slate-100">{responseRows.length ? responseRows.map((vote) => <tr key={vote.id}><td className="py-2 font-black text-slate-800">{audienceMap.get(vote.audience_id)?.nickname || 'Unknown audience'}</td><td className="py-2 text-slate-500">{LANGUAGE_OPTIONS.find((item) => item.code === audienceMap.get(vote.audience_id)?.language)?.native || '—'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>) : <tr><td colSpan="4" className="py-5 text-center text-slate-400">No responses yet.</td></tr>}</tbody></table></div></div>}</div>; })}</div></div>
-
-    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><h3 className="text-sm font-black text-slate-900">Reaction Data</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">Audience</th><th className="pb-2">Song / Performer</th><th className="pb-2">Reaction</th><th className="pb-2">Time</th></tr></thead><tbody className="divide-y divide-slate-100">{supabaseReactions.length ? supabaseReactions.map((reaction) => { const audience = audienceMap.get(reaction.audience_id); const performance = performanceMap.get(reaction.performance_id); return <tr key={reaction.id}><td className="py-2 font-black text-slate-800">{audience?.nickname || 'Unknown audience'}</td><td className="py-2 text-slate-600">{performance ? `${performance.title} • ${performance.performer}` : reaction.performance_id}</td><td className="py-2 text-lg">{reaction.reaction}</td><td className="py-2 text-slate-400">{new Date(reaction.created_at).toLocaleTimeString()}</td></tr>; }) : <tr><td colSpan="4" className="py-5 text-center text-slate-400">No reactions yet.</td></tr>}</tbody></table></div></div>
-  </div>;
+  );
 }
 
-function AdminAnalyticsTab({ audienceCount, supabasePerformances, supabaseInteractions, supabaseVotes, supabaseReactions, supabaseAudience, people, analyticsSnapshots, supabaseMemoryCards, onRefresh }) {
-  const [saving, setSaving] = useState(false);
+function AdminAnalyticsTab({
+  audienceCount,
+  supabasePerformances,
+  supabaseInteractions,
+  supabaseVotes,
+  supabaseReactions,
+  supabaseAudience,
+  people,
+  analyticsSnapshots,
+  supabaseMemoryCards,
+  onRefresh,
+}) {
+  const [saving, setSaving] =
+    useState(false);
 
   const interactionIds = useMemo(
-    () => new Set(supabaseInteractions.map((interaction) => interaction.id)),
+    () =>
+      new Set(
+        supabaseInteractions.map(
+          (interaction) => interaction.id
+        )
+      ),
     [supabaseInteractions]
   );
 
   const performanceIds = useMemo(
-    () => new Set(supabasePerformances.map((performance) => performance.id)),
+    () =>
+      new Set(
+        supabasePerformances.map(
+          (performance) => performance.id
+        )
+      ),
     [supabasePerformances]
   );
 
-  const eventVotes = supabaseVotes.filter((vote) => interactionIds.has(vote.interaction_id));
-  const eventReactions = supabaseReactions.filter((reaction) => performanceIds.has(reaction.performance_id));
+  const eventVotes =
+    supabaseVotes.filter((vote) =>
+      interactionIds.has(
+        vote.interaction_id
+      )
+    );
+
+  const eventReactions =
+    supabaseReactions.filter((reaction) =>
+      performanceIds.has(
+        reaction.performance_id
+      )
+    );
 
   const performanceMap = useMemo(
-    () => new Map(supabasePerformances.map((performance) => [performance.id, performance])),
+    () =>
+      new Map(
+        supabasePerformances.map(
+          (performance) => [
+            performance.id,
+            performance,
+          ]
+        )
+      ),
     [supabasePerformances]
   );
 
-  const interactionDataSheet = supabaseInteractions.flatMap((interaction) => {
-    const relatedPerformance = performanceMap.get(interaction.performance_id);
-    const totalResponses = eventVotes.filter((vote) => vote.interaction_id === interaction.id).length;
+  /*
+   * QUESTIONS ASKED
+   */
+  const questionGroups =
+    supabaseInteractions
+      .filter(
+        (interaction) =>
+          interaction.type !== 'guess_song'
+      )
+      .map((interaction) => {
 
-    return (interaction.options || []).map((option) => {
-      const selected = eventVotes.filter(
-        (vote) => vote.interaction_id === interaction.id && vote.selected_option === option
-      ).length;
+        const relatedPerformance =
+          performanceMap.get(
+            interaction.performance_id
+          );
 
-      return {
-        performance: relatedPerformance
-          ? `${relatedPerformance.title} • ${relatedPerformance.performer}`
-          : 'General event',
-        question: interaction.question || interaction.title,
-        type: interaction.type === 'guess_song' ? 'Guess the Song' : 'Poll',
-        option,
-        selected,
-        percentage: totalResponses ? Math.round((selected / totalResponses) * 100) : 0,
-        totalResponses,
-      };
-    });
-  });
+        const votes =
+          eventVotes.filter(
+            (vote) =>
+              vote.interaction_id ===
+              interaction.id
+          );
 
-  const questionGroups = supabaseInteractions.map((interaction) => {
-    const relatedPerformance = performanceMap.get(interaction.performance_id);
-    const questionVotes = eventVotes.filter((vote) => vote.interaction_id === interaction.id);
-    const totalResponses = questionVotes.length;
+        const totalResponses =
+          votes.length;
 
-    return {
-      id: interaction.id,
-      question: interaction.question || interaction.title,
-      type: interaction.type === 'guess_song' ? 'Guess the Song' : 'Poll',
-      performance: relatedPerformance
-        ? `${relatedPerformance.title} • ${relatedPerformance.performer}`
-        : 'General event',
-      totalResponses,
-      options: (interaction.options || []).map((option) => {
-        const selected = questionVotes.filter((vote) => vote.selected_option === option).length;
         return {
-          option,
-          selected,
-          percentage: totalResponses ? Math.round((selected / totalResponses) * 100) : 0,
-        };
-      }),
-    };
-  });
+          id: interaction.id,
+          question:
+            interaction.question ||
+            interaction.title,
+          performance:
+            relatedPerformance
+              ? `${relatedPerformance.title} • ${relatedPerformance.performer}`
+              : 'General event',
+          totalResponses,
+          options:
+            (interaction.options || []).map(
+              (option) => {
 
+                const selected =
+                  votes.filter(
+                    (vote) =>
+                      vote.selected_option ===
+                      option
+                  ).length;
+
+                return {
+                  option,
+                  selected,
+                  percentage:
+                    totalResponses
+                      ? Math.round(
+                          (selected /
+                            totalResponses) *
+                            100
+                        )
+                      : 0,
+                };
+              }
+            ),
+        };
+      });
+
+  /*
+   * GUESSES MADE
+   */
+  const guessGroups =
+    supabaseInteractions
+      .filter(
+        (interaction) =>
+          interaction.type === 'guess_song'
+      )
+      .map((interaction) => {
+
+        const relatedPerformance =
+          performanceMap.get(
+            interaction.performance_id
+          );
+
+        const votes =
+          eventVotes.filter(
+            (vote) =>
+              vote.interaction_id ===
+              interaction.id
+          );
+
+        const total =
+          votes.length;
+
+        const correct =
+          votes.filter(
+            (vote) =>
+              vote.selected_option ===
+              interaction.correct_option
+          ).length;
+
+        return {
+          id: interaction.id,
+          question:
+            interaction.question ||
+            interaction.title,
+          performance:
+            relatedPerformance
+              ? `${relatedPerformance.title} • ${relatedPerformance.performer}`
+              : 'General event',
+          total,
+          correct,
+          incorrect:
+            Math.max(
+              0,
+              total - correct
+            ),
+          correctPercentage:
+            total
+              ? Math.round(
+                  (correct / total) *
+                    100
+                )
+              : 0,
+        };
+      });
+
+  /*
+   * REACTIONS SUMMARY
+   * Group reaction → performer/song.
+   */
+  const reactionGroups =
+    supabasePerformances.map(
+      (performance) => {
+
+        const reactions =
+          eventReactions.filter(
+            (reaction) =>
+              reaction.performance_id ===
+              performance.id
+          );
+
+        const grouped = {};
+
+        reactions.forEach(
+          (reaction) => {
+            grouped[reaction.reaction] =
+              (grouped[reaction.reaction] || 0) +
+              1;
+          }
+        );
+
+        return {
+          performance,
+          total: reactions.length,
+          reactions: Object.entries(
+            grouped
+          ).sort(
+            (a, b) => b[1] - a[1]
+          ),
+        };
+      }
+    );
+
+  /*
+   * Keep the existing snapshot functionality.
+   */
   const saveSnapshot = async () => {
     if (!supabase || saving) return;
 
     setSaving(true);
 
     const snapshot = {
-      captured_at: new Date().toISOString(),
-      audience_count: audienceCount,
-      performance_count: supabasePerformances.length,
-      interaction_count: supabaseInteractions.length,
-      total_votes: eventVotes.length,
-      total_reactions: eventReactions.length,
-      people_count: people.length,
-      question_results: interactionDataSheet,
+      captured_at:
+        new Date().toISOString(),
+
+      audience_count:
+        audienceCount,
+
+      performance_count:
+        supabasePerformances.length,
+
+      interaction_count:
+        supabaseInteractions.length,
+
+      total_votes:
+        eventVotes.length,
+
+      total_reactions:
+        eventReactions.length,
+
+      people_count:
+        people.length,
+
+      question_results:
+        questionGroups,
+
+      guess_results:
+        guessGroups,
+
+      reaction_results:
+        reactionGroups.map(
+          (group) => ({
+            performance:
+              `${group.performance.title} • ${group.performance.performer}`,
+            total:
+              group.total,
+            reactions:
+              group.reactions,
+          })
+        ),
     };
 
-    const { error } = await supabase
-      .from('event_analytics_snapshots')
-      .insert({
-        event_id: APP_EVENT_ID,
-        event_name: EVENT_DISPLAY_NAME,
-        snapshot,
-      });
+    const { error } =
+      await supabase
+        .from('event_analytics_snapshots')
+        .insert({
+          event_id:
+            APP_EVENT_ID,
+
+          event_name:
+            EVENT_DISPLAY_NAME,
+
+          snapshot,
+        });
 
     setSaving(false);
 
     if (error) {
-      alert(`Could not save planning snapshot: ${error.message}`);
+      alert(
+        `Could not save planning snapshot: ${error.message}`
+      );
       return;
     }
 
-    alert('Analytics snapshot saved.');
-    await onRefresh?.();
-  };
-
-  const generateAllMemoryCards = async () => {
-    if (!supabase || !supabaseAudience.length) {
-      alert('No audience members found yet.');
-      return;
-    }
-
-    const rows = supabaseAudience.map((member) => {
-      const votes = eventVotes.filter((vote) => vote.audience_id === member.session_id).length;
-      const reactions = eventReactions.filter((reaction) => reaction.audience_id === member.session_id).length;
-      const profile = getEngagementProfile(votes, reactions, member.language || 'en');
-
-      return {
-        event_id: APP_EVENT_ID,
-        audience_id: member.session_id,
-        audience_name: member.nickname || 'Audience Guest',
-        photo_url: member.photo_url || null,
-        engagement_score: profile.score,
-        engagement_tag: profile.tag,
-        snapshot: {
-          votes,
-          reactions,
-          language: member.language || 'en',
-        },
-        updated_at: new Date().toISOString(),
-      };
-    });
-
-    const { error } = await supabase
-      .from('audience_memory_cards')
-      .upsert(rows, { onConflict: 'event_id,audience_id' });
-
-    if (error) {
-      alert(`Could not generate memory cards: ${error.message}`);
-      return;
-    }
-
-    alert('Memory cards generated for the current audience.');
-    await onRefresh?.();
-  };
-
-  const downloadInteractionSheet = () => {
-    downloadCsv(
-      interactionDataSheet.map((row) => ({
-        'Song / Performer': row.performance,
-        Question: row.question,
-        Type: row.type,
-        Option: row.option,
-        'Selected Count': row.selected,
-        Percentage: `${row.percentage}%`,
-        'Total Responses': row.totalResponses,
-      })),
-      `${EVENT_DISPLAY_NAME.replace(/\s+/g, '-')}-question-data-sheet.csv`
+    alert(
+      'Analytics snapshot saved.'
     );
+
+    await onRefresh?.();
   };
+
+  /*
+   * Keep existing memory card generation.
+   */
+  const generateAllMemoryCards =
+    async () => {
+
+      if (
+        !supabase ||
+        !supabaseAudience.length
+      ) {
+        alert(
+          'No audience members found yet.'
+        );
+        return;
+      }
+
+      const rows =
+        supabaseAudience.map(
+          (member) => {
+
+            const votes =
+              eventVotes.filter(
+                (vote) =>
+                  vote.audience_id ===
+                  member.id
+              ).length;
+
+            const reactions =
+              eventReactions.filter(
+                (reaction) =>
+                  reaction.audience_id ===
+                  member.id
+              ).length;
+
+            const profile =
+              getEngagementProfile(
+                votes,
+                reactions,
+                member.language ||
+                  'en'
+              );
+
+            return {
+              event_id:
+                APP_EVENT_ID,
+
+              audience_id:
+                member.id,
+
+              audience_name:
+                member.name ||
+                'Audience Guest',
+
+              photo_url:
+                member.photo_url ||
+                null,
+
+              engagement_score:
+                profile.score,
+
+              engagement_tag:
+                profile.tag,
+
+              snapshot: {
+                votes,
+                reactions,
+                language:
+                  member.language ||
+                  'en',
+              },
+
+              updated_at:
+                new Date().toISOString(),
+            };
+          }
+        );
+
+      const { error } =
+        await supabase
+          .from('audience_memory_cards')
+          .upsert(
+            rows,
+            {
+              onConflict:
+                'event_id,audience_id',
+            }
+          );
+
+      if (error) {
+        alert(
+          `Could not generate memory cards: ${error.message}`
+        );
+        return;
+      }
+
+      alert(
+        'Memory cards generated for the current audience.'
+      );
+
+      await onRefresh?.();
+    };
 
   const exportAllData = () => {
+
     const payload = {
       event: {
         id: APP_EVENT_ID,
         name: EVENT_DISPLAY_NAME,
       },
-      exported_at: new Date().toISOString(),
-      performances: supabasePerformances,
-      audience: supabaseAudience,
+
+      exported_at:
+        new Date().toISOString(),
+
+      performances:
+        supabasePerformances,
+
+      audience:
+        supabaseAudience,
+
       people,
-      interactions: supabaseInteractions,
-      votes: eventVotes,
-      reactions: eventReactions,
-      analytics_snapshots: analyticsSnapshots,
-      memory_cards: supabaseMemoryCards,
-      question_results: interactionDataSheet,
+
+      interactions:
+        supabaseInteractions,
+
+      votes:
+        eventVotes,
+
+      reactions:
+        eventReactions,
+
+      analytics_snapshots:
+        analyticsSnapshots,
+
+      memory_cards:
+        supabaseMemoryCards,
+
+      question_results:
+        questionGroups,
+
+      guess_results:
+        guessGroups,
+
+      reaction_results:
+        reactionGroups,
     };
 
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: 'application/json',
-    });
+    const blob = new Blob(
+      [
+        JSON.stringify(
+          payload,
+          null,
+          2
+        ),
+      ],
+      {
+        type: 'application/json',
+      }
+    );
 
     downloadBlob(
       blob,
-      `${EVENT_DISPLAY_NAME.replace(/\s+/g, '-')}-event-data.json`
+      `${EVENT_DISPLAY_NAME.replace(
+        /\s+/g,
+        '-'
+      )}-event-data.json`
     );
   };
 
   return (
     <div className="space-y-6">
+
+      {/* TOP METRICS */}
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Metric title="Live Audience" value={audienceCount} icon={<Users className="w-5 h-5" />} />
-        <Metric title="Total Votes" value={eventVotes.length} icon={<MessageCircle className="w-5 h-5" />} />
-        <Metric title="Reactions" value={eventReactions.length} icon={<Heart className="w-5 h-5" />} />
-        <Metric title="Questions" value={supabaseInteractions.length} icon={<BarChart3 className="w-5 h-5" />} />
+
+        <Metric
+          title="Live Audience"
+          value={audienceCount}
+          icon={
+            <Users className="w-5 h-5" />
+          }
+        />
+
+        <Metric
+          title="Total Votes"
+          value={eventVotes.length}
+          icon={
+            <MessageCircle className="w-5 h-5" />
+          }
+        />
+
+        <Metric
+          title="Reactions"
+          value={eventReactions.length}
+          icon={
+            <Heart className="w-5 h-5" />
+          }
+        />
+
+        <Metric
+          title="Questions"
+          value={
+            supabaseInteractions.length
+          }
+          icon={
+            <BarChart3 className="w-5 h-5" />
+          }
+        />
+
       </div>
 
+      {/* ACTIONS */}
+
       <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg">
+
         <div className="flex flex-wrap items-center justify-between gap-3">
+
           <div>
-            <h3 className="text-sm font-black text-slate-900">Analytics & Future Event Data</h3>
+            <h3 className="text-sm font-black text-slate-900">
+              Event Analytics
+            </h3>
+
             <p className="text-xs text-slate-500 mt-1">
-              Results are refreshed automatically every 2 seconds.
+              Live data is refreshed automatically.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-2">
+
             <button
               onClick={saveSnapshot}
               disabled={saving}
               className="bg-sky-600 text-white font-black text-xs px-3 py-2 rounded-xl flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
-              {saving ? 'Saving…' : 'Save Snapshot'}
+              {saving
+                ? 'Saving…'
+                : 'Save Snapshot'}
             </button>
 
             <button
@@ -3763,118 +5336,457 @@ function AdminAnalyticsTab({ audienceCount, supabasePerformances, supabaseIntera
             </button>
 
             <button
-              onClick={downloadInteractionSheet}
-              className="bg-emerald-600 text-white font-black text-xs px-3 py-2 rounded-xl flex items-center gap-2"
-            >
-              <Download className="w-4 h-4" />
-              Question Data Sheet
-            </button>
-
-            <button
               onClick={exportAllData}
               className="bg-white text-slate-700 font-black text-xs px-3 py-2 rounded-xl border border-slate-200 flex items-center gap-2"
             >
               <Download className="w-4 h-4" />
               Export All Data
             </button>
+
           </div>
         </div>
       </div>
 
+      {/* 1. QUESTIONS ASKED */}
+
       <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg">
-        <div className="flex items-center justify-between gap-3 mb-4">
+
+        <div className="flex items-center justify-between mb-5">
+
           <div>
-            <h3 className="text-sm font-black text-slate-900">Poll & Interaction Results</h3>
+            <h3 className="text-lg font-black text-slate-900">
+              Questions Asked
+            </h3>
+
             <p className="text-xs text-slate-500 mt-1">
-              Exactly how many people selected each option and the current percentage.
+              Question-wise breakdown, linked to each performance.
             </p>
           </div>
+
           <span className="text-[10px] font-black text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-1 rounded-full">
-            {supabaseInteractions.length} questions
+            {questionGroups.length} questions
           </span>
+
         </div>
 
         <div className="space-y-4">
-          {questionGroups.length ? questionGroups.map((question) => (
-            <div
-              key={question.id}
-              className="rounded-2xl border border-slate-200 bg-white p-4"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-100">
-                      {question.type}
+
+          {questionGroups.length ? (
+            questionGroups.map(
+              (question) => (
+
+                <div
+                  key={question.id}
+                  className="rounded-2xl border border-slate-200 bg-white p-4"
+                >
+
+                  <div className="flex flex-wrap justify-between gap-3">
+
+                    <div>
+
+                      <span className="text-[9px] uppercase font-black text-sky-700 bg-sky-50 px-2 py-1 rounded-full">
+                        {question.performance}
+                      </span>
+
+                      <h4 className="text-sm font-black text-slate-900 mt-3">
+                        {question.question}
+                      </h4>
+
+                    </div>
+
+                    <span className="text-[10px] font-black text-slate-500">
+                      {question.totalResponses}{' '}
+                      responses
                     </span>
-                    <span className="text-[10px] font-bold text-slate-500">
-                      {question.performance}
-                    </span>
+
                   </div>
-                  <h4 className="text-sm font-black text-slate-900 mt-2">
-                    {question.question}
+
+                  <div className="space-y-3 mt-4">
+
+                    {question.options.map(
+                      (option) => (
+                        <div key={option.option}>
+
+                          <div className="flex justify-between text-xs">
+
+                            <span className="font-bold text-slate-700">
+                              {option.option}
+                            </span>
+
+                            <span className="font-black text-sky-700">
+                              {option.selected} votes •{' '}
+                              {option.percentage}%
+                            </span>
+
+                          </div>
+
+                          <div className="h-2 bg-slate-100 rounded-full mt-1 overflow-hidden">
+
+                            <div
+                              className="h-full bg-sky-500 rounded-full"
+                              style={{
+                                width: `${option.percentage}%`,
+                              }}
+                            />
+
+                          </div>
+
+                        </div>
+                      )
+                    )}
+
+                  </div>
+
+                </div>
+              )
+            )
+          ) : (
+            <p className="text-xs text-slate-500 text-center py-8">
+              No questions asked yet.
+            </p>
+          )}
+
+        </div>
+      </div>
+
+      {/* 2. GUESSES MADE */}
+
+      <div className="bg-white/84 border border-indigo-200 rounded-3xl p-5 shadow-lg">
+
+        <div className="flex items-center justify-between mb-5">
+
+          <div>
+            <h3 className="text-lg font-black text-slate-900">
+              Guesses Made
+            </h3>
+
+            <p className="text-xs text-slate-500 mt-1">
+              Guess-the-song results for each performance.
+            </p>
+          </div>
+
+          <span className="text-[10px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-full">
+            {guessGroups.length} guesses
+          </span>
+
+        </div>
+
+        <div className="space-y-4">
+
+          {guessGroups.length ? (
+            guessGroups.map(
+              (guess) => (
+
+                <div
+                  key={guess.id}
+                  className="rounded-2xl border border-indigo-100 bg-white p-4"
+                >
+
+                  <span className="text-[9px] uppercase font-black text-indigo-700 bg-indigo-50 px-2 py-1 rounded-full">
+                    {guess.performance}
+                  </span>
+
+                  <h4 className="text-sm font-black text-slate-900 mt-3">
+                    {guess.question}
                   </h4>
+
+                  <div className="grid grid-cols-3 gap-2 mt-4">
+
+                    <StatBox
+                      label="Total"
+                      value={guess.total}
+                    />
+
+                    <StatBox
+                      label="Correct"
+                      value={guess.correct}
+                    />
+
+                    <StatBox
+                      label="Correct %"
+                      value={`${guess.correctPercentage}%`}
+                    />
+
+                  </div>
+
+                  <p className="text-[10px] text-slate-400 mt-3">
+                    Correct answer:{' '}
+                    {supabaseInteractions.find(
+                      (item) =>
+                        item.id ===
+                        guess.id
+                    )?.correct_option ||
+                      '—'}
+                  </p>
+
+                </div>
+              )
+            )
+          ) : (
+            <p className="text-xs text-slate-500 text-center py-8">
+              No Guess the Song data yet.
+            </p>
+          )}
+
+        </div>
+      </div>
+
+      {/* 3. REACTIONS SUMMARY */}
+
+      <div className="bg-white/84 border border-pink-200 rounded-3xl p-5 shadow-lg">
+
+        <div className="mb-5">
+
+          <h3 className="text-lg font-black text-slate-900">
+            Reactions Summary
+          </h3>
+
+          <p className="text-xs text-slate-500 mt-1">
+            Which reaction was given to which performer.
+          </p>
+
+        </div>
+
+        <div className="space-y-4">
+
+          {reactionGroups.map(
+            (group) => (
+
+              <div
+                key={group.performance.id}
+                className="rounded-2xl border border-pink-100 bg-white p-4"
+              >
+
+                <div className="flex items-center justify-between">
+
+                  <div>
+                    <h4 className="text-sm font-black text-slate-900">
+                      {group.performance.title}
+                    </h4>
+
+                    <p className="text-xs text-slate-500">
+                      {group.performance.performer}
+                    </p>
+                  </div>
+
+                  <span className="text-xs font-black text-pink-600">
+                    {group.total} total
+                  </span>
+
                 </div>
 
-                <span className="text-[10px] font-black text-slate-500 bg-slate-50 px-2 py-1 rounded-lg">
-                  {question.totalResponses} response{question.totalResponses === 1 ? '' : 's'}
-                </span>
-              </div>
+                {group.reactions.length ? (
 
-              <div className="space-y-3 mt-4">
-                {question.options.map((option) => (
-                  <div key={option.option}>
-                    <div className="flex items-center justify-between gap-3 text-xs">
-                      <span className="text-slate-700 font-bold">{option.option}</span>
-                      <span className="text-sky-700 font-black whitespace-nowrap">
-                        {option.selected} votes • {option.percentage}%
-                      </span>
-                    </div>
-                    <div className="h-2.5 bg-slate-100 rounded-full mt-1.5 overflow-hidden">
-                      <div
-                        className="h-full bg-sky-500 rounded-full transition-all duration-500"
-                        style={{ width: `${option.percentage}%` }}
-                      />
-                    </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
+
+                    {group.reactions.map(
+                      ([reaction, count]) => (
+                        <div
+                          key={reaction}
+                          className="bg-pink-50 border border-pink-100 rounded-xl p-3 text-center"
+                        >
+                          <div className="text-sm font-black text-slate-800">
+                            {reaction}
+                          </div>
+
+                          <div className="text-lg font-black text-pink-600 mt-1">
+                            {count}
+                          </div>
+                        </div>
+                      )
+                    )}
+
                   </div>
-                ))}
+
+                ) : (
+
+                  <p className="text-xs text-slate-400 mt-4">
+                    No reactions for this performance yet.
+                  </p>
+
+                )}
+
               </div>
-            </div>
-          )) : (
-            <div className="py-10 text-center text-xs text-slate-500">
-              No polls or interactions created yet.
-            </div>
+            )
           )}
+
         </div>
       </div>
 
-      <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg">
-        <div className="flex items-center justify-between gap-3 mb-4"><div><h3 className="text-sm font-black text-slate-900">Complete Audience List</h3><p className="text-xs text-slate-500 mt-1">Every audience member who joined this event, including people who did not vote or react.</p></div><span className="text-[10px] font-black text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-1 rounded-full">{supabaseAudience.length} names</span></div>
-        <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">#</th><th className="pb-2">Audience Name</th><th className="pb-2">Language</th><th className="pb-2">Joined</th><th className="pb-2">Votes</th><th className="pb-2">Reactions</th></tr></thead><tbody className="divide-y divide-slate-100">{supabaseAudience.length ? supabaseAudience.map((member, index) => { const memberVotes = eventVotes.filter((vote) => vote.audience_id === member.session_id).length; const memberReactions = eventReactions.filter((reaction) => reaction.audience_id === member.session_id).length; return <tr key={member.id || member.session_id}><td className="py-2 text-slate-400">{index + 1}</td><td className="py-2 font-black text-slate-800">{member.nickname || 'Unnamed audience'}</td><td className="py-2 text-slate-500">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || 'English'}</td><td className="py-2 text-slate-400">{member.joined_at ? new Date(member.joined_at).toLocaleTimeString() : '—'}</td><td className="py-2 text-sky-700 font-black">{memberVotes}</td><td className="py-2 text-pink-600 font-black">{memberReactions}</td></tr>; }) : <tr><td colSpan="6" className="py-8 text-center text-slate-400">No audience members have joined yet.</td></tr>}</tbody></table></div>
-      </div>
+      {/* COMPLETE AUDIENCE LIST */}
 
       <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg">
-        <h3 className="text-sm font-black text-slate-900">Saved Planning Snapshots</h3>
+
+        <div className="flex items-center justify-between gap-3 mb-4">
+
+          <div>
+            <h3 className="text-sm font-black text-slate-900">
+              Complete Audience List
+            </h3>
+
+            <p className="text-xs text-slate-500 mt-1">
+              Every audience member who joined this event.
+            </p>
+          </div>
+
+          <span className="text-[10px] font-black text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-1 rounded-full">
+            {supabaseAudience.length} names
+          </span>
+
+        </div>
+
+        <div className="overflow-x-auto">
+
+          <table className="w-full text-left text-xs">
+
+            <thead>
+              <tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]">
+                <th className="pb-2">#</th>
+                <th className="pb-2">Audience Name</th>
+                <th className="pb-2">Language</th>
+                <th className="pb-2">Joined</th>
+                <th className="pb-2">Votes</th>
+                <th className="pb-2">Reactions</th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-slate-100">
+
+              {supabaseAudience.length ? (
+                supabaseAudience.map(
+                  (member, index) => {
+
+                    const memberVotes =
+                      eventVotes.filter(
+                        (vote) =>
+                          vote.audience_id ===
+                          member.id
+                      ).length;
+
+                    const memberReactions =
+                      eventReactions.filter(
+                        (reaction) =>
+                          reaction.audience_id ===
+                          member.id
+                      ).length;
+
+                    return (
+                      <tr
+                        key={
+                          member.id
+                        }
+                      >
+
+                        <td className="py-2 text-slate-400">
+                          {index + 1}
+                        </td>
+
+                        <td className="py-2 font-black text-slate-800">
+                          {member.name ||
+                            'Unnamed audience'}
+                        </td>
+
+                        <td className="py-2 text-slate-500">
+                          {LANGUAGE_OPTIONS.find(
+                            (item) =>
+                              item.code ===
+                              member.language
+                          )?.native ||
+                            'English'}
+                        </td>
+
+                        <td className="py-2 text-slate-400">
+                          {member.joined_at
+                            ? new Date(
+                                member.joined_at
+                              ).toLocaleTimeString()
+                            : '—'}
+                        </td>
+
+                        <td className="py-2 text-sky-700 font-black">
+                          {memberVotes}
+                        </td>
+
+                        <td className="py-2 text-pink-600 font-black">
+                          {memberReactions}
+                        </td>
+
+                      </tr>
+                    );
+                  }
+                )
+              ) : (
+                <tr>
+                  <td
+                    colSpan="6"
+                    className="py-8 text-center text-slate-400"
+                  >
+                    No audience members have joined yet.
+                  </td>
+                </tr>
+              )}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+      {/* SAVED SNAPSHOTS */}
+
+      <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg">
+
+        <h3 className="text-sm font-black text-slate-900">
+          Saved Planning Snapshots
+        </h3>
+
         <div className="space-y-2 mt-4">
-          {analyticsSnapshots.length ? analyticsSnapshots.map((snapshot) => (
-            <div
-              key={snapshot.id}
-              className="bg-white border border-slate-200 rounded-2xl p-3 flex items-center justify-between gap-3"
-            >
-              <div>
-                <p className="text-xs font-black text-slate-900">{snapshot.event_name}</p>
-                <p className="text-[10px] text-slate-500">
-                  {new Date(snapshot.created_at).toLocaleString()}
-                </p>
-              </div>
-              <div className="text-[10px] text-sky-700 font-bold">
-                {snapshot.snapshot?.audience_count || 0} audience • {snapshot.snapshot?.total_votes || 0} votes
-              </div>
-            </div>
-          )) : (
-            <p className="text-xs text-slate-500">No snapshots saved yet.</p>
+
+          {analyticsSnapshots.length ? (
+            analyticsSnapshots.map(
+              (snapshot) => (
+
+                <div
+                  key={snapshot.id}
+                  className="bg-white border border-slate-200 rounded-2xl p-3 flex items-center justify-between gap-3"
+                >
+
+                  <div>
+                    <p className="text-xs font-black text-slate-900">
+                      {snapshot.event_name}
+                    </p>
+
+                    <p className="text-[10px] text-slate-500">
+                      {new Date(
+                        snapshot.created_at
+                      ).toLocaleString()}
+                    </p>
+                  </div>
+
+                  <div className="text-[10px] text-sky-700 font-bold">
+                    {snapshot.snapshot?.audience_count ||
+                      0}{' '}
+                    audience •{' '}
+                    {snapshot.snapshot?.total_votes ||
+                      0}{' '}
+                    votes
+                  </div>
+
+                </div>
+              )
+            )
+          ) : (
+            <p className="text-xs text-slate-500">
+              No snapshots saved yet.
+            </p>
           )}
+
         </div>
+
       </div>
+
     </div>
   );
 }
@@ -4000,6 +5912,16 @@ const DEFAULT_INTERACTIONS = [
     question: 'Can you guess the next song?',
     options: ['Option A', 'Option B', 'Option C', 'Option D'],
   },
+  {
+  type: 'audience_poll',
+  question: 'What performance was the best?',
+  options: [
+    'Performance 1',
+    'Performance 2',
+    'Performance 3',
+    'Group Performance'
+  ],
+},
 ];
 
 const INITIAL_SEED_DATA = {
@@ -4747,7 +6669,12 @@ export default function App() {
           supabaseVotes={supabaseVotes}
           supabaseReactions={supabaseReactions}
           people={people}
-          audienceProfile={supabaseAudience.find((row) => row.session_id === audienceSession?.sessionId) || null}
+          audienceProfile={
+  supabaseAudience.find(
+    (row) =>
+      row.id === audienceSession?.sessionId
+  ) || null
+}
           onAudiencePhotoUpload={handleAudiencePhotoUpload}
           onChangeNickname={() => navigate('#/join')}
         />
@@ -5340,9 +7267,9 @@ function TextAreaInput({ label, value, setValue, placeholder }) {
 }
 
 function AdminAudienceTab({ audience, audienceCount, supabaseVotes, supabaseReactions, supabaseInteractions }) {
-  const audienceMap = useMemo(() => new Map(audience.map((member) => [member.session_id, member])), [audience]);
+  const audienceMap = useMemo(() => new Map(audience.map((member) => [member.id, member])), [audience]);
 
-  return <div className="space-y-6"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="flex items-center justify-between"><h3 className="text-sm font-black text-slate-900 flex items-center gap-2"><Users className="w-4 h-4 text-sky-700" /> Live Audience Directory ({audienceCount})</h3><span className="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">Live sync</span></div><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase font-black text-[10px]"><th className="pb-3 pl-2">Audience</th><th className="pb-3">Language</th><th className="pb-3">Joined</th><th className="pb-3">Votes</th><th className="pb-3">Reactions</th><th className="pb-3 pr-2 text-right">Status</th></tr></thead><tbody className="divide-y divide-slate-200">{audience.length ? audience.map((member) => { const votes = supabaseVotes.filter((vote) => vote.audience_id === member.session_id).length; const reactions = supabaseReactions.filter((reaction) => reaction.audience_id === member.session_id).length; return <tr key={member.id || member.session_id}><td className="py-3 pl-2 font-black text-slate-900"><div className="flex items-center gap-2"><div className="w-9 h-9 rounded-full overflow-hidden bg-sky-100 text-sky-700 border border-sky-200 flex items-center justify-center font-black text-xs">{member.photo_url ? <img src={member.photo_url} alt={member.nickname} className="w-full h-full object-cover" /> : (member.nickname?.[0]?.toUpperCase() || 'A')}</div><div><div>{member.nickname}</div><div className="text-[9px] font-mono text-slate-400">{member.session_id?.slice(0, 12)}...</div></div></div></td><td className="py-3 text-slate-600">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || '—'}</td><td className="py-3 text-slate-500">{formatJoined(member.joined_at || member.created_at)}</td><td className="py-3 font-black text-sky-700">{votes}</td><td className="py-3 font-black text-pink-600">{reactions}</td><td className="py-3 pr-2 text-right"><span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />Active</span></td></tr>; }) : <tr><td colSpan="6" className="py-8 text-center text-slate-500">No audience members yet.</td></tr>}</tbody></table></div></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><h3 className="text-sm font-black text-slate-900">Audience Response Summary</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase text-[9px]"><th className="pb-3">Question</th><th className="pb-3">Audience</th><th className="pb-3">Answer</th><th className="pb-3">Time</th></tr></thead><tbody className="divide-y divide-slate-200">{supabaseInteractions.flatMap((interaction) => supabaseVotes.filter((vote) => vote.interaction_id === interaction.id).map((vote) => <tr key={vote.id}><td className="py-2 font-bold text-slate-800">{interaction.question}</td><td className="py-2 text-slate-600">{audienceMap.get(vote.audience_id)?.nickname || 'Unknown'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>))}</tbody></table></div></div></div>;
+  return <div className="space-y-6"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="flex items-center justify-between"><h3 className="text-sm font-black text-slate-900 flex items-center gap-2"><Users className="w-4 h-4 text-sky-700" /> Live Audience Directory ({audienceCount})</h3><span className="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">Live sync</span></div><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase font-black text-[10px]"><th className="pb-3 pl-2">Audience</th><th className="pb-3">Language</th><th className="pb-3">Joined</th><th className="pb-3">Votes</th><th className="pb-3">Reactions</th><th className="pb-3 pr-2 text-right">Status</th></tr></thead><tbody className="divide-y divide-slate-200">{audience.length ? audience.map((member) => { const votes = supabaseVotes.filter((vote) => vote.audience_id === member.id).length; const reactions = supabaseReactions.filter((reaction) => reaction.audience_id === member.id).length; return <tr key={member.id || member.id}><td className="py-3 pl-2 font-black text-slate-900"><div className="flex items-center gap-2"><div className="w-9 h-9 rounded-full overflow-hidden bg-sky-100 text-sky-700 border border-sky-200 flex items-center justify-center font-black text-xs">{member.photo_url ? <img src={member.photo_url} alt={member.name} className="w-full h-full object-cover" /> : (member.name?.[0]?.toUpperCase() || 'A')}</div><div><div>{member.name}</div><div className="text-[9px] font-mono text-slate-400">{member.id?.slice(0, 12)}...</div></div></div></td><td className="py-3 text-slate-600">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || '—'}</td><td className="py-3 text-slate-500">{formatJoined(member.joined_at || member.created_at)}</td><td className="py-3 font-black text-sky-700">{votes}</td><td className="py-3 font-black text-pink-600">{reactions}</td><td className="py-3 pr-2 text-right"><span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />Active</span></td></tr>; }) : <tr><td colSpan="6" className="py-8 text-center text-slate-500">No audience members yet.</td></tr>}</tbody></table></div></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><h3 className="text-sm font-black text-slate-900">Audience Response Summary</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase text-[9px]"><th className="pb-3">Question</th><th className="pb-3">Audience</th><th className="pb-3">Answer</th><th className="pb-3">Time</th></tr></thead><tbody className="divide-y divide-slate-200">{supabaseInteractions.flatMap((interaction) => supabaseVotes.filter((vote) => vote.interaction_id === interaction.id).map((vote) => <tr key={vote.id}><td className="py-2 font-bold text-slate-800">{interaction.question}</td><td className="py-2 text-slate-600">{audienceMap.get(vote.audience_id)?.name || 'Unknown'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>))}</tbody></table></div></div></div>;
 }
 
 function formatJoined(value) {
@@ -5361,7 +7288,7 @@ function AdminInteractionsTab({ supabaseInteractions, supabaseVotes, supabaseAud
   const [selectedInteraction, setSelectedInteraction] = useState(null);
 
   const interactions = supabaseInteractions.filter((interaction) => ['poll', 'guess_song'].includes(interaction.type));
-  const audienceMap = useMemo(() => new Map(supabaseAudience.map((member) => [member.session_id, member])), [supabaseAudience]);
+  const audienceMap = useMemo(() => new Map(supabaseAudience.map((member) => [member.id, member])), [supabaseAudience]);
   const performanceMap = useMemo(() => new Map(supabasePerformances.map((performance) => [performance.id, performance])), [supabasePerformances]);
   const livePerformance = supabasePerformances.find((performance) => performance.status === 'playing') || null;
 
@@ -5438,7 +7365,7 @@ function AdminInteractionsTab({ supabaseInteractions, supabaseVotes, supabaseAud
       </div>
     </div>
 
-    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="mb-5"><h3 className="text-sm font-black text-slate-900">Created Interactions + Answer Analysis</h3><p className="text-xs text-slate-500 mt-1">Option counts and audience names update automatically from Supabase.</p></div><div className="space-y-3">{interactions.length === 0 ? <p className="text-xs text-slate-500 text-center py-8">No interactions created yet.</p> : interactions.map((interaction) => { const isLive = interaction.status === 'live'; const total = countVotes(interaction.id); const attachedPerformance = performanceMap.get(interaction.performance_id); return <div key={interaction.id} className={`p-4 rounded-2xl border ${isLive ? 'bg-sky-50 border-sky-300' : 'bg-white border-slate-200'}`}><div className="flex items-start justify-between gap-4"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{interaction.type === 'guess_song' ? 'Guess' : 'Poll'}</span>{isLive && <span className="text-[9px] uppercase font-black text-emerald-700">LIVE</span>}{attachedPerformance && <span className="text-[9px] uppercase font-black text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">{attachedPerformance.title} • {attachedPerformance.performer}</span>}</div><h4 className="text-sm font-black text-slate-900 mt-2">{interaction.question}</h4><div className="space-y-2 mt-3">{(interaction.options || []).map((option) => { const votes = supabaseVotes.filter((vote) => vote.interaction_id === interaction.id && vote.selected_option === option).length; const percentage = total ? Math.round((votes / total) * 100) : 0; return <div key={option} className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs"><div><div className="flex justify-between"><span className="text-slate-600 font-bold">{option}</span><span className="text-sky-700 font-black">{percentage}%</span></div><div className="h-2 bg-slate-100 rounded-full mt-1 overflow-hidden"><div className="h-full bg-sky-500 rounded-full" style={{ width: `${percentage}%` }} /></div></div><span className="text-slate-400 font-bold">{votes}</span></div>; })}</div><p className="text-[10px] text-slate-400 mt-3">{total} total response{total === 1 ? '' : 's'}</p></div><div className="flex flex-col gap-2">{isLive ? <button onClick={() => handleStop(interaction.id)} className="bg-rose-50 text-rose-700 font-black text-xs px-3 py-1.5 rounded-xl border border-rose-200">Stop</button> : <button onClick={() => handleMakeLive(interaction.id)} className="bg-emerald-50 text-emerald-700 font-black text-xs px-3 py-1.5 rounded-xl border border-emerald-200">Make Live</button>}<button onClick={() => setSelectedInteraction(selectedInteraction?.id === interaction.id ? null : interaction)} className="bg-sky-50 text-sky-700 font-black text-xs px-3 py-1.5 rounded-xl border border-sky-200">{selectedInteraction?.id === interaction.id ? 'Hide Responses' : 'See Responses'}</button></div></div>{selectedInteraction?.id === interaction.id && <div className="mt-4 bg-white border border-sky-100 rounded-2xl p-3"><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">Audience Name</th><th className="pb-2">Language</th><th className="pb-2">Answer</th><th className="pb-2">Time</th></tr></thead><tbody className="divide-y divide-slate-100">{responseRows.length ? responseRows.map((vote) => <tr key={vote.id}><td className="py-2 font-black text-slate-800">{audienceMap.get(vote.audience_id)?.nickname || 'Unknown audience'}</td><td className="py-2 text-slate-500">{LANGUAGE_OPTIONS.find((item) => item.code === audienceMap.get(vote.audience_id)?.language)?.native || '—'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>) : <tr><td colSpan="4" className="py-5 text-center text-slate-400">No responses yet.</td></tr>}</tbody></table></div></div>}</div>; })}</div></div>
+    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="mb-5"><h3 className="text-sm font-black text-slate-900">Created Interactions + Answer Analysis</h3><p className="text-xs text-slate-500 mt-1">Option counts and audience names update automatically from Supabase.</p></div><div className="space-y-3">{interactions.length === 0 ? <p className="text-xs text-slate-500 text-center py-8">No interactions created yet.</p> : interactions.map((interaction) => { const isLive = interaction.status === 'live'; const total = countVotes(interaction.id); const attachedPerformance = performanceMap.get(interaction.performance_id); return <div key={interaction.id} className={`p-4 rounded-2xl border ${isLive ? 'bg-sky-50 border-sky-300' : 'bg-white border-slate-200'}`}><div className="flex items-start justify-between gap-4"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{interaction.type === 'guess_song' ? 'Guess' : 'Poll'}</span>{isLive && <span className="text-[9px] uppercase font-black text-emerald-700">LIVE</span>}{attachedPerformance && <span className="text-[9px] uppercase font-black text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">{attachedPerformance.title} • {attachedPerformance.performer}</span>}</div><h4 className="text-sm font-black text-slate-900 mt-2">{interaction.question}</h4><div className="space-y-2 mt-3">{(interaction.options || []).map((option) => { const votes = supabaseVotes.filter((vote) => vote.interaction_id === interaction.id && vote.selected_option === option).length; const percentage = total ? Math.round((votes / total) * 100) : 0; return <div key={option} className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs"><div><div className="flex justify-between"><span className="text-slate-600 font-bold">{option}</span><span className="text-sky-700 font-black">{percentage}%</span></div><div className="h-2 bg-slate-100 rounded-full mt-1 overflow-hidden"><div className="h-full bg-sky-500 rounded-full" style={{ width: `${percentage}%` }} /></div></div><span className="text-slate-400 font-bold">{votes}</span></div>; })}</div><p className="text-[10px] text-slate-400 mt-3">{total} total response{total === 1 ? '' : 's'}</p></div><div className="flex flex-col gap-2">{isLive ? <button onClick={() => handleStop(interaction.id)} className="bg-rose-50 text-rose-700 font-black text-xs px-3 py-1.5 rounded-xl border border-rose-200">Stop</button> : <button onClick={() => handleMakeLive(interaction.id)} className="bg-emerald-50 text-emerald-700 font-black text-xs px-3 py-1.5 rounded-xl border border-emerald-200">Make Live</button>}<button onClick={() => setSelectedInteraction(selectedInteraction?.id === interaction.id ? null : interaction)} className="bg-sky-50 text-sky-700 font-black text-xs px-3 py-1.5 rounded-xl border border-sky-200">{selectedInteraction?.id === interaction.id ? 'Hide Responses' : 'See Responses'}</button></div></div>{selectedInteraction?.id === interaction.id && <div className="mt-4 bg-white border border-sky-100 rounded-2xl p-3"><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">Audience Name</th><th className="pb-2">Language</th><th className="pb-2">Answer</th><th className="pb-2">Time</th></tr></thead><tbody className="divide-y divide-slate-100">{responseRows.length ? responseRows.map((vote) => <tr key={vote.id}><td className="py-2 font-black text-slate-800">{audienceMap.get(vote.audience_id)?.name || 'Unknown audience'}</td><td className="py-2 text-slate-500">{LANGUAGE_OPTIONS.find((item) => item.code === audienceMap.get(vote.audience_id)?.language)?.native || '—'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>) : <tr><td colSpan="4" className="py-5 text-center text-slate-400">No responses yet.</td></tr>}</tbody></table></div></div>}</div>; })}</div></div>
 
     <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><h3 className="text-sm font-black text-slate-900">Reaction Data</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">Audience</th><th className="pb-2">Song / Performer</th><th className="pb-2">Reaction</th><th className="pb-2">Time</th></tr></thead><tbody className="divide-y divide-slate-100">{supabaseReactions.length ? supabaseReactions.map((reaction) => { const audience = audienceMap.get(reaction.audience_id); const performance = performanceMap.get(reaction.performance_id); return <tr key={reaction.id}><td className="py-2 font-black text-slate-800">{audience?.nickname || 'Unknown audience'}</td><td className="py-2 text-slate-600">{performance ? `${performance.title} • ${performance.performer}` : reaction.performance_id}</td><td className="py-2 text-lg">{reaction.reaction}</td><td className="py-2 text-slate-400">{new Date(reaction.created_at).toLocaleTimeString()}</td></tr>; }) : <tr><td colSpan="4" className="py-5 text-center text-slate-400">No reactions yet.</td></tr>}</tbody></table></div></div>
   </div>;
@@ -5554,14 +7481,14 @@ function AdminAnalyticsTab({ audienceCount, supabasePerformances, supabaseIntera
     }
 
     const rows = supabaseAudience.map((member) => {
-      const votes = eventVotes.filter((vote) => vote.audience_id === member.session_id).length;
-      const reactions = eventReactions.filter((reaction) => reaction.audience_id === member.session_id).length;
+      const votes = eventVotes.filter((vote) => vote.audience_id === member.id).length;
+      const reactions = eventReactions.filter((reaction) => reaction.audience_id === member.id).length;
       const profile = getEngagementProfile(votes, reactions, member.language || 'en');
 
       return {
         event_id: APP_EVENT_ID,
-        audience_id: member.session_id,
-        audience_name: member.nickname || 'Audience Guest',
+        audience_id: member.id,
+        audience_name: member.name || 'Audience Guest',
         photo_url: member.photo_url || null,
         engagement_score: profile.score,
         engagement_tag: profile.tag,
@@ -5753,7 +7680,7 @@ function AdminAnalyticsTab({ audienceCount, supabasePerformances, supabaseIntera
 
       <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg">
         <div className="flex items-center justify-between gap-3 mb-4"><div><h3 className="text-sm font-black text-slate-900">Complete Audience List</h3><p className="text-xs text-slate-500 mt-1">Every audience member who joined this event, including people who did not vote or react.</p></div><span className="text-[10px] font-black text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-1 rounded-full">{supabaseAudience.length} names</span></div>
-        <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">#</th><th className="pb-2">Audience Name</th><th className="pb-2">Language</th><th className="pb-2">Joined</th><th className="pb-2">Votes</th><th className="pb-2">Reactions</th></tr></thead><tbody className="divide-y divide-slate-100">{supabaseAudience.length ? supabaseAudience.map((member, index) => { const memberVotes = eventVotes.filter((vote) => vote.audience_id === member.session_id).length; const memberReactions = eventReactions.filter((reaction) => reaction.audience_id === member.session_id).length; return <tr key={member.id || member.session_id}><td className="py-2 text-slate-400">{index + 1}</td><td className="py-2 font-black text-slate-800">{member.nickname || 'Unnamed audience'}</td><td className="py-2 text-slate-500">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || 'English'}</td><td className="py-2 text-slate-400">{member.joined_at ? new Date(member.joined_at).toLocaleTimeString() : '—'}</td><td className="py-2 text-sky-700 font-black">{memberVotes}</td><td className="py-2 text-pink-600 font-black">{memberReactions}</td></tr>; }) : <tr><td colSpan="6" className="py-8 text-center text-slate-400">No audience members have joined yet.</td></tr>}</tbody></table></div>
+        <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">#</th><th className="pb-2">Audience Name</th><th className="pb-2">Language</th><th className="pb-2">Joined</th><th className="pb-2">Votes</th><th className="pb-2">Reactions</th></tr></thead><tbody className="divide-y divide-slate-100">{supabaseAudience.length ? supabaseAudience.map((member, index) => { const memberVotes = eventVotes.filter((vote) => vote.audience_id === member.id).length; const memberReactions = eventReactions.filter((reaction) => reaction.audience_id === member.id).length; return <tr key={member.id || member.id}><td className="py-2 text-slate-400">{index + 1}</td><td className="py-2 font-black text-slate-800">{member.name || 'Unnamed audience'}</td><td className="py-2 text-slate-500">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || 'English'}</td><td className="py-2 text-slate-400">{member.joined_at ? new Date(member.joined_at).toLocaleTimeString() : '—'}</td><td className="py-2 text-sky-700 font-black">{memberVotes}</td><td className="py-2 text-pink-600 font-black">{memberReactions}</td></tr>; }) : <tr><td colSpan="6" className="py-8 text-center text-slate-400">No audience members have joined yet.</td></tr>}</tbody></table></div>
       </div>
 
       <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg">
@@ -6582,7 +8509,12 @@ export default function App() {
           supabaseVotes={supabaseVotes}
           supabaseReactions={supabaseReactions}
           people={people}
-          audienceProfile={supabaseAudience.find((row) => row.session_id === audienceSession?.sessionId) || null}
+          audienceProfile={
+  supabaseAudience.find(
+    (row) =>
+      row.id === audienceSession?.sessionId
+  ) || null
+}
           onAudiencePhotoUpload={handleAudiencePhotoUpload}
           onChangeNickname={() => navigate('#/join')}
         />
@@ -7175,9 +9107,9 @@ function TextAreaInput({ label, value, setValue, placeholder }) {
 }
 
 function AdminAudienceTab({ audience, audienceCount, supabaseVotes, supabaseReactions, supabaseInteractions }) {
-  const audienceMap = useMemo(() => new Map(audience.map((member) => [member.session_id, member])), [audience]);
+  const audienceMap = useMemo(() => new Map(audience.map((member) => [member.id, member])), [audience]);
 
-  return <div className="space-y-6"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="flex items-center justify-between"><h3 className="text-sm font-black text-slate-900 flex items-center gap-2"><Users className="w-4 h-4 text-sky-700" /> Live Audience Directory ({audienceCount})</h3><span className="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">Live sync</span></div><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase font-black text-[10px]"><th className="pb-3 pl-2">Audience</th><th className="pb-3">Language</th><th className="pb-3">Joined</th><th className="pb-3">Votes</th><th className="pb-3">Reactions</th><th className="pb-3 pr-2 text-right">Status</th></tr></thead><tbody className="divide-y divide-slate-200">{audience.length ? audience.map((member) => { const votes = supabaseVotes.filter((vote) => vote.audience_id === member.session_id).length; const reactions = supabaseReactions.filter((reaction) => reaction.audience_id === member.session_id).length; return <tr key={member.id || member.session_id}><td className="py-3 pl-2 font-black text-slate-900"><div className="flex items-center gap-2"><div className="w-9 h-9 rounded-full overflow-hidden bg-sky-100 text-sky-700 border border-sky-200 flex items-center justify-center font-black text-xs">{member.photo_url ? <img src={member.photo_url} alt={member.nickname} className="w-full h-full object-cover" /> : (member.nickname?.[0]?.toUpperCase() || 'A')}</div><div><div>{member.nickname}</div><div className="text-[9px] font-mono text-slate-400">{member.session_id?.slice(0, 12)}...</div></div></div></td><td className="py-3 text-slate-600">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || '—'}</td><td className="py-3 text-slate-500">{formatJoined(member.joined_at || member.created_at)}</td><td className="py-3 font-black text-sky-700">{votes}</td><td className="py-3 font-black text-pink-600">{reactions}</td><td className="py-3 pr-2 text-right"><span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />Active</span></td></tr>; }) : <tr><td colSpan="6" className="py-8 text-center text-slate-500">No audience members yet.</td></tr>}</tbody></table></div></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><h3 className="text-sm font-black text-slate-900">Audience Response Summary</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase text-[9px]"><th className="pb-3">Question</th><th className="pb-3">Audience</th><th className="pb-3">Answer</th><th className="pb-3">Time</th></tr></thead><tbody className="divide-y divide-slate-200">{supabaseInteractions.flatMap((interaction) => supabaseVotes.filter((vote) => vote.interaction_id === interaction.id).map((vote) => <tr key={vote.id}><td className="py-2 font-bold text-slate-800">{interaction.question}</td><td className="py-2 text-slate-600">{audienceMap.get(vote.audience_id)?.nickname || 'Unknown'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>))}</tbody></table></div></div></div>;
+  return <div className="space-y-6"><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="flex items-center justify-between"><h3 className="text-sm font-black text-slate-900 flex items-center gap-2"><Users className="w-4 h-4 text-sky-700" /> Live Audience Directory ({audienceCount})</h3><span className="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">Live sync</span></div><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase font-black text-[10px]"><th className="pb-3 pl-2">Audience</th><th className="pb-3">Language</th><th className="pb-3">Joined</th><th className="pb-3">Votes</th><th className="pb-3">Reactions</th><th className="pb-3 pr-2 text-right">Status</th></tr></thead><tbody className="divide-y divide-slate-200">{audience.length ? audience.map((member) => { const votes = supabaseVotes.filter((vote) => vote.audience_id === member.id).length; const reactions = supabaseReactions.filter((reaction) => reaction.audience_id === member.id).length; return <tr key={member.id || member.id}><td className="py-3 pl-2 font-black text-slate-900"><div className="flex items-center gap-2"><div className="w-9 h-9 rounded-full overflow-hidden bg-sky-100 text-sky-700 border border-sky-200 flex items-center justify-center font-black text-xs">{member.photo_url ? <img src={member.photo_url} alt={member.name} className="w-full h-full object-cover" /> : (member.name?.[0]?.toUpperCase() || 'A')}</div><div><div>{member.name}</div><div className="text-[9px] font-mono text-slate-400">{member.id?.slice(0, 12)}...</div></div></div></td><td className="py-3 text-slate-600">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || '—'}</td><td className="py-3 text-slate-500">{formatJoined(member.joined_at || member.created_at)}</td><td className="py-3 font-black text-sky-700">{votes}</td><td className="py-3 font-black text-pink-600">{reactions}</td><td className="py-3 pr-2 text-right"><span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />Active</span></td></tr>; }) : <tr><td colSpan="6" className="py-8 text-center text-slate-500">No audience members yet.</td></tr>}</tbody></table></div></div><div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><h3 className="text-sm font-black text-slate-900">Audience Response Summary</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500 uppercase text-[9px]"><th className="pb-3">Question</th><th className="pb-3">Audience</th><th className="pb-3">Answer</th><th className="pb-3">Time</th></tr></thead><tbody className="divide-y divide-slate-200">{supabaseInteractions.flatMap((interaction) => supabaseVotes.filter((vote) => vote.interaction_id === interaction.id).map((vote) => <tr key={vote.id}><td className="py-2 font-bold text-slate-800">{interaction.question}</td><td className="py-2 text-slate-600">{audienceMap.get(vote.audience_id)?.name || 'Unknown'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>))}</tbody></table></div></div></div>;
 }
 
 function formatJoined(value) {
@@ -7196,7 +9128,7 @@ function AdminInteractionsTab({ supabaseInteractions, supabaseVotes, supabaseAud
   const [selectedInteraction, setSelectedInteraction] = useState(null);
 
   const interactions = supabaseInteractions.filter((interaction) => ['poll', 'guess_song'].includes(interaction.type));
-  const audienceMap = useMemo(() => new Map(supabaseAudience.map((member) => [member.session_id, member])), [supabaseAudience]);
+  const audienceMap = useMemo(() => new Map(supabaseAudience.map((member) => [member.id, member])), [supabaseAudience]);
   const performanceMap = useMemo(() => new Map(supabasePerformances.map((performance) => [performance.id, performance])), [supabasePerformances]);
   const livePerformance = supabasePerformances.find((performance) => performance.status === 'playing') || null;
 
@@ -7273,7 +9205,7 @@ function AdminInteractionsTab({ supabaseInteractions, supabaseVotes, supabaseAud
       </div>
     </div>
 
-    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="mb-5"><h3 className="text-sm font-black text-slate-900">Created Interactions + Answer Analysis</h3><p className="text-xs text-slate-500 mt-1">Option counts and audience names update automatically from Supabase.</p></div><div className="space-y-3">{interactions.length === 0 ? <p className="text-xs text-slate-500 text-center py-8">No interactions created yet.</p> : interactions.map((interaction) => { const isLive = interaction.status === 'live'; const total = countVotes(interaction.id); const attachedPerformance = performanceMap.get(interaction.performance_id); return <div key={interaction.id} className={`p-4 rounded-2xl border ${isLive ? 'bg-sky-50 border-sky-300' : 'bg-white border-slate-200'}`}><div className="flex items-start justify-between gap-4"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{interaction.type === 'guess_song' ? 'Guess' : 'Poll'}</span>{isLive && <span className="text-[9px] uppercase font-black text-emerald-700">LIVE</span>}{attachedPerformance && <span className="text-[9px] uppercase font-black text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">{attachedPerformance.title} • {attachedPerformance.performer}</span>}</div><h4 className="text-sm font-black text-slate-900 mt-2">{interaction.question}</h4><div className="space-y-2 mt-3">{(interaction.options || []).map((option) => { const votes = supabaseVotes.filter((vote) => vote.interaction_id === interaction.id && vote.selected_option === option).length; const percentage = total ? Math.round((votes / total) * 100) : 0; return <div key={option} className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs"><div><div className="flex justify-between"><span className="text-slate-600 font-bold">{option}</span><span className="text-sky-700 font-black">{percentage}%</span></div><div className="h-2 bg-slate-100 rounded-full mt-1 overflow-hidden"><div className="h-full bg-sky-500 rounded-full" style={{ width: `${percentage}%` }} /></div></div><span className="text-slate-400 font-bold">{votes}</span></div>; })}</div><p className="text-[10px] text-slate-400 mt-3">{total} total response{total === 1 ? '' : 's'}</p></div><div className="flex flex-col gap-2">{isLive ? <button onClick={() => handleStop(interaction.id)} className="bg-rose-50 text-rose-700 font-black text-xs px-3 py-1.5 rounded-xl border border-rose-200">Stop</button> : <button onClick={() => handleMakeLive(interaction.id)} className="bg-emerald-50 text-emerald-700 font-black text-xs px-3 py-1.5 rounded-xl border border-emerald-200">Make Live</button>}<button onClick={() => setSelectedInteraction(selectedInteraction?.id === interaction.id ? null : interaction)} className="bg-sky-50 text-sky-700 font-black text-xs px-3 py-1.5 rounded-xl border border-sky-200">{selectedInteraction?.id === interaction.id ? 'Hide Responses' : 'See Responses'}</button></div></div>{selectedInteraction?.id === interaction.id && <div className="mt-4 bg-white border border-sky-100 rounded-2xl p-3"><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">Audience Name</th><th className="pb-2">Language</th><th className="pb-2">Answer</th><th className="pb-2">Time</th></tr></thead><tbody className="divide-y divide-slate-100">{responseRows.length ? responseRows.map((vote) => <tr key={vote.id}><td className="py-2 font-black text-slate-800">{audienceMap.get(vote.audience_id)?.nickname || 'Unknown audience'}</td><td className="py-2 text-slate-500">{LANGUAGE_OPTIONS.find((item) => item.code === audienceMap.get(vote.audience_id)?.language)?.native || '—'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>) : <tr><td colSpan="4" className="py-5 text-center text-slate-400">No responses yet.</td></tr>}</tbody></table></div></div>}</div>; })}</div></div>
+    <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><div className="mb-5"><h3 className="text-sm font-black text-slate-900">Created Interactions + Answer Analysis</h3><p className="text-xs text-slate-500 mt-1">Option counts and audience names update automatically from Supabase.</p></div><div className="space-y-3">{interactions.length === 0 ? <p className="text-xs text-slate-500 text-center py-8">No interactions created yet.</p> : interactions.map((interaction) => { const isLive = interaction.status === 'live'; const total = countVotes(interaction.id); const attachedPerformance = performanceMap.get(interaction.performance_id); return <div key={interaction.id} className={`p-4 rounded-2xl border ${isLive ? 'bg-sky-50 border-sky-300' : 'bg-white border-slate-200'}`}><div className="flex items-start justify-between gap-4"><div className="flex-1"><div className="flex flex-wrap items-center gap-2"><span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{interaction.type === 'guess_song' ? 'Guess' : 'Poll'}</span>{isLive && <span className="text-[9px] uppercase font-black text-emerald-700">LIVE</span>}{attachedPerformance && <span className="text-[9px] uppercase font-black text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">{attachedPerformance.title} • {attachedPerformance.performer}</span>}</div><h4 className="text-sm font-black text-slate-900 mt-2">{interaction.question}</h4><div className="space-y-2 mt-3">{(interaction.options || []).map((option) => { const votes = supabaseVotes.filter((vote) => vote.interaction_id === interaction.id && vote.selected_option === option).length; const percentage = total ? Math.round((votes / total) * 100) : 0; return <div key={option} className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs"><div><div className="flex justify-between"><span className="text-slate-600 font-bold">{option}</span><span className="text-sky-700 font-black">{percentage}%</span></div><div className="h-2 bg-slate-100 rounded-full mt-1 overflow-hidden"><div className="h-full bg-sky-500 rounded-full" style={{ width: `${percentage}%` }} /></div></div><span className="text-slate-400 font-bold">{votes}</span></div>; })}</div><p className="text-[10px] text-slate-400 mt-3">{total} total response{total === 1 ? '' : 's'}</p></div><div className="flex flex-col gap-2">{isLive ? <button onClick={() => handleStop(interaction.id)} className="bg-rose-50 text-rose-700 font-black text-xs px-3 py-1.5 rounded-xl border border-rose-200">Stop</button> : <button onClick={() => handleMakeLive(interaction.id)} className="bg-emerald-50 text-emerald-700 font-black text-xs px-3 py-1.5 rounded-xl border border-emerald-200">Make Live</button>}<button onClick={() => setSelectedInteraction(selectedInteraction?.id === interaction.id ? null : interaction)} className="bg-sky-50 text-sky-700 font-black text-xs px-3 py-1.5 rounded-xl border border-sky-200">{selectedInteraction?.id === interaction.id ? 'Hide Responses' : 'See Responses'}</button></div></div>{selectedInteraction?.id === interaction.id && <div className="mt-4 bg-white border border-sky-100 rounded-2xl p-3"><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">Audience Name</th><th className="pb-2">Language</th><th className="pb-2">Answer</th><th className="pb-2">Time</th></tr></thead><tbody className="divide-y divide-slate-100">{responseRows.length ? responseRows.map((vote) => <tr key={vote.id}><td className="py-2 font-black text-slate-800">{audienceMap.get(vote.audience_id)?.name || 'Unknown audience'}</td><td className="py-2 text-slate-500">{LANGUAGE_OPTIONS.find((item) => item.code === audienceMap.get(vote.audience_id)?.language)?.native || '—'}</td><td className="py-2 text-sky-700 font-bold">{vote.selected_option}</td><td className="py-2 text-slate-400">{new Date(vote.created_at).toLocaleTimeString()}</td></tr>) : <tr><td colSpan="4" className="py-5 text-center text-slate-400">No responses yet.</td></tr>}</tbody></table></div></div>}</div>; })}</div></div>
 
     <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg"><h3 className="text-sm font-black text-slate-900">Reaction Data</h3><div className="overflow-x-auto mt-4"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">Audience</th><th className="pb-2">Song / Performer</th><th className="pb-2">Reaction</th><th className="pb-2">Time</th></tr></thead><tbody className="divide-y divide-slate-100">{supabaseReactions.length ? supabaseReactions.map((reaction) => { const audience = audienceMap.get(reaction.audience_id); const performance = performanceMap.get(reaction.performance_id); return <tr key={reaction.id}><td className="py-2 font-black text-slate-800">{audience?.nickname || 'Unknown audience'}</td><td className="py-2 text-slate-600">{performance ? `${performance.title} • ${performance.performer}` : reaction.performance_id}</td><td className="py-2 text-lg">{reaction.reaction}</td><td className="py-2 text-slate-400">{new Date(reaction.created_at).toLocaleTimeString()}</td></tr>; }) : <tr><td colSpan="4" className="py-5 text-center text-slate-400">No reactions yet.</td></tr>}</tbody></table></div></div>
   </div>;
@@ -7389,14 +9321,14 @@ function AdminAnalyticsTab({ audienceCount, supabasePerformances, supabaseIntera
     }
 
     const rows = supabaseAudience.map((member) => {
-      const votes = eventVotes.filter((vote) => vote.audience_id === member.session_id).length;
-      const reactions = eventReactions.filter((reaction) => reaction.audience_id === member.session_id).length;
+      const votes = eventVotes.filter((vote) => vote.audience_id === member.id).length;
+      const reactions = eventReactions.filter((reaction) => reaction.audience_id === member.id).length;
       const profile = getEngagementProfile(votes, reactions, member.language || 'en');
 
       return {
         event_id: APP_EVENT_ID,
-        audience_id: member.session_id,
-        audience_name: member.nickname || 'Audience Guest',
+        audience_id: member.id,
+        audience_name: member.name || 'Audience Guest',
         photo_url: member.photo_url || null,
         engagement_score: profile.score,
         engagement_tag: profile.tag,
@@ -7588,7 +9520,7 @@ function AdminAnalyticsTab({ audienceCount, supabasePerformances, supabaseIntera
 
       <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg">
         <div className="flex items-center justify-between gap-3 mb-4"><div><h3 className="text-sm font-black text-slate-900">Complete Audience List</h3><p className="text-xs text-slate-500 mt-1">Every audience member who joined this event, including people who did not vote or react.</p></div><span className="text-[10px] font-black text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-1 rounded-full">{supabaseAudience.length} names</span></div>
-        <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">#</th><th className="pb-2">Audience Name</th><th className="pb-2">Language</th><th className="pb-2">Joined</th><th className="pb-2">Votes</th><th className="pb-2">Reactions</th></tr></thead><tbody className="divide-y divide-slate-100">{supabaseAudience.length ? supabaseAudience.map((member, index) => { const memberVotes = eventVotes.filter((vote) => vote.audience_id === member.session_id).length; const memberReactions = eventReactions.filter((reaction) => reaction.audience_id === member.session_id).length; return <tr key={member.id || member.session_id}><td className="py-2 text-slate-400">{index + 1}</td><td className="py-2 font-black text-slate-800">{member.nickname || 'Unnamed audience'}</td><td className="py-2 text-slate-500">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || 'English'}</td><td className="py-2 text-slate-400">{member.joined_at ? new Date(member.joined_at).toLocaleTimeString() : '—'}</td><td className="py-2 text-sky-700 font-black">{memberVotes}</td><td className="py-2 text-pink-600 font-black">{memberReactions}</td></tr>; }) : <tr><td colSpan="6" className="py-8 text-center text-slate-400">No audience members have joined yet.</td></tr>}</tbody></table></div>
+        <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-400 uppercase text-[9px]"><th className="pb-2">#</th><th className="pb-2">Audience Name</th><th className="pb-2">Language</th><th className="pb-2">Joined</th><th className="pb-2">Votes</th><th className="pb-2">Reactions</th></tr></thead><tbody className="divide-y divide-slate-100">{supabaseAudience.length ? supabaseAudience.map((member, index) => { const memberVotes = eventVotes.filter((vote) => vote.audience_id === member.id).length; const memberReactions = eventReactions.filter((reaction) => reaction.audience_id === member.id).length; return <tr key={member.id || member.id}><td className="py-2 text-slate-400">{index + 1}</td><td className="py-2 font-black text-slate-800">{member.name || 'Unnamed audience'}</td><td className="py-2 text-slate-500">{LANGUAGE_OPTIONS.find((item) => item.code === member.language)?.native || 'English'}</td><td className="py-2 text-slate-400">{member.joined_at ? new Date(member.joined_at).toLocaleTimeString() : '—'}</td><td className="py-2 text-sky-700 font-black">{memberVotes}</td><td className="py-2 text-pink-600 font-black">{memberReactions}</td></tr>; }) : <tr><td colSpan="6" className="py-8 text-center text-slate-400">No audience members have joined yet.</td></tr>}</tbody></table></div>
       </div>
 
       <div className="bg-white/84 border border-sky-200 rounded-3xl p-5 shadow-lg">
